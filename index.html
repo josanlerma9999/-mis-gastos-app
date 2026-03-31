@@ -39,8 +39,10 @@
                 <option value="Previsto">⏳ Pendiente/Previsto</option>
             </select>
 
-            <button type="submit" class="md:col-span-2 bg-blue-600 text-white font-bold py-4 rounded-xl hover:bg-blue-700 transition shadow-lg active:scale-95">
-                Registrar Movimiento
+            <button type="button" onclick="registrarMovimiento()" class="md:col-span-2 bg-blue-600 text-white font-bold py-4 rounded-xl hover:bg-blue-700 transition shadow-lg active:scale-95">
+    Registrar Movimiento
+</button>
+
             </button>
         </form>
 
@@ -85,3 +87,57 @@
 
                 lista.innerHTML += `
                     <li class="flex justify-between items-center p-4 bg-white rounded-xl border border
+                                <div class="text-right">
+                <p class="font-bold ${colorImporte}">${simbolo}${monto.toFixed(2)}€</p>
+                <p class="text-xs text-slate-400">${g.fecha || ''}</p>
+            </div>
+        </li>`;
+    });
+
+    document.getElementById('totalIngresos').innerText = ingresos.toFixed(2);
+    document.getElementById('totalGastos').innerText = gastosTotales.toFixed(2);
+    const balance = ingresos - gastosTotales;
+    document.getElementById('balanceTotal').innerText = balance.toFixed(2);
+    document.getElementById('balanceContainer').className = `mt-4 p-3 rounded-lg text-center font-bold text-lg border ${balance >= 0 ? 'bg-green-100 border-green-200 text-green-800' : 'bg-red-100 border-red-200 text-red-800'}`;
+}
+
+async function registrarMovimiento() {
+    const concepto = document.getElementById('concepto').value;
+    const importe = document.getElementById('importe').value;
+    const categoria = document.getElementById('categoria').value;
+
+    if (!concepto || !importe) return alert('Rellena concepto e importe');
+
+    const nuevoGasto = {
+        concepto,
+        importe: parseFloat(importe),
+        categoria,
+        fecha: new Date().toLocaleDateString()
+    };
+
+    try {
+        const res = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(nuevoGasto)
+        });
+
+        if (res.ok) {
+            alert('✅ ¡Registrado con éxito!');
+            document.getElementById('concepto').value = '';
+            document.getElementById('importe').value = '';
+            cargarGastos();
+        }
+    } catch (err) {
+        alert('❌ Error al guardar');
+    }
+}
+
+// Esto arranca la app nada más abrirla
+cargarGastos();
+</script>
+
+</body>
+</html>
+
+                    
