@@ -9,7 +9,7 @@ app.use(express.json());
 app.use(express.static(__dirname));
 
 // CONEXIÓN (Usa tu dirección de MongoDB aquí debajo)
-const MONGO_URI = mongodb+srv://Josan77:Yakonala@cluster0.npzvokr.mongodb.net/?appName=Cluster0; 
+const MONGO_URI = 'mongodb+srv://Josan77:Yakonala@cluster0.npzvokr.mongodb.net/?appName=Cluster0'; 
 
 mongoose.connect(MONGO_URI)
   .then(() => console.log('✅ ¡CONECTADO A MONGODB!'))
