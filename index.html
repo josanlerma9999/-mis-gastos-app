@@ -69,7 +69,10 @@
                     </select>
                     <input type="date" id="fecha" class="w-full p-4 bg-slate-50 rounded-xl outline-none" required>
                     <button type="submit" class="w-full bg-indigo-600 text-white font-bold p-5 rounded-2xl shadow-lg shadow-indigo-100">Guardar Movimiento</button>
-                </form>
+               <button type="button" onclick="resetearTodo()" class="w-full mt-8 text-red-500 text-xs font-bold uppercase tracking-widest border border-red-200 p-2 rounded-xl">
+    ⚠️ Borrar todos los datos y empezar de cero
+</button>
+  </form>
             </div>
         </section>
 
@@ -89,8 +92,21 @@
             <span class="text-[10px] font-bold uppercase">Añadir</span>
         </button>
     </div>
-
-        <script>
+    async function resetearTodo() {
+    if (confirm("¿Estás seguro? Esto borrará ABSOLUTAMENTE TODO el historial para siempre.")) {
+        const res = await fetch(API_URL);
+        const todos = await res.json();
+        
+        // Borra uno por uno todos los movimientos antiguos
+        for (let g of todos) {
+            await fetch(`${API_URL}/${g._id}`, { method: 'DELETE' });
+        }
+        
+        alert("Base de datos limpia. Ahora puedes empezar de cero.");
+        location.reload(); // Recarga la app
+    }
+}
+       <script>
         const API_URL = 'https://mis-gastos-app.onrender.com/api/gastos'; 
 
         // Configuración inicial: Poner mes actual
