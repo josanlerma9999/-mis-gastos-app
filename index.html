@@ -44,14 +44,18 @@
             <form id="gastoForm" class="space-y-3">
                 <input type="text" id="concepto" placeholder="¿En qué lo gastaste?" class="w-full p-3 bg-slate-50 rounded-xl border-none focus:ring-2 focus:ring-indigo-500 outline-none" required>
                 <input type="number" id="importe" step="0.01" placeholder="Importe (0.00€)" class="w-full p-3 bg-slate-50 rounded-xl border-none outline-none" required>
-                <select id="categoria" class="w-full p-3 bg-slate-50 rounded-xl border-none outline-none">
-                    <option value="Comida">🛒 Comida</option>
-                    <option value="Sueldo">💰 Sueldo / Ingreso</option>
-                    <option value="Ocio">🎬 Ocio / Caprichos</option>
-                    <option value="Facturas">🏠 Facturas / Alquiler</option>
-                    <option value="Transporte">🚗 Transporte</option>
-                    <option value="Otros">📦 Otros</option>
-                </select>
+               <select id="categoria" class="w-full p-3 bg-slate-50 rounded-xl border-none outline-none font-medium text-slate-700">
+    <option value="Sueldo">💰 Sueldo</option>
+    <option value="Otros Ingresos">💵 Otros Ingresos</option>
+    <option value="El Corte Inglés">🛍️ El Corte Inglés</option>
+    <option value="BBVA Tarjeta">🟦 BBVA Tarjeta</option>
+    <option value="BBVA Explora">🚀 BBVA Explora</option>
+    <option value="Imagine">🟣 Imagine</option>
+    <option value="PayPal">💳 PayPal</option>
+    <option value="Amazon">📦 Amazon</option>
+    <option value="Gasolina">⛽ Gasolina</option>
+</select>
+
                 <input type="date" id="fecha" class="w-full p-3 bg-slate-50 rounded-xl border-none outline-none" required>
                 <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold p-4 rounded-2xl transition-all shadow-lg shadow-indigo-100">Registrar Movimiento</button>
             </form>
