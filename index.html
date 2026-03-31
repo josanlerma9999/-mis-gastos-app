@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Control de Gastos Personal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 p-4 md:p-10 text-slate-800">
+    <div class="max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow-xl border-t-8 border-blue-600">
+        <h2 class="text-3xl font-extrabold mb-2 text-slate-900">📊 Mi Diario Financiero</h2>
+        <p class="text-slate-500 mb-8 text-sm italic italic">Gestionando ingresos y tarjetas</p>
+        
+        <form id="gastoForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input type="text" id="concepto" placeholder="¿Qué concepto es?" class="p-3 border rounded-lg focus:ring-2 focus:ring-blue-400 outline-none shadow-sm" required>
+            <input type="number" step="0.01" id="importe" placeholder="Importe (€)" class="p-3 border rounded-lg focus:ring-2 focus:ring-blue-400 outline-none shadow-sm" required>
+            
+            <select id="categoria" class="p-3 border rounded-lg bg-white shadow-sm font-medium">
+                <optgroup label="💰 Ingresos">
+                    <option value="Sueldo">💵 Sueldo</option>
+                    <option value="Otros Ingresos">➕ Otros Ingresos</option>
+                </optgroup>
+                <optgroup label="💳 Bancos y Tarjetas">
+                    <option value="BBVA">🟦 BBVA (Cuenta)</option>
+                    <option value="Tarjeta BBVA">💳 Tarjeta BBVA</option>
+                    <option value="Tarjeta Explora">✈️ Tarjeta Explora</option>
+                    <option value="Imagine">🟣 Imagine</option>
+                </optgroup>
+                <optgroup label="🛍️ Compras y Otros">
+                    <option value="El Corte Inglés">🟢 El Corte Inglés</option>
+                    <option value="Amazon">📦 Amazon</option>
+                    <option value="PayPal">🔹 PayPal</option>
+                    <option value="Gasolina">⛽ Gasolina</option>
+                </optgroup>
+            </select>
+
+            <select id="estado" class="p-3 border rounded-lg bg-white shadow-sm font-medium">
+                <option value="Realizado">✅ Ya pagado/cobrado</option>
+                <option value="Previsto">⏳ Pendiente/Previsto</option>
+            </select>
+
+            <button type="submit" class="md:col-span-2 bg-blue-600 text-white font-bold py-4 rounded-xl hover:bg-blue-700 transition shadow-lg active:scale-95">
+                Registrar Movimiento
+            </button>
+        </form>
+
+        <div class="grid grid-cols-2 gap-4 mt-8">
+            <div class="bg-green-50 p-4 rounded-xl border border-green-200 shadow-sm">
+                <p class="text-green-800 text-xs uppercase font-bold tracking-wider">Total Ingresos</p>
+                <p class="text-2xl font-black text-green-700">+<span id="totalIngresos">0</span>€</p>
+            </div>
+            <div class="bg-red-50 p-4 rounded-xl border border-red-200 shadow-sm">
+                <p class="text-red-800 text-xs uppercase font-bold tracking-wider">Total Gastos</p>
+                <p class="text-2xl font-black text-red-700">-<span id="totalGastos">0</span>€</p>
+            </div>
+        </div>
+
+        <div id="balanceContainer" class="mt-4 p-3 rounded-lg text-center font-bold text-lg border">
+            Balance Neto: <span id="balanceNeto">0</span>€
+        </div>
+
+        <ul id="listaGastos" class="mt-8 space-y-3">
+            </ul>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api/gastos';
+
+        async function cargarGastos() {
+            const res = await fetch(API_URL);
+            const datos = await res.json();
+            const lista = document.getElementById('listaGastos');
+            let ingresos = 0, gastosTotales = 0;
+
+            lista.innerHTML = '';
+            datos.reverse().forEach(g => {
+                const monto = parseFloat(g.importe);
+                const esIngreso = g.categoria === 'Sueldo' || g.categoria === 'Otros Ingresos';
+                
+                if (esIngreso) ingresos += monto;
+                else gastosTotales += monto;
+
+                const colorImporte = esIngreso ? 'text-green-600' : 'text-red-600';
+                const simbolo = esIngreso ? '+' : '-';
+
+                lista.innerHTML += `
+                    <li class="flex justify-between items-center p-4 bg-white rounded-xl border border
