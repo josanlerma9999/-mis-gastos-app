@@ -159,7 +159,20 @@
             });
 
             // Actualizar pantallas
-            document.getElementById('totalRealCuenta').innerText = balanceReal.toFixed(2) + '€';
+ const totalElem = document.getElementById('totalRealCuenta');
+totalElem.innerText = balanceReal.toFixed(2) + '€';
+
+// Lógica de alerta de los 100€
+const tarjetaCuenta = totalElem.parentElement; 
+
+if (balanceReal < 0) {
+    tarjetaCuenta.className = 'bg-red-600 text-white p-8 rounded-3xl shadow-xl mb-6 text-center animate-pulse';
+} else if (balanceReal < 100) {
+    tarjetaCuenta.className = 'bg-orange-500 text-white p-8 rounded-3xl shadow-xl mb-6 text-center';
+} else {
+    tarjetaCuenta.className = 'bg-indigo-600 text-white p-8 rounded-3xl shadow-xl mb-6 text-center';
+}
+
             document.getElementById('ingresosMes').innerText = ingresosMes.toFixed(2) + '€';
             document.getElementById('gastosMes').innerText = gastosMes.toFixed(2) + '€';
         }
