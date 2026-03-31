@@ -86,12 +86,23 @@
                 const simbolo = esIngreso ? '+' : '-';
 
                 lista.innerHTML += `
-                    <li class="flex justify-between items-center p-4 bg-white rounded-xl border border
-                                <div class="text-right">
-                <p class="font-bold ${colorImporte}">${simbolo}${monto.toFixed(2)}€</p>
-                <p class="text-xs text-slate-400">${g.fecha || ''}</p>
-            </div>
-        </li>`;
+                            lista.innerHTML += `
+            <li class="flex justify-between items-center p-4 bg-white rounded-xl border border-slate-200 shadow-sm mb-2">
+                <div class="flex items-center gap-3">
+                    <button onclick="eliminarGasto('${g._id}')" class="bg-red-50 hover:bg-red-100 text-red-500 p-2 rounded-lg transition-colors">
+                        🗑️
+                    </button>
+                    <div>
+                        <p class="font-semibold text-slate-800">${g.concepto}</p>
+                        <p class="text-xs text-slate-500">${g.categoria}</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="font-bold ${colorImporte}">${simbolo}${monto.toFixed(2)}€</p>
+                    <p class="text-xs text-slate-400">${g.fecha || ''}</p>
+                </div>
+            </li>`;
+
     });
 
     document.getElementById('totalIngresos').innerText = ingresos.toFixed(2);
@@ -132,6 +143,26 @@ async function registrarMovimiento() {
         alert('❌ Error al guardar');
     }
 }
+// --- NUEVA FUNCIÓN PARA BORRAR ---
+async function eliminarGasto(id) {
+    if (!confirm("¿Seguro que quieres borrar este movimiento?")) return;
+
+    try {
+        const res = await fetch(`${API_URL}/${id}`, {
+            method: 'DELETE'
+        });
+
+        if (res.ok) {
+            alert("🗑️ Movimiento eliminado");
+            cargarGastos(); // Esto actualiza la lista automáticamente
+        } else {
+            alert("❌ No se pudo borrar");
+        }
+    } catch (error) {
+        alert("❌ Error de conexión: " + error.message);
+    }
+}
+        
 
 // Esto arranca la app nada más abrirla
 cargarGastos();
