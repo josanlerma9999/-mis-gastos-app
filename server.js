@@ -45,6 +45,16 @@ app.get('/', (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
+// Ruta para BORRAR un gasto por su ID
+app.delete('/api/gastos/:id', async (req, res) => {
+    try {
+        await Gasto.findByIdAndDelete(req.params.id);
+        res.json({ mensaje: "Gasto eliminado correctamente" });
+    } catch (error) {
+        res.status(500).json({ error: "Error al borrar" });
+    }
+});
+
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Servidor en puerto ${PORT}`);
 });
