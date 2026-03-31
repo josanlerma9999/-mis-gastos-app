@@ -90,94 +90,92 @@
         </button>
     </div>
 
-    <script>
-        const API_URL ='https://mis-gastos-app.onrender.com/api/gastos';
+        <script>
+        const API_URL = 'https://mis-gastos-app.onrender.com/api/gastos'; 
 
-        // Configuración inicial
+        // Configuración inicial: Poner mes actual
         document.getElementById('mesFiltro').value = new Date().toISOString().slice(0, 7);
         document.getElementById('fecha').valueAsDate = new Date();
 
+        // Función para cambiar entre las 3 pestañas
         function cambiarTab(id, el) {
-            // Ocultar todas las secciones
             document.querySelectorAll('.seccion-tab').forEach(s => s.classList.add('hidden'));
-            // Quitar clase activa de botones
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active-tab', 'text-indigo-600'));
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.add('text-slate-400'));
 
-            // Mostrar la elegida
             document.getElementById(id).classList.remove('hidden');
             el.classList.add('active-tab');
             el.classList.remove('text-slate-400');
             
-            // Cambiar título cabecera
             const titulos = {'vista-total': 'Mi Cuenta Real', 'vista-mes': 'Gastos del Mes', 'vista-add': 'Nuevo Movimiento'};
             document.getElementById('tituloFiltro').innerText = titulos[id];
         }
 
         async function cargarDatos() {
-            const res = await fetch(API_URL);
-            const todos = await res.json();
-            const mesActual = document.getElementById('mesFiltro').value;
+            try {
+                const res = await fetch(API_URL);
+                const todos = await res.json();
+                const mesActual = document.getElementById('mesFiltro').value;
 
-            let balanceReal = 0;
-            let ingresosMes = 0;
-            let gastosMes = 0;
-            const lista = document.getElementById('listaGastos');
-            lista.innerHTML = '';
+                let balanceReal = 0;
+                let ingresosMes = 0;
+                let gastosMes = 0;
+                const lista = document.getElementById('listaGastos');
+                lista.innerHTML = '';
 
-            todos.forEach(g => {
-                const monto = parseFloat(g.importe);
-                const esIngreso = g.categoria === 'Sueldo' || g.categoria === 'Otros Ingresos';
-                
-                // 1. Cálculo para la pestaña "Cuenta Real" (Todo el tiempo)
-                if (esIngreso) balanceReal += monto;
-                else balanceReal -= monto;
+                todos.forEach(g => {
+                    const monto = parseFloat(g.importe);
+                    const esIngreso = g.categoria === 'Sueldo' || g.categoria === 'Otros Ingresos';
+                    
+                    if (esIngreso) balanceReal += monto;
+                    else balanceReal -= monto;
 
-                // 2. Filtro para la pestaña "Mes"
-                if (g.fecha && g.fecha.startsWith(mesActual)) {
-                    if (esIngreso) ingresosMes += monto;
-                    else gastosMes += monto;
+                    if (g.fecha && g.fecha.startsWith(mesActual)) {
+                        if (esIngreso) ingresosMes += monto;
+                        else gastosMes += monto;
 
-                    const color = esIngreso ? 'text-green-600' : 'text-red-600';
-                    const simbolo = esIngreso ? '+' : '-';
+                        const color = esIngreso ? 'text-green-600' : 'text-red-600';
+                        const simbolo = esIngreso ? '+' : '-';
 
-                    lista.innerHTML += `
-                        <li class="bg-white p-4 rounded-2xl border border-slate-100 flex justify-between items-center shadow-sm">
-                            <div class="flex items-center gap-3">
-                                <button onclick="eliminarGasto('${g._id}')" class="text-xl">🗑️</button>
-                                <div>
-                                    <p class="font-bold text-slate-800 text-sm">${g.concepto}</p>
-                                    <p class="text-[10px] text-slate-400 font-bold uppercase">${g.categoria}</p>
+                        lista.innerHTML += `
+                            <li class="bg-white p-4 rounded-2xl border border-slate-100 flex justify-between items-center shadow-sm">
+                                <div class="flex items-center gap-3">
+                                    <button onclick="eliminarGasto('${g._id}')" class="text-xl">🗑️</button>
+                                    <div>
+                                        <p class="font-bold text-slate-800 text-sm">${g.concepto}</p>
+                                        <p class="text-[10px] text-slate-400 font-bold uppercase">${g.categoria}</p>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="text-right">
-                                <p class="${color} font-black">${simbolo}${monto.toFixed(2)}€</p>
-                                <p class="text-[9px] text-slate-300">${g.fecha}</p>
-                            </div>
-                        </li>`;
+                                <div class="text-right">
+                                    <p class="${color} font-black">${simbolo}${monto.toFixed(2)}€</p>
+                                    <p class="text-[9px] text-slate-300">${g.fecha}</p>
+                                </div>
+                            </li>`;
+                    }
+                });
+
+                // --- LÓGICA DE ALERTAS DE SALDO ---
+                const totalElem = document.getElementById('totalRealCuenta');
+                totalElem.innerText = balanceReal.toFixed(2) + '€';
+                const tarjetaCuenta = totalElem.parentElement; 
+
+                if (balanceReal < 0) {
+                    tarjetaCuenta.className = 'bg-red-600 text-white p-8 rounded-3xl shadow-xl mb-6 text-center animate-pulse';
+                } else if (balanceReal < 100) {
+                    tarjetaCuenta.className = 'bg-orange-500 text-white p-8 rounded-3xl shadow-xl mb-6 text-center';
+                } else {
+                    tarjetaCuenta.className = 'bg-indigo-600 text-white p-8 rounded-3xl shadow-xl mb-6 text-center';
                 }
-            });
 
-            // Actualizar pantallas
- const totalElem = document.getElementById('totalRealCuenta');
-totalElem.innerText = balanceReal.toFixed(2) + '€';
+                document.getElementById('ingresosMes').innerText = ingresosMes.toFixed(2) + '€';
+                document.getElementById('gastosMes').innerText = gastosMes.toFixed(2) + '€';
 
-// Lógica de alerta de los 100€
-const tarjetaCuenta = totalElem.parentElement; 
-
-if (balanceReal < 0) {
-    tarjetaCuenta.className = 'bg-red-600 text-white p-8 rounded-3xl shadow-xl mb-6 text-center animate-pulse';
-} else if (balanceReal < 100) {
-    tarjetaCuenta.className = 'bg-orange-500 text-white p-8 rounded-3xl shadow-xl mb-6 text-center';
-} else {
-    tarjetaCuenta.className = 'bg-indigo-600 text-white p-8 rounded-3xl shadow-xl mb-6 text-center';
-}
-
-            document.getElementById('ingresosMes').innerText = ingresosMes.toFixed(2) + '€';
-            document.getElementById('gastosMes').innerText = gastosMes.toFixed(2) + '€';
+            } catch (error) {
+                console.error("Error cargando datos:", error);
+            }
         }
 
-        // Formulario y Eliminar (Igual que antes)
+        // Manejar el envío del formulario
         document.getElementById('gastoForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const nuevo = {
@@ -193,18 +191,22 @@ if (balanceReal < 0) {
             });
             e.target.reset();
             document.getElementById('fecha').valueAsDate = new Date();
-            cargarDatos();
-            cambiarTab('vista-mes', document.querySelectorAll('.tab-btn')[1]); // Ir a pestaña mes
+            await cargarDatos();
+            // Al guardar, te lleva automáticamente a la pestaña del Mes
+            cambiarTab('vista-mes', document.querySelectorAll('.tab-btn')[1]);
         });
 
         async function eliminarGasto(id) {
             if (confirm("¿Borrar este movimiento?")) {
                 await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
-                cargarDatos();
+                await cargarDatos();
             }
         }
 
+        // Cargar todo al abrir la app
         cargarDatos();
     </script>
 </body>
 </html>
+
+        
