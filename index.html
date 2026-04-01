@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestor Financiero v6.8</title>
+    <title>Gestor Financiero v6.9</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -17,8 +17,8 @@
 <body class="bg-slate-50 font-sans pb-24 text-slate-900">
 
     <nav class="bg-slate-900 text-white p-4 shadow-md sticky top-0 z-50 flex justify-between items-center">
-        <h1 id="tituloFiltro" class="text-lg font-black tracking-tighter">Mi Cuenta Real</h1>
-        <span class="bg-emerald-500 px-2 py-1 rounded text-[10px] font-black uppercase tracking-tighter">v6.8 🎨</span>
+        <h1 class="text-lg font-black tracking-tighter italic">Mi Cuenta Real</h1>
+        <span class="bg-emerald-500 px-2 py-1 rounded text-[10px] font-black uppercase tracking-tighter">v6.9 💎</span>
     </nav>
 
     <main class="max-w-md mx-auto p-4">
@@ -41,25 +41,22 @@
             </div>
 
             <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 mb-6">
-                <h3 class="text-[10px] font-black uppercase text-slate-400 mb-4 text-center tracking-widest">Distribución de Gastos</h3>
-                <div class="relative h-48 mb-6">
-                    <canvas id="graficoGastos"></canvas>
-                </div>
+                <div class="relative h-48 mb-6"><canvas id="graficoGastos"></canvas></div>
                 <div id="leyendaPersonalizada" class="grid grid-cols-2 gap-2 mt-4"></div>
-                <div id="mensajeSinDatos" class="hidden text-center py-10 text-slate-400 text-xs italic font-black">Sin gastos este mes.</div>
+                <div id="mensajeSinDatos" class="hidden text-center py-10 text-slate-400 text-xs italic font-black">Sin datos.</div>
             </div>
         </section>
 
         <section id="vista-prevision" class="seccion-tab hidden">
-            <div class="bg-indigo-50 p-4 rounded-2xl mb-4 border border-indigo-100 text-center">
-                <p class="text-[10px] font-black text-indigo-600 uppercase italic">🗓️ Movimientos Programados</p>
+            <div class="bg-indigo-50 p-4 rounded-2xl mb-4 border border-indigo-100 text-center text-indigo-600 font-black text-[10px] uppercase italic">
+                🗓️ Movimientos Programados
             </div>
             <ul id="listaPrevision" class="space-y-3 pt-2"></ul>
         </section>
 
         <section id="vista-mes" class="seccion-tab hidden">
             <div class="bg-white p-4 rounded-2xl shadow-sm mb-4 border border-slate-100 text-center">
-                <input type="month" id="mesFiltro" class="font-black outline-none border-none bg-transparent text-slate-700" onchange="cargarDatos()">
+                <input type="month" id="mesFiltro" class="font-black outline-none border-none bg-transparent" onchange="cargarDatos()">
             </div>
             <div class="grid grid-cols-2 gap-3 mb-6 font-black uppercase text-[10px]">
                 <div class="bg-emerald-50 p-4 rounded-2xl text-center text-emerald-700 border border-emerald-100">
@@ -76,7 +73,8 @@
             <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
                 <h2 id="tituloForm" class="text-center font-black uppercase text-[10px] mb-4 text-slate-400 tracking-widest">Añadir Movimiento</h2>
                 <form id="gastoForm" class="space-y-4">
-                    <input type="hidden" id="edit_id">
+                    <input type="hidden" id="edit_id" value="">
+                    
                     <input type="text" id="concepto" placeholder="Concepto" class="w-full p-4 bg-slate-50 rounded-xl outline-none font-bold" required>
                     <input type="number" id="importe" step="0.01" placeholder="0.00 €" class="w-full p-4 bg-slate-50 rounded-xl outline-none font-black text-2xl" required>
                     <select id="categoria" class="w-full p-4 bg-slate-50 rounded-xl outline-none font-bold">
@@ -92,7 +90,7 @@
                         <option value="Gasolina">⛽ Gasolina</option>
                     </select>
                     <input type="date" id="fecha" class="w-full p-4 bg-slate-50 rounded-xl outline-none font-bold" required>
-                    <button type="submit" id="btnGuardar" class="w-full bg-slate-900 text-white font-black p-5 rounded-2xl shadow-xl">GUARDAR</button>
+                    <button type="submit" id="btnGuardar" class="w-full bg-slate-900 text-white font-black p-5 rounded-2xl shadow-xl transition-all">GUARDAR</button>
                     <button type="button" id="btnCancelarEdicion" onclick="cancelarEdicion()" class="hidden w-full text-rose-500 font-black p-2 text-[10px] uppercase">Cancelar Edición</button>
                 </form>
             </div>
@@ -128,7 +126,7 @@
             document.querySelectorAll('.tab-btn').forEach(b => { b.classList.remove('active-tab'); b.classList.add('text-slate-400'); });
             document.getElementById(id).classList.remove('hidden');
             el.classList.add('active-tab'); el.classList.remove('text-slate-400');
-            cargarDatos();
+            if (id !== 'vista-add') cargarDatos();
         }
 
         async function cargarDatos() {
@@ -144,8 +142,7 @@
 
                 gastosCache.sort((a,b) => new Date(a.fecha) - new Date(b.fecha)).forEach(g => {
                     const monto = parseFloat(g.importe), esIn = ["Sueldo", "Otros Ingresos"].includes(g.categoria);
-                    const btnEdit = `<button onclick="prepararEdicion('${g._id}')" class="text-blue-400 p-1">✏️</button>`;
-                    const btnDel = `<button onclick="eliminarGasto('${g._id}')" class="text-slate-300 p-1">🗑️</button>`;
+                    const controles = `<div class="flex gap-2"><button onclick="prepararEdicion('${g._id}')" class="text-blue-500">✏️</button><button onclick="eliminarGasto('${g._id}')" class="text-slate-300">🗑️</button></div>`;
 
                     if (g.fecha <= hoyStr) {
                         if (esIn) balAct += monto; else balAct -= monto;
@@ -153,18 +150,15 @@
                         if (esIn) balPrev += monto; else balPrev -= monto;
                         listaP.innerHTML += `<li class="bg-white p-4 rounded-2xl border-l-4 border-amber-400 shadow-sm flex justify-between items-center mb-2 animate-fade">
                             <div><p class="font-black text-sm text-slate-800">${g.concepto}</p><p class="text-[9px] text-amber-600 font-black uppercase">${g.fecha}</p></div>
-                            <div class="flex items-center gap-2 font-black"><p class="${esIn?'text-emerald-500':'text-rose-500'}">${monto.toFixed(2)}€</p>${btnEdit}${btnDel}</div>
+                            <div class="flex items-center gap-3 font-black"><p class="${esIn?'text-emerald-500':'text-rose-500'}">${monto.toFixed(2)}€</p>${controles}</div>
                         </li>`;
                     }
 
                     if (g.fecha.startsWith(mesSel)) {
-                        if (esIn) inMes += monto; else { 
-                            gasMes += monto; 
-                            resCats[g.categoria] = (resCats[g.categoria] || 0) + monto; 
-                        }
+                        if (esIn) inMes += monto; else { gasMes += monto; resCats[g.categoria] = (resCats[g.categoria] || 0) + monto; }
                         listaM.innerHTML += `<li class="bg-white p-3 rounded-xl border border-slate-100 flex justify-between items-center animate-fade">
                             <div><p class="font-bold text-xs text-slate-700 font-black">${g.concepto}</p><p class="text-[8px] text-slate-400 font-black uppercase">${g.categoria}</p></div>
-                            <div class="flex items-center gap-2 font-black"><p class="text-xs ${esIn?'text-emerald-500':'text-rose-500'}">${monto.toFixed(2)}€</p>${btnEdit}${btnDel}</div>
+                            <div class="flex items-center gap-3 font-black"><p class="text-xs ${esIn?'text-emerald-500':'text-rose-500'}">${monto.toFixed(2)}€</p>${controles}</div>
                         </li>`;
                     }
                 });
@@ -175,36 +169,26 @@
                 document.getElementById('ingresosMes').innerText = inMes.toFixed(2) + '€';
                 document.getElementById('gastosMes').innerText = gasMes.toFixed(2) + '€';
                 
-                // ACTUALIZAR GRÁFICO Y LEYENDA
+                // Grafico
                 const ctx = document.getElementById('graficoGastos').getContext('2d');
+                if (miGrafico) miGrafico.destroy();
+                const catsArray = Object.keys(resCats);
                 const divLeyenda = document.getElementById('leyendaPersonalizada');
                 divLeyenda.innerHTML = '';
-                
-                if (miGrafico) miGrafico.destroy();
-                
-                const catsArray = Object.keys(resCats);
+
                 if (catsArray.length > 0) {
                     document.getElementById('mensajeSinDatos').classList.add('hidden');
                     miGrafico = new Chart(ctx, {
                         type: 'doughnut',
-                        data: {
-                            labels: catsArray,
-                            datasets: [{ data: Object.values(resCats), backgroundColor: COLORES, borderWidth: 0 }]
-                        },
-                        options: { plugins: { legend: { display: false } }, maintainAspectRatio: false, cutout: '70%' }
+                        data: { labels: catsArray, datasets: [{ data: Object.values(resCats), backgroundColor: COLORES, borderWidth: 0 }] },
+                        options: { plugins: { legend: { display: false } }, maintainAspectRatio: false, cutout: '75%' }
                     });
-
-                    // Crear Leyenda Visual
-                    catsArray.forEach((cat, index) => {
-                        const porcentaje = ((resCats[cat] / gasMes) * 100).toFixed(0);
-                        divLeyenda.innerHTML += `
-                            <div class="flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-100 animate-fade">
-                                <div class="w-2 h-2 rounded-full" style="background:${COLORES[index]}"></div>
-                                <div class="flex flex-col">
-                                    <span class="text-[8px] font-black uppercase text-slate-400 leading-none">${cat}</span>
-                                    <span class="text-[10px] font-black text-slate-700">${resCats[cat].toFixed(1)}€ (${porcentaje}%)</span>
-                                </div>
-                            </div>`;
+                    catsArray.forEach((cat, i) => {
+                        const porc = ((resCats[cat] / gasMes) * 100).toFixed(0);
+                        divLeyenda.innerHTML += `<div class="flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-100">
+                            <div class="w-2 h-2 rounded-full" style="background:${COLORES[i]}"></div>
+                            <div class="flex flex-col"><span class="text-[8px] font-black uppercase text-slate-400 leading-none">${cat}</span><span class="text-[10px] font-black text-slate-700">${resCats[cat].toFixed(1)}€ (${porc}%)</span></div>
+                        </div>`;
                     });
                 } else { document.getElementById('mensajeSinDatos').classList.remove('hidden'); }
             } catch (e) { console.error(e); }
@@ -213,46 +197,78 @@
         function prepararEdicion(id) {
             const g = gastosCache.find(i => i._id === id);
             if (!g) return;
+            
+            // Llenamos el formulario
             document.getElementById('edit_id').value = g._id;
             document.getElementById('concepto').value = g.concepto;
             document.getElementById('importe').value = g.importe;
             document.getElementById('categoria').value = g.categoria;
             document.getElementById('fecha').value = g.fecha;
-            document.getElementById('btnGuardar').innerText = "ACTUALIZAR";
+            
+            // Cambiamos aspecto visual
+            document.getElementById('btnGuardar').innerText = "ACTUALIZAR GASTO";
             document.getElementById('btnGuardar').className = "w-full bg-orange-500 text-white font-black p-5 rounded-2xl shadow-xl";
             document.getElementById('btnCancelarEdicion').classList.remove('hidden');
+            document.getElementById('tituloForm').innerText = "Modo Edición";
+            
             cambiarTab('vista-add', document.querySelectorAll('.tab-btn')[3]);
         }
 
         function cancelarEdicion() {
-            document.getElementById('gastoForm').reset();
             document.getElementById('edit_id').value = "";
+            document.getElementById('gastoForm').reset();
             document.getElementById('btnGuardar').innerText = "GUARDAR";
             document.getElementById('btnGuardar').className = "w-full bg-slate-900 text-white font-black p-5 rounded-2xl shadow-xl";
             document.getElementById('btnCancelarEdicion').classList.add('hidden');
+            document.getElementById('tituloForm').innerText = "Añadir Movimiento";
             document.getElementById('fecha').valueAsDate = new Date();
         }
 
         document.getElementById('gastoForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const id = document.getElementById('edit_id').value;
+            const idParaEditar = document.getElementById('edit_id').value;
+            
             const data = { 
                 concepto: document.getElementById('concepto').value, 
                 importe: document.getElementById('importe').value, 
                 categoria: document.getElementById('categoria').value, 
                 fecha: document.getElementById('fecha').value 
             };
-            await fetch(id ? `${API_URL}/${id}` : API_URL, { 
-                method: id ? 'PUT' : 'POST', 
-                headers: { 'Content-Type': 'application/json' }, 
-                body: JSON.stringify(data) 
-            });
-            cancelarEdicion();
-            await cargarDatos();
-            cambiarTab('vista-total', document.querySelectorAll('.tab-btn')[0]);
+
+            try {
+                let response;
+                if (idParaEditar) {
+                    // MODO EDITAR (PUT)
+                    response = await fetch(`${API_URL}/${idParaEditar}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                } else {
+                    // MODO CREAR (POST)
+                    response = await fetch(API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                }
+
+                if (response.ok) {
+                    cancelarEdicion();
+                    await cargarDatos();
+                    cambiarTab('vista-total', document.querySelectorAll('.tab-btn')[0]);
+                } else {
+                    alert("Error al guardar en el servidor");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Error de conexión");
+            }
         });
 
         async function eliminarGasto(id) { if (confirm("¿Eliminar?")) { await fetch(`${API_URL}/${id}`, { method: 'DELETE' }); await cargarDatos(); } }
+        
+        // Carga inicial
         cargarDatos();
     </script>
 </body>
