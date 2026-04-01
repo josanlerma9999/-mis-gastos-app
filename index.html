@@ -2,58 +2,64 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi Gestor Financiero Pro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mi Gestor Financiero</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .active-tab { color: #4f46e5; border-top: 3px solid #4f46e5; }
-        .hidden { display: none; }
+        .hidden { display: none !important; }
+        .tab-active { color: #4f46e5 !important; border-top: 3px solid #4f46e5; background: #f8fafc; }
+        .tab-btn { cursor: pointer; -webkit-tap-highlight-color: transparent; }
     </style>
 </head>
 <body class="bg-slate-50 font-sans pb-24 text-slate-900">
 
     <nav class="bg-indigo-600 text-white p-4 shadow-md sticky top-0 z-50 flex justify-between items-center">
         <h1 id="tituloFiltro" class="text-lg font-bold">Mi Cuenta Real</h1>
-        <span class="text-xs opacity-80">v5.1 ⚡</span>
+        <span class="text-xs opacity-70 font-black tracking-tighter">v5.3 🛠️</span>
     </nav>
 
     <main class="max-w-md mx-auto p-4">
-        <section id="vista-total" class="seccion-tab">
-            <div id="tarjetaBalance" class="bg-indigo-600 text-white p-8 rounded-3xl shadow-xl mb-6 text-center transition-all duration-500">
-                <p class="text-[10px] uppercase tracking-widest opacity-80 mb-2 font-bold">Saldo Real Actual</p>
+        
+        <div id="vista-total" class="seccion-tab">
+            <div id="tarjetaBalance" class="bg-indigo-600 text-white p-8 rounded-3xl shadow-xl mb-6 text-center">
+                <p class="text-[10px] uppercase tracking-widest opacity-80 mb-2 font-bold">Saldo Actual</p>
                 <p id="totalRealCuenta" class="text-5xl font-black">0.00€</p>
             </div>
             <div id="avisoPendiente" class="bg-amber-50 p-4 rounded-2xl border border-amber-100 text-center hidden">
-                <p class="text-amber-700 text-[10px] font-bold uppercase">⚠️ Hay movimientos programados en espera</p>
+                <p class="text-amber-700 text-[10px] font-bold uppercase">⚠️ Hay movimientos programados</p>
             </div>
-        </section>
+        </div>
 
-        <section id="vista-pendiente" class="seccion-tab hidden">
-            <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 ml-2 text-center text-indigo-500">Próximos días</h3>
+        <div id="vista-pendiente" class="seccion-tab hidden">
+            <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 text-center">Próximos movimientos</h3>
             <ul id="listaPendientes" class="space-y-3"></ul>
-            <div id="sinPendientes" class="text-center py-10 text-slate-400 text-sm italic hidden">No hay nada programado.</div>
-        </section>
+            <div id="sinPendientes" class="text-center py-10 text-slate-400 text-sm italic">No hay nada programado.</div>
+        </div>
 
-        <section id="vista-mes" class="seccion-tab hidden">
+        <div id="vista-mes" class="seccion-tab hidden">
             <div class="bg-white p-4 rounded-2xl shadow-sm mb-4 border border-slate-100">
                 <input type="month" id="mesFiltro" class="w-full p-2 bg-slate-50 rounded-xl font-bold text-center" onchange="cargarDatos()">
             </div>
-            <div id="desgloseCategorias" class="grid grid-cols-1 gap-2 mb-6 text-xs font-bold text-slate-500 uppercase"></div>
+            <div id="desgloseCategorias" class="grid grid-cols-1 gap-2 mb-6 text-[10px] font-bold text-slate-500 uppercase"></div>
             <div class="grid grid-cols-2 gap-3 mb-6 text-center">
-                <div class="bg-green-50 p-4 rounded-2xl border border-green-100"><p class="text-[9px] text-green-600 uppercase font-bold">Entradas</p><p id="ingresosMes" class="text-lg font-black text-green-700">0.00€</p></div>
-                <div class="bg-red-50 p-4 rounded-2xl border border-red-100"><p class="text-[9px] text-red-600 uppercase font-bold">Gastos</p><p id="gastosMes" class="text-lg font-black text-red-700">0.00€</p></div>
+                <div class="bg-green-50 p-4 rounded-2xl border border-green-100">
+                    <p class="text-[9px] text-green-600 uppercase font-bold">Entradas</p>
+                    <p id="ingresosMes" class="text-lg font-black text-green-700">0.00€</p>
+                </div>
+                <div class="bg-red-50 p-4 rounded-2xl border border-red-100">
+                    <p class="text-[9px] text-red-600 uppercase font-bold">Gastos</p>
+                    <p id="gastosMes" class="text-lg font-black text-red-700">0.00€</p>
+                </div>
             </div>
             <ul id="listaGastos" class="space-y-3"></ul>
-        </section>
+        </div>
 
-        <section id="vista-add" class="seccion-tab hidden">
+        <div id="vista-add" class="seccion-tab hidden">
             <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
-                <h2 class="text-xl font-bold text-slate-800 mb-6 text-center">Nuevo Registro</h2>
                 <form id="gastoForm" class="space-y-4">
-                    <input type="text" id="concepto" placeholder="¿Qué es?" class="w-full p-4 bg-slate-50 rounded-xl outline-none" required>
-                    <input type="number" id="importe" step="0.01" placeholder="Importe (€)" class="w-full p-4 bg-slate-50 rounded-xl outline-none" required>
-                    
-                    <select id="categoria" class="w-full p-4 bg-slate-50 rounded-xl outline-none font-medium text-slate-600 border border-slate-200">
+                    <input type="text" id="concepto" placeholder="¿Qué es?" class="w-full p-4 bg-slate-50 rounded-xl border border-slate-100" required>
+                    <input type="number" id="importe" step="0.01" placeholder="Importe (€)" class="w-full p-4 bg-slate-50 rounded-xl border border-slate-100" required>
+                    <select id="categoria" class="w-full p-4 bg-slate-50 rounded-xl font-bold text-slate-600 border border-slate-200">
                         <option value="Sueldo">💰 Sueldo / Saldo Inicial</option>
                         <option value="Otros ingresos">💵 Otros ingresos</option>
                         <option value="BBVA">🏦 Cuenta BBVA</option>
@@ -65,35 +71,142 @@
                         <option value="Amazon">📦 Amazon</option>
                         <option value="Gasolina">⛽ Gasolina</option>
                     </select>
-
                     <div class="flex gap-2">
-                        <label class="flex-1">
-                            <input type="radio" name="estado" value="pagado" checked class="hidden peer">
-                            <div class="p-3 text-center rounded-xl bg-slate-50 text-slate-400 font-bold text-[10px] peer-checked:bg-indigo-600 peer-checked:text-white cursor-pointer transition-all">YA PAGADO</div>
-                        </label>
-                        <label class="flex-1">
-                            <input type="radio" name="estado" value="pendiente" class="hidden peer">
-                            <div class="p-3 text-center rounded-xl bg-slate-50 text-slate-400 font-bold text-[10px] peer-checked:bg-amber-500 peer-checked:text-white cursor-pointer transition-all">PROGRAMAR</div>
-                        </label>
+                        <label class="flex-1"><input type="radio" name="estado" value="pagado" checked class="hidden peer"><div class="p-3 text-center rounded-xl bg-slate-100 text-slate-400 font-bold text-[10px] peer-checked:bg-indigo-600 peer-checked:text-white cursor-pointer">PAGADO</div></label>
+                        <label class="flex-1"><input type="radio" name="estado" value="pendiente" class="hidden peer"><div class="p-3 text-center rounded-xl bg-slate-100 text-slate-400 font-bold text-[10px] peer-checked:bg-amber-500 peer-checked:text-white cursor-pointer">PENDIENTE</div></label>
                     </div>
-                    
-                    <input type="date" id="fecha" class="w-full p-4 bg-slate-50 rounded-xl outline-none" required>
-                    <button type="submit" class="w-full bg-indigo-600 text-white font-bold p-5 rounded-2xl shadow-lg">Guardar</button>
+                    <input type="date" id="fecha" class="w-full p-4 bg-slate-50 rounded-xl border border-slate-100" required>
+                    <button type="submit" class="w-full bg-indigo-600 text-white font-black p-5 rounded-2xl shadow-lg">GUARDAR</button>
                 </form>
-
-                <button onclick="resetearTodo()" class="w-full mt-12 text-red-300 text-[10px] font-bold uppercase tracking-widest border border-red-50 p-3 rounded-xl hover:bg-red-50 transition-all">
-                    ⚠️ Limpiar todo el historial
-                </button>
+                <button onclick="resetearTodo()" class="w-full mt-10 text-red-300 text-[9px] font-bold uppercase border border-red-50 p-2 rounded-xl">⚠️ Borrar todo</button>
             </div>
-        </section>
+        </div>
     </main>
 
-    <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around p-2 pb-6 shadow-lg z-50">
-        <button onclick="cambiarTab('vista-total', this)" class="tab-btn flex flex-col items-center p-2 active-tab"><span class="text-xl">💰</span><span class="text-[9px] font-bold uppercase">Cuenta</span></button>
-        <button onclick="cambiarTab('vista-pendiente', this)" class="tab-btn flex flex-col items-center p-2 text-slate-400"><span class="text-xl">📅</span><span class="text-[9px] font-bold uppercase">Previsión</span></button>
-        <button onclick="cambiarTab('vista-mes', this)" class="tab-btn flex flex-col items-center p-2 text-slate-400"><span class="text-xl">📊</span><span class="text-[9px] font-bold uppercase">Mes</span></button>
-        <button onclick="cambiarTab('vista-add', this)" class="tab-btn flex flex-col items-center p-2 text-slate-400"><span class="text-xl">➕</span><span class="text-[9px] font-bold uppercase">Añadir</span></button>
-    </div>
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around p-2 pb-6 shadow-2xl z-50">
+        <button onclick="ir('vista-total', this)" class="tab-btn flex flex-col items-center p-2 tab-active w-full">
+            <span class="text-xl">💰</span><span class="text-[9px] font-bold uppercase">Cuenta</span>
+        </button>
+        <button onclick="ir('vista-pendiente', this)" class="tab-btn flex flex-col items-center p-2 text-slate-400 w-full">
+            <span class="text-xl">📅</span><span class="text-[9px] font-bold uppercase">Previsión</span>
+        </button>
+        <button onclick="ir('vista-mes', this)" class="tab-btn flex flex-col items-center p-2 text-slate-400 w-full">
+            <span class="text-xl">📊</span><span class="text-[9px] font-bold uppercase">Mes</span>
+        </button>
+        <button onclick="ir('vista-add', this)" class="tab-btn flex flex-col items-center p-2 text-slate-400 w-full">
+            <span class="text-xl">➕</span><span class="text-[9px] font-bold uppercase">Añadir</span>
+        </button>
+    </nav>
 
     <script>
-        const API_URL = '
+        const API_URL = 'https://mis-gastos-app.onrender.com/api/gastos';
+
+        // 1. NAVEGACIÓN SIMPLE
+        function ir(id, el) {
+            // Ocultar todo
+            document.querySelectorAll('.seccion-tab').forEach(s => s.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(b => {
+                b.classList.remove('tab-active');
+                b.classList.add('text-slate-400');
+            });
+            // Mostrar destino
+            document.getElementById(id).classList.remove('hidden');
+            el.classList.add('tab-active');
+            el.classList.remove('text-slate-400');
+            
+            const titulos = {'vista-total': 'Saldo Real', 'vista-pendiente': 'Previsiones', 'vista-mes': 'Resumen Mes', 'vista-add': 'Nuevo Registro'};
+            document.getElementById('tituloFiltro').innerText = titulos[id];
+        }
+
+        // 2. CARGAR DATOS
+        async function cargarDatos() {
+            try {
+                const res = await fetch(API_URL);
+                const todos = await res.json();
+                const hoy = new Date().toISOString().split('T')[0];
+                const mesActual = document.getElementById('mesFiltro').value;
+                
+                let balanceReal = 0, ingresosMes = 0, gastosMes = 0, resumenCats = {};
+                const lista = document.getElementById('listaGastos');
+                const listaP = document.getElementById('listaPendientes');
+                
+                lista.innerHTML = ''; 
+                listaP.innerHTML = '';
+                let hayP = false;
+
+                for (let g of todos) {
+                    const monto = parseFloat(g.importe);
+                    const esI = g.categoria === 'Sueldo' || g.categoria === 'Otros ingresos';
+                    
+                    // Auto-cobro
+                    if (g.estado === 'pendiente' && g.fecha <= hoy) {
+                        await fetch(`${API_URL}/${g._id}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ estado: 'pagado' })
+                        });
+                        g.estado = 'pagado';
+                    }
+
+                    if (g.estado === 'pagado') {
+                        if (esI) balanceReal += monto; else balanceReal -= monto;
+                        if (g.fecha && g.fecha.startsWith(mesActual)) {
+                            if (esI) ingresosMes += monto;
+                            else {
+                                gastosMes += monto;
+                                resumenCats[g.categoria] = (resumenCats[g.categoria] || 0) + monto;
+                            }
+                            lista.innerHTML += `<li class="bg-white p-4 rounded-2xl border border-slate-100 flex justify-between items-center shadow-sm text-sm">
+                                <div class="flex items-center gap-3"><button onclick="eliminar('${g._id}')">🗑️</button><div><p class="font-bold">${g.concepto}</p><p class="text-[9px] text-slate-400 uppercase">${g.categoria}</p></div></div>
+                                <p class="font-black ${esI ? 'text-green-600':'text-red-600'}">${esI?'+':'-'}${monto.toFixed(2)}€</p></li>`;
+                        }
+                    } else {
+                        hayP = true;
+                        listaP.innerHTML += `<li class="bg-amber-50 p-4 rounded-2xl border border-amber-100 flex justify-between items-center shadow-sm text-sm">
+                            <div><p class="font-bold text-amber-900">${g.concepto}</p><p class="text-[9px] text-amber-600 uppercase font-bold">${g.categoria} - ${g.fecha}</p></div>
+                            <div class="text-right"><p class="font-black ${esI ? 'text-green-600':'text-red-600'}">${monto.toFixed(2)}€</p><button onclick="eliminar('${g._id}')" class="text-[9px] text-red-400 font-bold uppercase mt-1">Anular</button></div></li>`;
+                    }
+                }
+
+                document.getElementById('totalRealCuenta').innerText = balanceReal.toFixed(2) + '€';
+                document.getElementById('avisoPendiente').classList.toggle('hidden', !hayP);
+                document.getElementById('sinPendientes').classList.toggle('hidden', listaP.innerHTML !== '');
+                
+                const divCats = document.getElementById('desgloseCategorias');
+                divCats.innerHTML = '';
+                for (let cat in resumenCats) {
+                    divCats.innerHTML += `<div class="bg-white px-3 py-1 rounded-lg border border-slate-100 flex justify-between mb-1 shadow-sm"><span>${cat}</span><span>${resumenCats[cat].toFixed(2)}€</span></div>`;
+                }
+                document.getElementById('ingresosMes').innerText = ingresosMes.toFixed(2) + '€';
+                document.getElementById('gastosMes').innerText = gastosMes.toFixed(2) + '€';
+            } catch (e) { console.error("Error cargando datos:", e); }
+        }
+
+        // 3. GUARDAR
+        document.getElementById('gastoForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const nuevo = {
+                concepto: document.getElementById('concepto').value,
+                importe: document.getElementById('importe').value,
+                categoria: document.getElementById('categoria').value,
+                fecha: document.getElementById('fecha').value,
+                estado: document.querySelector('input[name="estado"]:checked').value
+            };
+            await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(nuevo) });
+            e.target.reset();
+            document.getElementById('fecha').valueAsDate = new Date();
+            await cargarDatos();
+            ir('vista-total', document.querySelector('.tab-btn'));
+        };
+
+        // 4. ACCIONES
+        async function eliminar(id) { if (confirm("¿Borrar?")) { await fetch(`${API_URL}/${id}`, { method: 'DELETE' }); await cargarDatos(); } }
+        async function resetearTodo() { if (confirm("¿Borrar todo el historial?")) { const res = await fetch(API_URL); const todos = await res.json(); for (let g of todos) { await fetch(`${API_URL}/${g._id}`, { method: 'DELETE' }); } location.reload(); } }
+
+        // INICIO
+        document.getElementById('mesFiltro').value = new Date().toISOString().slice(0, 7);
+        document.getElementById('fecha').valueAsDate = new Date();
+        cargarDatos();
+    </script>
+</body>
+</html>
