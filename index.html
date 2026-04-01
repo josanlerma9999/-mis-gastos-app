@@ -14,7 +14,7 @@
 
     <nav class="bg-indigo-600 text-white p-4 shadow-md sticky top-0 z-50 flex justify-between items-center">
         <h1 id="tituloFiltro" class="text-lg font-bold">Mi Cuenta Real</h1>
-        <span class="text-xs opacity-80">v3.5 🏦</span>
+        <span class="text-xs opacity-80">v3.1 ✨</span>
     </nav>
 
     <main class="max-w-md mx-auto p-4">
@@ -23,52 +23,71 @@
                 <p class="text-[10px] uppercase tracking-widest opacity-80 mb-2 font-bold">Dinero Real Disponible</p>
                 <p id="totalRealCuenta" class="text-5xl font-black">0.00€</p>
             </div>
+            <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm text-center">
+                <p class="text-slate-500 text-xs italic">Estado global de tu bolsillo.</p>
+            </div>
         </section>
 
         <section id="vista-mes" class="seccion-tab hidden">
             <div class="bg-white p-4 rounded-2xl shadow-sm mb-4 border border-slate-100">
                 <input type="month" id="mesFiltro" class="w-full p-2 bg-slate-50 rounded-xl font-bold text-center" onchange="cargarDatos()">
             </div>
-            <div id="desgloseCategorias" class="grid grid-cols-1 gap-2 mb-6 text-xs font-bold text-slate-600"></div>
-            <div class="grid grid-cols-2 gap-3 mb-6 font-black text-center">
-                <div class="bg-green-50 p-4 rounded-2xl border border-green-100"><p class="text-[9px] text-green-600 uppercase">Entradas</p><p id="ingresosMes" class="text-lg text-green-700">0.00€</p></div>
-                <div class="bg-red-50 p-4 rounded-2xl border border-red-100"><p class="text-[9px] text-red-600 uppercase">Gastos</p><p id="gastosMes" class="text-lg text-red-700">0.00€</p></div>
+            
+            <div id="desgloseCategorias" class="grid grid-cols-1 gap-2 mb-6">
+                </div>
+
+            <div class="grid grid-cols-2 gap-3 mb-6">
+                <div class="bg-green-50 p-4 rounded-2xl border border-green-100 text-center">
+                    <p class="text-[9px] text-green-600 font-bold uppercase tracking-tighter">Entradas Mes</p>
+                    <p id="ingresosMes" class="text-lg font-black text-green-700">0.00€</p>
+                </div>
+                <div class="bg-red-50 p-4 rounded-2xl border border-red-100 text-center">
+                    <p class="text-[9px] text-red-600 font-bold uppercase tracking-tighter">Gastos Mes</p>
+                    <p id="gastosMes" class="text-lg font-black text-red-700">0.00€</p>
+                </div>
             </div>
+
+            <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 ml-2">Movimientos del mes</h3>
             <ul id="listaGastos" class="space-y-3"></ul>
         </section>
 
         <section id="vista-add" class="seccion-tab hidden">
             <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
-                <h2 class="text-xl font-bold text-slate-800 mb-6 text-center">Nuevo Registro</h2>
+                <h2 class="text-xl font-bold text-slate-800 mb-6">Nuevo Registro</h2>
                 <form id="gastoForm" class="space-y-4">
                     <input type="text" id="concepto" placeholder="¿Qué es?" class="w-full p-4 bg-slate-50 rounded-xl outline-none" required>
                     <input type="number" id="importe" step="0.01" placeholder="Importe (€)" class="w-full p-4 bg-slate-50 rounded-xl outline-none" required>
-                    
-                    <select id="categoria" class="w-full p-4 bg-slate-50 rounded-xl outline-none font-medium text-slate-600 border border-slate-200">
-                        <option value="Sueldo">💰 Sueldo</option>
-                        <option value="Otros ingresos">💵 Otros ingresos</option>
-                        <option value="Cuenta BBVA">🏦 Cuenta BBVA</option>
-                        <option value="El Corte Inglés">🏬 El Corte Inglés</option>
-                        <option value="BBVA tarjeta">🟦 BBVA tarjeta</option>
-                        <option value="BBVA tarjeta explora">💳 BBVA tarjeta explora</option>
+                    <select id="categoria" class="w-full p-4 bg-slate-50 rounded-xl outline-none font-medium">
+                        <option value="Sueldo">💰 Sueldo / Ingreso</option>
+                        <option value="Alimentación">🛒 Alimentación</option>
+                        <option value="BBVA Tarjeta">🟦 BBVA Tarjeta</option>
                         <option value="Imagine">🟣 Imagine</option>
-                        <option value="PayPal">🌐 PayPal</option>
+                        <option value="PayPal">💳 PayPal</option>
                         <option value="Amazon">📦 Amazon</option>
                         <option value="Gasolina">⛽ Gasolina</option>
+                        <option value="Varios">💸 Otros / Varios</option>
                     </select>
-                    
                     <input type="date" id="fecha" class="w-full p-4 bg-slate-50 rounded-xl outline-none" required>
                     <button type="submit" class="w-full bg-indigo-600 text-white font-bold p-5 rounded-2xl shadow-lg">Guardar Movimiento</button>
                 </form>
-                <button onclick="resetearTodo()" class="w-full mt-12 text-red-300 text-[10px] font-bold uppercase tracking-widest border border-red-50 p-2 rounded-xl">⚠️ Borrar todo el historial</button>
+                
+                <button onclick="resetearTodo()" class="w-full mt-12 text-red-400 text-[10px] font-bold uppercase tracking-widest border border-red-50 p-2 rounded-xl">
+                    ⚠️ Borrar historial y empezar de cero
+                </button>
             </div>
         </section>
     </main>
 
     <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around p-2 pb-6 shadow-lg z-50">
-        <button onclick="cambiarTab('vista-total', this)" class="tab-btn flex flex-col items-center p-2 active-tab"><span class="text-2xl">💰</span><span class="text-[10px] font-bold uppercase">Cuenta</span></button>
-        <button onclick="cambiarTab('vista-mes', this)" class="tab-btn flex flex-col items-center p-2 text-slate-400"><span class="text-2xl">📊</span><span class="text-[10px] font-bold uppercase">Mes</span></button>
-        <button onclick="cambiarTab('vista-add', this)" class="tab-btn flex flex-col items-center p-2 text-slate-400"><span class="text-2xl">➕</span><span class="text-[10px] font-bold uppercase">Añadir</span></button>
+        <button onclick="cambiarTab('vista-total', this)" class="tab-btn flex flex-col items-center p-2 active-tab transition-all">
+            <span class="text-2xl">💰</span><span class="text-[10px] font-bold uppercase">Cuenta</span>
+        </button>
+        <button onclick="cambiarTab('vista-mes', this)" class="tab-btn flex flex-col items-center p-2 text-slate-400 transition-all">
+            <span class="text-2xl">📊</span><span class="text-[10px] font-bold uppercase">Mes</span>
+        </button>
+        <button onclick="cambiarTab('vista-add', this)" class="tab-btn flex flex-col items-center p-2 text-slate-400 transition-all">
+            <span class="text-2xl">➕</span><span class="text-[10px] font-bold uppercase">Añadir</span>
+        </button>
     </div>
 
     <script>
@@ -81,8 +100,10 @@
             document.querySelectorAll('.seccion-tab').forEach(s => s.classList.add('hidden'));
             document.querySelectorAll('.tab-btn').forEach(b => { b.classList.remove('active-tab'); b.classList.add('text-slate-400'); });
             document.getElementById(id).classList.remove('hidden');
-            el.classList.add('active-tab'); el.classList.remove('text-slate-400');
-            document.getElementById('tituloFiltro').innerText = {'vista-total': 'Mi Cuenta Real', 'vista-mes': 'Resumen Mensual', 'vista-add': 'Nuevo Registro'}[id];
+            el.classList.add('active-tab');
+            el.classList.remove('text-slate-400');
+            const titulos = {'vista-total': 'Mi Cuenta Real', 'vista-mes': 'Resumen Mensual', 'vista-add': 'Nuevo Movimiento'};
+            document.getElementById('tituloFiltro').innerText = titulos[id];
         }
 
         async function cargarDatos() {
@@ -90,46 +111,55 @@
                 const res = await fetch(API_URL);
                 const todos = await res.json();
                 const mesActual = document.getElementById('mesFiltro').value;
-                let balanceReal = 0, ingresosMes = 0, gastosMes = 0, resumenCats = {};
+
+                let balanceReal = 0;
+                let ingresosMes = 0;
+                let gastosMes = 0;
+                let resumenCats = {};
+
                 const lista = document.getElementById('listaGastos');
                 lista.innerHTML = '';
 
                 todos.forEach(g => {
+                    if (!g.importe || !g.categoria) return;
                     const monto = parseFloat(g.importe);
-                    // SOLO SUMA Sueldo y Otros ingresos. TODO LO DEMÁS RESTA.
-                    const esIngreso = g.categoria === 'Sueldo' || g.categoria === 'Otros ingresos';
+                    const esIngreso = g.categoria === 'Sueldo' || g.categoria === 'Otros Ingresos';
                     
                     if (esIngreso) balanceReal += monto;
                     else balanceReal -= monto;
 
                     if (g.fecha && g.fecha.startsWith(mesActual)) {
-                        if (esIngreso) ingresosMes += monto;
-                        else {
+                        if (esIngreso) {
+                            ingresosMes += monto;
+                        } else {
                             gastosMes += monto;
                             resumenCats[g.categoria] = (resumenCats[g.categoria] || 0) + monto;
                         }
                         const color = esIngreso ? 'text-green-600' : 'text-red-600';
                         const simbolo = esIngreso ? '+' : '-';
                         lista.innerHTML += `<li class="bg-white p-4 rounded-2xl border border-slate-100 flex justify-between items-center shadow-sm">
-                            <div class="flex items-center gap-3"><button onclick="eliminarGasto('${g._id}')">🗑️</button><div><p class="font-bold text-slate-800 text-sm">${g.concepto}</p><p class="text-[9px] text-slate-400 uppercase">${g.categoria}</p></div></div>
-                            <div class="text-right font-black ${color}">${simbolo}${monto.toFixed(2)}€</div></li>`;
+                            <div class="flex items-center gap-3">
+                                <button onclick="eliminarGasto('${g._id}')" class="text-sm">🗑️</button>
+                                <div><p class="font-bold text-slate-800 text-sm">${g.concepto}</p><p class="text-[9px] text-slate-400 font-bold uppercase">${g.categoria}</p></div>
+                            </div>
+                            <div class="text-right"><p class="${color} font-black">${simbolo}${monto.toFixed(2)}€</p><p class="text-[8px] text-slate-300">${g.fecha}</p></div>
+                        </li>`;
                     }
                 });
 
                 const divCats = document.getElementById('desgloseCategorias');
                 divCats.innerHTML = '';
                 for (let cat in resumenCats) {
-                    divCats.innerHTML += `<div class="bg-white px-4 py-2 rounded-xl border border-slate-100 flex justify-between items-center shadow-sm"><span>${cat}</span><span>${resumenCats[cat].toFixed(2)}€</span></div>`;
+                    divCats.innerHTML += `<div class="bg-white px-4 py-2 rounded-xl border border-slate-100 flex justify-between items-center shadow-sm mb-1"><span class="text-xs font-bold text-slate-600 uppercase">${cat}</span><span class="text-sm font-black text-slate-800">${resumenCats[cat].toFixed(2)}€</span></div>`;
                 }
 
                 document.getElementById('totalRealCuenta').innerText = balanceReal.toFixed(2) + '€';
+                document.getElementById('ingresosMes').innerText = ingresosMes.toFixed(2) + '€';
+                document.getElementById('gastosMes').innerText = gastosMes.toFixed(2) + '€';
                 const tarjeta = document.getElementById('tarjetaBalance');
                 if (balanceReal < 0) tarjeta.className = 'bg-red-600 text-white p-8 rounded-3xl shadow-xl mb-6 text-center animate-pulse';
                 else if (balanceReal < 100) tarjeta.className = 'bg-orange-500 text-white p-8 rounded-3xl shadow-xl mb-6 text-center';
                 else tarjeta.className = 'bg-indigo-600 text-white p-8 rounded-3xl shadow-xl mb-6 text-center';
-
-                document.getElementById('ingresosMes').innerText = ingresosMes.toFixed(2) + '€';
-                document.getElementById('gastosMes').innerText = gastosMes.toFixed(2) + '€';
             } catch (e) { console.error(e); }
         }
 
@@ -142,7 +172,15 @@
         });
 
         async function eliminarGasto(id) { if (confirm("¿Borrar?")) { await fetch(`${API_URL}/${id}`, { method: 'DELETE' }); await cargarDatos(); } }
-        async function resetearTodo() { if (confirm("¿Borrar todo?")) { const res = await fetch(API_URL); const todos = await res.json(); for (let g of todos) { await fetch(`${API_URL}/${g._id}`, { method: 'DELETE' }); } location.reload(); } }
+
+        async function resetearTodo() {
+            if (confirm("¿Borrar historial completo?")) {
+                const res = await fetch(API_URL);
+                const todos = await res.json();
+                for (let g of todos) { await fetch(`${API_URL}/${g._id}`, { method: 'DELETE' }); }
+                location.reload();
+            }
+        }
         cargarDatos();
     </script>
 </body>
