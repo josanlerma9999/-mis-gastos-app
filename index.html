@@ -3,13 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestor Financiero v7.1</title>
+    <title>Gestor Financiero v7.2</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .active-tab { color: #10b981; border-top: 3px solid #10b981; font-weight: 900; }
         .hidden { display: none; }
         .font-black { font-weight: 900; }
+        @keyframes pulse-red { 0%, 100% { background-color: #ef4444; } 50% { background-color: #b91c1c; } }
+        .animate-alert { animation: pulse-red 1s infinite; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade { animation: fadeIn 0.3s ease-out; }
     </style>
@@ -18,10 +20,14 @@
 
     <nav class="bg-slate-900 text-white p-4 shadow-md sticky top-0 z-50 flex justify-between items-center">
         <h1 class="text-lg font-black tracking-tighter italic">Mi Cuenta Real</h1>
-        <span class="bg-emerald-500 px-2 py-1 rounded text-[10px] font-black uppercase tracking-tighter">v7.1 💎</span>
+        <span class="bg-emerald-500 px-2 py-1 rounded text-[10px] font-black uppercase tracking-tighter">v7.2 🔔</span>
     </nav>
 
     <main class="max-w-md mx-auto p-4">
+        <div id="avisoHoy" class="hidden animate-alert text-white p-3 rounded-xl mb-4 text-center text-xs font-black uppercase tracking-widest shadow-lg">
+            ⚠️ ¡Atención! Tienes pagos para HOY
+        </div>
+
         <section id="vista-total" class="seccion-tab">
             <div id="tarjetaBalance" class="bg-emerald-500 text-white p-6 rounded-[2rem] shadow-xl mb-4 text-center transition-all">
                 <p class="text-[10px] uppercase tracking-widest opacity-90 mb-1 font-black">Dinero Actual</p>
@@ -45,9 +51,9 @@
         </section>
 
         <section id="vista-prevision" class="seccion-tab hidden">
-            <div class="bg-indigo-50 p-4 rounded-2xl mb-4 text-center text-indigo-600 font-black text-[10px] uppercase italic border border-indigo-100">
-                🗓️ Movimientos Programados
-            </div>
+            <button onclick="revisarNotificaciones()" class="w-full bg-indigo-600 text-white font-black p-3 rounded-xl mb-4 text-[10px] uppercase shadow-md">
+                🔔 Revisar alertas de hoy
+            </button>
             <ul id="listaPrevision" class="space-y-3 pt-2"></ul>
         </section>
 
@@ -129,17 +135,18 @@
             try {
                 const res = await fetch(API_URL);
                 gastosCache = await res.json();
-                const hoy = new Date(); hoy.setHours(0,0,0,0);
-                const hoyStr = hoy.toISOString().split('T')[0];
+                const hoyStr = new Date().toISOString().split('T')[0];
                 const mesSel = document.getElementById('mesFiltro').value;
 
-                let balAct = 0, balPrev = 0, inMes = 0, gasMes = 0, resCats = {};
+                let balAct = 0, balPrev = 0, inMes = 0, gasMes = 0, resCats = {}, hayPagoHoy = false;
                 const listaM = document.getElementById('listaGastos'), listaP = document.getElementById('listaPrevision');
                 listaM.innerHTML = ''; listaP.innerHTML = '';
 
                 gastosCache.sort((a,b) => new Date(a.fecha) - new Date(b.fecha)).forEach(g => {
                     const monto = parseFloat(g.importe), esIn = ["Sueldo", "Otros Ingresos"].includes(g.categoria);
                     const botones = `<div class="flex gap-3"><button onclick="prepararEdicion('${g._id}')" class="text-blue-500">✏️</button><button onclick="eliminarGasto('${g._id}')" class="text-slate-300">🗑️</button></div>`;
+
+                    if (g.fecha === hoyStr && !esIn) hayPagoHoy = true;
 
                     if (g.fecha <= hoyStr) { if (esIn) balAct += monto; else balAct -= monto; } 
                     else {
@@ -157,6 +164,8 @@
                         </li>`;
                     }
                 });
+                
+                document.getElementById('avisoHoy').classList.toggle('hidden', !hayPagoHoy);
                 document.getElementById('totalRealCuenta').innerText = balAct.toFixed(2) + '€';
                 document.getElementById('totalEstimado').innerText = (balAct + balPrev).toFixed(2) + '€';
                 document.getElementById('totalPendiente').innerText = (balPrev >= 0 ? '+' : '') + balPrev.toFixed(2) + '€';
@@ -174,9 +183,18 @@
                         divLeyenda.innerHTML += `<div class="flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-100"><div class="w-2 h-2 rounded-full" style="background:${COLORES[i]}"></div><div class="flex flex-col leading-tight"><span class="text-[8px] font-black uppercase text-slate-400">${cat}</span><span class="text-[10px] font-black text-slate-700">${resCats[cat].toFixed(1)}€ (${porc}%)</span></div></div>`;
                     });
                 }
-                const tj = document.getElementById('tarjetaBalance');
-                tj.className = balAct < 0 ? 'bg-rose-500 text-white p-6 rounded-[2rem] shadow-xl mb-4 text-center' : 'bg-emerald-500 text-white p-6 rounded-[2rem] shadow-xl mb-4 text-center';
+                document.getElementById('tarjetaBalance').className = balAct < 0 ? 'bg-rose-500 text-white p-6 rounded-[2rem] shadow-xl mb-4 text-center' : 'bg-emerald-500 text-white p-6 rounded-[2rem] shadow-xl mb-4 text-center';
             } catch (e) { console.error(e); }
+        }
+
+        function revisarNotificaciones() {
+            const hoyStr = new Date().toISOString().split('T')[0];
+            const pagosHoy = gastosCache.filter(g => g.fecha === hoyStr && !["Sueldo", "Otros Ingresos"].includes(g.categoria));
+            if (pagosHoy.length > 0) {
+                alert(`🔔 ALERTA: Tienes ${pagosHoy.length} pago(s) para hoy:\n` + pagosHoy.map(p => `- ${p.concepto}: ${p.importe}€`).join('\n'));
+            } else {
+                alert("✅ Todo al día. No hay pagos programados para hoy.");
+            }
         }
 
         function prepararEdicion(id) {
@@ -205,31 +223,12 @@
         document.getElementById('gastoForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const idViejo = document.getElementById('edit_id').value;
-            const data = {
-                concepto: document.getElementById('concepto').value,
-                importe: parseFloat(document.getElementById('importe').value),
-                categoria: document.getElementById('categoria').value,
-                fecha: document.getElementById('fecha').value
-            };
-
+            const data = { concepto: document.getElementById('concepto').value, importe: parseFloat(document.getElementById('importe').value), categoria: document.getElementById('categoria').value, fecha: document.getElementById('fecha').value };
             try {
-                // ESTRATEGIA INFALIBLE: SI EDITAMOS, PRIMERO BORRAMOS EL VIEJO
-                if (idViejo) {
-                    await fetch(`${API_URL}/${idViejo}`, { method: 'DELETE' });
-                }
-                
-                // LUEGO CREAMOS EL NUEVO (O SIMPLEMENTE CREAMOS SI NO ES EDICIÓN)
-                const res = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-
-                if (res.ok) {
-                    cancelarEdicion(); await cargarDatos();
-                    cambiarTab('vista-total', document.querySelectorAll('.tab-btn')[0]);
-                } else { alert("Error al guardar."); }
-            } catch (err) { console.error(err); alert("Error de conexión."); }
+                if (idViejo) { await fetch(`${API_URL}/${idViejo}`, { method: 'DELETE' }); }
+                const res = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+                if (res.ok) { cancelarEdicion(); await cargarDatos(); cambiarTab('vista-total', document.querySelectorAll('.tab-btn')[0]); }
+            } catch (err) { console.error(err); }
         });
 
         async function eliminarGasto(id) { if (confirm("¿Eliminar?")) { await fetch(`${API_URL}/${id}`, { method: 'DELETE' }); await cargarDatos(); } }
