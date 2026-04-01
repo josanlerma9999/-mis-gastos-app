@@ -14,7 +14,7 @@
 
     <nav class="bg-indigo-600 text-white p-4 shadow-md sticky top-0 z-50 flex justify-between items-center">
         <h1 id="tituloFiltro" class="text-lg font-bold">Mi Cuenta Real</h1>
-        <span class="text-xs opacity-80">v5.0 ⚡ Auto</span>
+        <span class="text-xs opacity-80">v5.1 ⚡</span>
     </nav>
 
     <main class="max-w-md mx-auto p-4">
@@ -23,25 +23,25 @@
                 <p class="text-[10px] uppercase tracking-widest opacity-80 mb-2 font-bold">Saldo Real Actual</p>
                 <p id="totalRealCuenta" class="text-5xl font-black">0.00€</p>
             </div>
-            <div id="avisoPendiente" class="bg-amber-50 p-4 rounded-2xl border border-amber-100 text-center hidden animate-bounce">
-                <p class="text-amber-700 text-[10px] font-bold uppercase">⚠️ Tienes previsiones futuras en espera</p>
+            <div id="avisoPendiente" class="bg-amber-50 p-4 rounded-2xl border border-amber-100 text-center hidden">
+                <p class="text-amber-700 text-[10px] font-bold uppercase">⚠️ Hay movimientos programados en espera</p>
             </div>
         </section>
 
         <section id="vista-pendiente" class="seccion-tab hidden">
-            <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 ml-2 text-center">Calendario de Previsiones</h3>
+            <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 ml-2 text-center text-indigo-500">Próximos días</h3>
             <ul id="listaPendientes" class="space-y-3"></ul>
-            <div id="sinPendientes" class="text-center py-10 text-slate-400 text-sm italic hidden">No hay pagos futuros programados.</div>
+            <div id="sinPendientes" class="text-center py-10 text-slate-400 text-sm italic hidden">No hay nada programado.</div>
         </section>
 
         <section id="vista-mes" class="seccion-tab hidden">
-            <div class="bg-white p-4 rounded-2xl shadow-sm mb-4 border border-slate-100 flex gap-2">
-                <input type="month" id="mesFiltro" class="flex-1 p-2 bg-slate-50 rounded-xl font-bold text-center" onchange="cargarDatos()">
+            <div class="bg-white p-4 rounded-2xl shadow-sm mb-4 border border-slate-100">
+                <input type="month" id="mesFiltro" class="w-full p-2 bg-slate-50 rounded-xl font-bold text-center" onchange="cargarDatos()">
             </div>
             <div id="desgloseCategorias" class="grid grid-cols-1 gap-2 mb-6 text-xs font-bold text-slate-500 uppercase"></div>
-            <div class="grid grid-cols-2 gap-3 mb-6 font-black text-center">
-                <div class="bg-green-50 p-4 rounded-2xl border border-green-100"><p class="text-[9px] text-green-600 uppercase">Entradas</p><p id="ingresosMes" class="text-lg text-green-700">0.00€</p></div>
-                <div class="bg-red-50 p-4 rounded-2xl border border-red-100"><p class="text-[9px] text-red-600 uppercase">Gastos</p><p id="gastosMes" class="text-lg text-red-700">0.00€</p></div>
+            <div class="grid grid-cols-2 gap-3 mb-6 text-center">
+                <div class="bg-green-50 p-4 rounded-2xl border border-green-100"><p class="text-[9px] text-green-600 uppercase font-bold">Entradas</p><p id="ingresosMes" class="text-lg font-black text-green-700">0.00€</p></div>
+                <div class="bg-red-50 p-4 rounded-2xl border border-red-100"><p class="text-[9px] text-red-600 uppercase font-bold">Gastos</p><p id="gastosMes" class="text-lg font-black text-red-700">0.00€</p></div>
             </div>
             <ul id="listaGastos" class="space-y-3"></ul>
         </section>
@@ -66,21 +66,24 @@
                         <option value="Gasolina">⛽ Gasolina</option>
                     </select>
 
-                    <p class="text-[10px] font-bold text-slate-400 uppercase text-center mt-2">¿Cuándo se hará efectivo?</p>
                     <div class="flex gap-2">
                         <label class="flex-1">
                             <input type="radio" name="estado" value="pagado" checked class="hidden peer">
-                            <div class="p-3 text-center rounded-xl bg-slate-50 text-slate-400 font-bold text-[10px] peer-checked:bg-indigo-600 peer-checked:text-white cursor-pointer">YA PAGADO</div>
+                            <div class="p-3 text-center rounded-xl bg-slate-50 text-slate-400 font-bold text-[10px] peer-checked:bg-indigo-600 peer-checked:text-white cursor-pointer transition-all">YA PAGADO</div>
                         </label>
                         <label class="flex-1">
                             <input type="radio" name="estado" value="pendiente" class="hidden peer">
-                            <div class="p-3 text-center rounded-xl bg-slate-50 text-slate-400 font-bold text-[10px] peer-checked:bg-amber-500 peer-checked:text-white cursor-pointer">PROGRAMAR FECHA</div>
+                            <div class="p-3 text-center rounded-xl bg-slate-50 text-slate-400 font-bold text-[10px] peer-checked:bg-amber-500 peer-checked:text-white cursor-pointer transition-all">PROGRAMAR</div>
                         </label>
                     </div>
                     
                     <input type="date" id="fecha" class="w-full p-4 bg-slate-50 rounded-xl outline-none" required>
                     <button type="submit" class="w-full bg-indigo-600 text-white font-bold p-5 rounded-2xl shadow-lg">Guardar</button>
                 </form>
+
+                <button onclick="resetearTodo()" class="w-full mt-12 text-red-300 text-[10px] font-bold uppercase tracking-widest border border-red-50 p-3 rounded-xl hover:bg-red-50 transition-all">
+                    ⚠️ Limpiar todo el historial
+                </button>
             </div>
         </section>
     </main>
@@ -93,108 +96,4 @@
     </div>
 
     <script>
-        const API_URL = 'https://mis-gastos-app.onrender.com/api/gastos'; 
-
-        document.getElementById('mesFiltro').value = new Date().toISOString().slice(0, 7);
-        document.getElementById('fecha').valueAsDate = new Date();
-
-        function cambiarTab(id, el) {
-            document.querySelectorAll('.seccion-tab').forEach(s => s.classList.add('hidden'));
-            document.querySelectorAll('.tab-btn').forEach(b => { b.classList.remove('active-tab'); b.classList.add('text-slate-400'); });
-            document.getElementById(id).classList.remove('hidden');
-            el.classList.add('active-tab'); el.classList.remove('text-slate-400');
-            document.getElementById('tituloFiltro').innerText = {'vista-total': 'Mi Cuenta Real', 'vista-pendiente': 'Previsiones', 'vista-mes': 'Resumen Mes', 'vista-add': 'Nuevo Registro'}[id];
-        }
-
-        async function cargarDatos() {
-            try {
-                const res = await fetch(API_URL);
-                const todos = await res.json();
-                const hoy = new Date().toISOString().split('T')[0];
-                const mesActual = document.getElementById('mesFiltro').value;
-                
-                let balanceReal = 0, ingresosMes = 0, gastosMes = 0, resumenCats = {};
-                const lista = document.getElementById('listaGastos');
-                const listaP = document.getElementById('listaPendientes');
-                lista.innerHTML = ''; listaP.innerHTML = '';
-
-                let hayPendientesFuturos = false;
-
-                for (let g of todos) {
-                    const monto = parseFloat(g.importe);
-                    const esIngreso = g.categoria === 'Sueldo' || g.categoria === 'Otros ingresos';
-                    
-                    // --- LÓGICA AUTOMÁTICA ---
-                    // Si estaba marcado como pendiente pero la fecha es hoy o ya pasó:
-                    if (g.estado === 'pendiente' && g.fecha <= hoy) {
-                        await fetch(`${API_URL}/${g._id}`, {
-                            method: 'PUT',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ estado: 'pagado' })
-                        });
-                        g.estado = 'pagado'; // Actualizamos localmente para el cálculo
-                    }
-
-                    // Cálculo de Balance Real (Solo lo que ya ha pasado o está marcado como pagado)
-                    if (g.estado === 'pagado') {
-                        if (esIngreso) balanceReal += monto;
-                        else balanceReal -= monto;
-
-                        // Historial del Mes
-                        if (g.fecha && g.fecha.startsWith(mesActual)) {
-                            if (esIngreso) ingresosMes += monto;
-                            else {
-                                gastosMes += monto;
-                                resumenCats[g.categoria] = (resumenCats[g.categoria] || 0) + monto;
-                            }
-                            lista.innerHTML += `<li class="bg-white p-4 rounded-2xl border border-slate-100 flex justify-between items-center shadow-sm">
-                                <div class="flex items-center gap-3"><button onclick="eliminarGasto('${g._id}')">🗑️</button><div><p class="font-bold text-slate-800 text-sm">${g.concepto}</p><p class="text-[9px] text-slate-400 font-bold">${g.categoria}</p></div></div>
-                                <div class="text-right font-black ${esIngreso ? 'text-green-600':'text-red-600'}">${esIngreso?'+':'-'}${monto.toFixed(2)}€</div></li>`;
-                        }
-                    } else {
-                        // Es pendiente futuro (Fecha > hoy)
-                        hayPendientesFuturos = true;
-                        listaP.innerHTML += `<li class="bg-amber-50 p-4 rounded-2xl border border-amber-100 flex justify-between items-center shadow-sm">
-                            <div class="flex items-center gap-3"><div><p class="font-bold text-amber-900 text-sm">${g.concepto}</p><p class="text-[9px] text-amber-600 font-bold">PROGRAMADO: ${g.fecha}</p></div></div>
-                            <div class="text-right">
-                                <p class="font-black ${esIngreso ? 'text-green-600':'text-red-600'}">${monto.toFixed(2)}€</p>
-                                <button onclick="eliminarGasto('${g._id}')" class="text-[8px] text-red-400 font-bold uppercase mt-1">Anular</button>
-                            </div></li>`;
-                    }
-                }
-
-                document.getElementById('totalRealCuenta').innerText = balanceReal.toFixed(2) + '€';
-                document.getElementById('avisoPendiente').classList.toggle('hidden', !hayPendientesFuturos);
-                document.getElementById('sinPendientes').classList.toggle('hidden', listaP.innerHTML !== '');
-                
-                // Desglose
-                const divCats = document.getElementById('desgloseCategorias');
-                divCats.innerHTML = '';
-                for (let cat in resumenCats) {
-                    divCats.innerHTML += `<div class="bg-white px-4 py-1 rounded-xl border border-slate-100 flex justify-between shadow-sm"><span>${cat}</span><span>${resumenCats[cat].toFixed(2)}€</span></div>`;
-                }
-                document.getElementById('ingresosMes').innerText = ingresosMes.toFixed(2) + '€';
-                document.getElementById('gastosMes').innerText = gastosMes.toFixed(2) + '€';
-
-            } catch (e) { console.error(e); }
-        }
-
-        document.getElementById('gastoForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const nuevo = {
-                concepto: document.getElementById('concepto').value,
-                importe: document.getElementById('importe').value,
-                categoria: document.getElementById('categoria').value,
-                fecha: document.getElementById('fecha').value,
-                estado: document.querySelector('input[name="estado"]:checked').value
-            };
-            await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(nuevo) });
-            e.target.reset(); document.getElementById('fecha').valueAsDate = new Date();
-            await cargarDatos(); cambiarTab('vista-total', document.querySelectorAll('.tab-btn')[0]);
-        });
-
-        async function eliminarGasto(id) { if (confirm("¿Eliminar?")) { await fetch(`${API_URL}/${id}`, { method: 'DELETE' }); await cargarDatos(); } }
-        cargarDatos();
-    </script>
-</body>
-</html>
+        const API_URL = '
