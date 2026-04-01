@@ -14,7 +14,7 @@
 
     <nav class="bg-indigo-600 text-white p-4 shadow-md sticky top-0 z-50 flex justify-between items-center">
         <h1 id="tituloFiltro" class="text-lg font-bold">Mi Cuenta Real</h1>
-        <span class="text-xs opacity-80">v3.0 💎</span>
+        <span class="text-xs opacity-80">v3.3 💎</span>
     </nav>
 
     <main class="max-w-md mx-auto p-4">
@@ -53,26 +53,29 @@
 
         <section id="vista-add" class="seccion-tab hidden">
             <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
-                <h2 class="text-xl font-bold text-slate-800 mb-6">Nuevo Movimiento</h2>
+                <h2 class="text-xl font-bold text-slate-800 mb-6">Nuevo Registro</h2>
                 <form id="gastoForm" class="space-y-4">
-                    <input type="text" id="concepto" placeholder="¿Qué has comprado?" class="w-full p-4 bg-slate-50 rounded-xl outline-none" required>
+                    <input type="text" id="concepto" placeholder="¿Qué es?" class="w-full p-4 bg-slate-50 rounded-xl outline-none" required>
                     <input type="number" id="importe" step="0.01" placeholder="Importe (€)" class="w-full p-4 bg-slate-50 rounded-xl outline-none" required>
-                    <select id="categoria" class="w-full p-4 bg-slate-50 rounded-xl outline-none font-medium text-slate-600">
-                        <option value="Sueldo">💰 Sueldo / Ingreso</option>
-                        <option value="Alimentación">🛒 Alimentación</option>
-                        <option value="BBVA Tarjeta">🟦 BBVA Tarjeta</option>
+                    
+                    <select id="categoria" class="w-full p-4 bg-slate-50 rounded-xl outline-none font-medium text-slate-600 border border-slate-200">
+                        <option value="Sueldo">💰 Sueldo</option>
+                        <option value="Otros ingresos">💵 Otros ingresos</option>
+                        <option value="El Corte Inglés">🏬 El Corte Inglés</option>
+                        <option value="BBVA tarjeta">🟦 BBVA tarjeta</option>
+                        <option value="BBVA tarjeta explora">💳 BBVA tarjeta explora</option>
                         <option value="Imagine">🟣 Imagine</option>
-                        <option value="PayPal">💳 PayPal</option>
+                        <option value="PayPal">🌐 PayPal</option>
                         <option value="Amazon">📦 Amazon</option>
                         <option value="Gasolina">⛽ Gasolina</option>
-                        <option value="Varios">💸 Otros / Varios</option>
                     </select>
+                    
                     <input type="date" id="fecha" class="w-full p-4 bg-slate-50 rounded-xl outline-none" required>
-                    <button type="submit" class="w-full bg-indigo-600 text-white font-bold p-5 rounded-2xl shadow-lg">Guardar en mi cuenta</button>
+                    <button type="submit" class="w-full bg-indigo-600 text-white font-bold p-5 rounded-2xl shadow-lg">Guardar Movimiento</button>
                 </form>
                 
                 <button onclick="resetearTodo()" class="w-full mt-12 text-red-300 text-[10px] font-bold uppercase tracking-widest border border-red-50 p-2 rounded-xl">
-                    ⚠️ Resetear App (Borrar todo)
+                    ⚠️ Borrar historial completo
                 </button>
             </div>
         </section>
@@ -91,7 +94,7 @@
     </div>
 
     <script>
-        const API_URL = 'https://mis-gastos-app.onrender.com/api/gastos'; // <-- ¡IMPORTANTE! ASEGÚRATE QUE SEA TU URL
+        const API_URL = 'https://mis-gastos-app.onrender.com/api/gastos'; // <-- Revisa si es tu URL
 
         document.getElementById('mesFiltro').value = new Date().toISOString().slice(0, 7);
         document.getElementById('fecha').valueAsDate = new Date();
@@ -118,14 +121,15 @@
                 let balanceReal = 0;
                 let ingresosMes = 0;
                 let gastosMes = 0;
-                let resumenCats = {}; // Aquí guardaremos los totales por categoría
+                let resumenCats = {};
 
                 const lista = document.getElementById('listaGastos');
                 lista.innerHTML = '';
 
                 todos.forEach(g => {
                     const monto = parseFloat(g.importe);
-                    const esIngreso = g.categoria === 'Sueldo' || g.categoria === 'Otros Ingresos';
+                    // Lógica para tus nuevas categorías de ingreso
+                    const esIngreso = g.categoria === 'Sueldo' || g.categoria === 'Otros ingresos';
                     
                     if (esIngreso) balanceReal += monto;
                     else balanceReal -= monto;
@@ -135,7 +139,6 @@
                             ingresosMes += monto;
                         } else {
                             gastosMes += monto;
-                            // Sumar al desglose por categorías
                             resumenCats[g.categoria] = (resumenCats[g.categoria] || 0) + monto;
                         }
 
@@ -151,16 +154,10 @@
                     }
                 });
 
-                // ACTUALIZAR DESGLOSE VISUAL (CATEGORÍAS)
                 const divCats = document.getElementById('desgloseCategorias');
                 divCats.innerHTML = '';
                 for (let cat in resumenCats) {
-                    divCats.innerHTML += `
-                        <div class="bg-white px-4 py-2 rounded-xl border border-slate-100 flex justify-between items-center shadow-sm">
-                            <span class="text-xs font-bold text-slate-600 uppercase">${cat}</span>
-                            <span class="text-sm font-black text-slate-800">${resumenCats[cat].toFixed(2)}€</span>
-                        </div>
-                    `;
+                    divCats.innerHTML += `<div class="bg-white px-4 py-2 rounded-xl border border-slate-100 flex justify-between items-center shadow-sm"><span class="text-[10px] font-bold text-slate-500 uppercase">${cat}</span><span class="text-sm font-black text-slate-800">${resumenCats[cat].toFixed(2)}€</span></div>`;
                 }
 
                 const totalElem = document.getElementById('totalRealCuenta');
