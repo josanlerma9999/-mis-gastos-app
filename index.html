@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestor Financiero v6.5</title>
+    <title>Gestor Financiero v6.6</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -16,7 +16,7 @@
 
     <nav class="bg-slate-900 text-white p-4 shadow-md sticky top-0 z-50 flex justify-between items-center">
         <h1 id="tituloFiltro" class="text-lg font-black tracking-tighter">Mi Cuenta Real</h1>
-        <span class="bg-emerald-500 px-2 py-1 rounded text-[10px] font-black uppercase tracking-tighter">v6.5 🏆</span>
+        <span class="bg-emerald-500 px-2 py-1 rounded text-[10px] font-black uppercase tracking-tighter">v6.6 💎</span>
     </nav>
 
     <main class="max-w-md mx-auto p-4">
@@ -43,13 +43,13 @@
                 <div class="relative h-64">
                     <canvas id="graficoGastos"></canvas>
                 </div>
-                <div id="mensajeSinDatos" class="hidden text-center py-10 text-slate-400 text-xs italic font-black">No hay gastos registrados este mes.</div>
+                <div id="mensajeSinDatos" class="hidden text-center py-10 text-slate-400 text-xs italic font-black">No hay gastos este mes.</div>
             </div>
         </section>
 
         <section id="vista-prevision" class="seccion-tab hidden">
             <div class="bg-indigo-50 p-4 rounded-2xl mb-4 border border-indigo-100">
-                <p class="text-[10px] font-black text-indigo-600 uppercase font-black">Movimientos Pendientes</p>
+                <p class="text-[10px] font-black text-indigo-600 uppercase font-black italic text-center">🗓️ Movimientos Programados</p>
             </div>
             <ul id="listaPrevision" class="space-y-3 pt-2"></ul>
         </section>
@@ -72,7 +72,7 @@
         <section id="vista-add" class="seccion-tab hidden">
             <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
                 <form id="gastoForm" class="space-y-4">
-                    <input type="text" id="concepto" placeholder="Concepto" class="w-full p-4 bg-slate-50 rounded-xl outline-none font-bold" required>
+                    <input type="text" id="concepto" placeholder="¿Qué es?" class="w-full p-4 bg-slate-50 rounded-xl outline-none font-bold" required>
                     <input type="number" id="importe" step="0.01" placeholder="Importe (€)" class="w-full p-4 bg-slate-50 rounded-xl outline-none font-black" required>
                     <select id="categoria" class="w-full p-4 bg-slate-50 rounded-xl outline-none font-bold">
                         <option value="Sueldo">💰 Sueldo</option>
@@ -80,15 +80,16 @@
                         <option value="El Corte Inglés">🏬 El Corte Inglés</option>
                         <option value="Cuenta BBVA">🏦 Cuenta BBVA</option>
                         <option value="Tarjeta BBVA">🟦 Tarjeta BBVA</option>
+                        <option value="Tarjeta Explora">🧭 Tarjeta Explora</option>
                         <option value="Imagine">🟣 Imagine</option>
                         <option value="PayPal">💳 PayPal</option>
                         <option value="Amazon">📦 Amazon</option>
                         <option value="Gasolina">⛽ Gasolina</option>
                     </select>
                     <input type="date" id="fecha" class="w-full p-4 bg-slate-50 rounded-xl outline-none font-bold" required>
-                    <button type="submit" class="w-full bg-slate-900 text-white font-black p-5 rounded-2xl shadow-xl">GUARDAR MOVIMIENTO</button>
+                    <button type="submit" class="w-full bg-slate-900 text-white font-black p-5 rounded-2xl shadow-xl">GUARDAR</button>
                 </form>
-                <button onclick="resetearTodo()" class="w-full mt-10 text-slate-300 text-[9px] font-black uppercase p-2 tracking-widest">♻️ Borrar Base de Datos</button>
+                <button onclick="resetearTodo()" class="w-full mt-10 text-slate-300 text-[9px] font-black uppercase p-2 tracking-widest italic">♻️ Borrar todo y empezar de cero</button>
             </div>
         </section>
     </main>
@@ -128,7 +129,7 @@
                 const res = await fetch(API_URL);
                 const todos = await res.json();
                 
-                // FECHA DE HOY (Ajustada a zona horaria local para comparar bien)
+                // Fecha de HOY exacta para comparar
                 const hoy = new Date();
                 hoy.setHours(0,0,0,0);
                 const hoyStr = hoy.toISOString().split('T')[0];
@@ -142,24 +143,24 @@
                 const listaP = document.getElementById('listaPrevision');
                 listaM.innerHTML = ''; listaP.innerHTML = '';
 
-                // ORDENAR POR FECHA
                 todos.sort((a,b) => new Date(a.fecha) - new Date(b.fecha)).forEach(g => {
                     if (!g.importe || !g.categoria) return;
                     const monto = parseFloat(g.importe);
                     const esIn = ["Sueldo", "Otros Ingresos"].includes(g.categoria);
                     
-                    // Lógica Dinero Actual vs Plan
+                    // Separar Actual de Futuro
                     if (g.fecha <= hoyStr) {
                         if (esIn) balanceActual += monto; else balanceActual -= monto;
                     } else {
                         if (esIn) balancePrevision += monto; else balancePrevision -= monto;
-                        listaP.innerHTML += `<li class="bg-white p-4 rounded-2xl border-l-4 border-amber-400 shadow-sm flex justify-between items-center mb-2">
-                            <div><p class="font-black text-sm text-slate-800">${g.concepto}</p><p class="text-[9px] text-amber-600 font-black uppercase">${g.fecha}</p></div>
-                            <div class="text-right flex items-center gap-3"><p class="font-black ${esIn?'text-emerald-500':'text-rose-500'}">${monto.toFixed(2)}€</p><button onclick="eliminarGasto('${g._id}')">🗑️</button></div>
+                        // Mostrar en pestaña PLAN
+                        listaP.innerHTML += `<li class="bg-white p-4 rounded-2xl border-l-4 border-amber-400 shadow-sm flex justify-between items-center mb-2 animate-fade-in">
+                            <div><p class="font-black text-sm text-slate-800">${g.concepto}</p><p class="text-[9px] text-amber-600 font-black uppercase tracking-tighter">${g.fecha}</p></div>
+                            <div class="text-right flex items-center gap-3 font-black"><p class="${esIn?'text-emerald-500':'text-rose-500'}">${monto.toFixed(2)}€</p><button onclick="eliminarGasto('${g._id}')">🗑️</button></div>
                         </li>`;
                     }
 
-                    // Datos del Mes para Historial y Quesitos
+                    // Historial del Mes y Gráfico
                     if (g.fecha.startsWith(mesSel)) {
                         if (esIn) ingresosMes += monto;
                         else {
@@ -167,8 +168,8 @@
                             resumenCats[g.categoria] = (resumenCats[g.categoria] || 0) + monto;
                         }
                         listaM.innerHTML += `<li class="bg-white p-3 rounded-xl border border-slate-100 flex justify-between items-center">
-                            <div><p class="font-bold text-xs text-slate-700 font-black">${g.concepto}</p><p class="text-[8px] text-slate-400 font-black uppercase">${g.categoria}</p></div>
-                            <div class="text-right flex items-center gap-2"><p class="font-black text-xs ${esIn?'text-emerald-500':'text-rose-500'} font-black">${monto.toFixed(2)}€</p><button onclick="eliminarGasto('${g._id}')">🗑️</button></div>
+                            <div><p class="font-bold text-xs text-slate-700">${g.concepto}</p><p class="text-[8px] text-slate-400 font-black uppercase">${g.categoria}</p></div>
+                            <div class="text-right flex items-center gap-2"><p class="font-black text-xs ${esIn?'text-emerald-500':'text-rose-500'}">${monto.toFixed(2)}€</p><button onclick="eliminarGasto('${g._id}')">🗑️</button></div>
                         </li>`;
                     }
                 });
@@ -179,7 +180,7 @@
                 document.getElementById('ingresosMes').innerText = ingresosMes.toFixed(2) + '€';
                 document.getElementById('gastosMes').innerText = gastosMes.toFixed(2) + '€';
                 
-                // REFRESCAR GRÁFICO
+                // Gráfico Circular
                 const ctx = document.getElementById('graficoGastos').getContext('2d');
                 if (miGrafico) miGrafico.destroy();
                 if (Object.keys(resumenCats).length > 0) {
@@ -188,9 +189,9 @@
                         type: 'doughnut',
                         data: {
                             labels: Object.keys(resumenCats),
-                            datasets: [{ data: Object.values(resumenCats), backgroundColor: ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316'], borderWidth: 0 }]
+                            datasets: [{ data: Object.values(resumenCats), backgroundColor: ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316', '#3b82f6'], borderWidth: 0 }]
                         },
-                        options: { plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 9, weight: 'bold' } } } }, maintainAspectRatio: false }
+                        options: { plugins: { legend: { position: 'bottom', labels: { boxWidth: 8, font: { size: 9, weight: '900' } } } }, maintainAspectRatio: false }
                     });
                 } else { document.getElementById('mensajeSinDatos').classList.remove('hidden'); }
 
@@ -208,8 +209,8 @@
             await cargarDatos(); cambiarTab('vista-total', document.querySelectorAll('.tab-btn')[0]);
         });
 
-        async function eliminarGasto(id) { if (confirm("¿Borrar?")) { await fetch(`${API_URL}/${id}`, { method: 'DELETE' }); await cargarDatos(); } }
-        async function resetearTodo() { if (confirm("⚠️ ¿Borrar todo?")) { const res = await fetch(API_URL); const todos = await res.json(); for (let g of todos) { await fetch(`${API_URL}/${g._id}`, { method: 'DELETE' }); } location.reload(); } }
+        async function eliminarGasto(id) { if (confirm("¿Borrar este movimiento?")) { await fetch(`${API_URL}/${id}`, { method: 'DELETE' }); await cargarDatos(); } }
+        async function resetearTodo() { if (confirm("⚠️ ¡PELIGRO! Se borrarán todos tus datos. ¿Confirmas?")) { const res = await fetch(API_URL); const todos = await res.json(); for (let g of todos) { await fetch(`${API_URL}/${g._id}`, { method: 'DELETE' }); } location.reload(); } }
         
         cargarDatos();
     </script>
