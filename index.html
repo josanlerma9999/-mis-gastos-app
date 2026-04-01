@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestor Financiero v7.0</title>
+    <title>Gestor Financiero v7.1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -18,12 +18,12 @@
 
     <nav class="bg-slate-900 text-white p-4 shadow-md sticky top-0 z-50 flex justify-between items-center">
         <h1 class="text-lg font-black tracking-tighter italic">Mi Cuenta Real</h1>
-        <span class="bg-emerald-500 px-2 py-1 rounded text-[10px] font-black uppercase tracking-tighter">v7.0 🚀</span>
+        <span class="bg-emerald-500 px-2 py-1 rounded text-[10px] font-black uppercase tracking-tighter">v7.1 💎</span>
     </nav>
 
     <main class="max-w-md mx-auto p-4">
         <section id="vista-total" class="seccion-tab">
-            <div id="tarjetaBalance" class="bg-emerald-500 text-white p-6 rounded-[2rem] shadow-xl mb-4 text-center">
+            <div id="tarjetaBalance" class="bg-emerald-500 text-white p-6 rounded-[2rem] shadow-xl mb-4 text-center transition-all">
                 <p class="text-[10px] uppercase tracking-widest opacity-90 mb-1 font-black">Dinero Actual</p>
                 <p id="totalRealCuenta" class="text-4xl font-black italic">0.00€</p>
             </div>
@@ -109,7 +109,6 @@
     </div>
 
     <script>
-        // ASEGÚRATE DE QUE ESTA URL ES LA CORRECTA DE TU RENDER
         const API_URL = 'https://mis-gastos-app.onrender.com/api/gastos'; 
         let miGrafico = null;
         let gastosCache = [];
@@ -129,11 +128,8 @@
         async function cargarDatos() {
             try {
                 const res = await fetch(API_URL);
-                if (!res.ok) throw new Error("Error al obtener datos");
                 gastosCache = await res.json();
-                
-                const hoy = new Date();
-                hoy.setHours(0,0,0,0);
+                const hoy = new Date(); hoy.setHours(0,0,0,0);
                 const hoyStr = hoy.toISOString().split('T')[0];
                 const mesSel = document.getElementById('mesFiltro').value;
 
@@ -145,16 +141,14 @@
                     const monto = parseFloat(g.importe), esIn = ["Sueldo", "Otros Ingresos"].includes(g.categoria);
                     const botones = `<div class="flex gap-3"><button onclick="prepararEdicion('${g._id}')" class="text-blue-500">✏️</button><button onclick="eliminarGasto('${g._id}')" class="text-slate-300">🗑️</button></div>`;
 
-                    if (g.fecha <= hoyStr) {
-                        if (esIn) balAct += monto; else balAct -= monto;
-                    } else {
+                    if (g.fecha <= hoyStr) { if (esIn) balAct += monto; else balAct -= monto; } 
+                    else {
                         if (esIn) balPrev += monto; else balPrev -= monto;
                         listaP.innerHTML += `<li class="bg-white p-4 rounded-2xl border-l-4 border-amber-400 shadow-sm flex justify-between items-center mb-2 animate-fade">
                             <div><p class="font-black text-sm text-slate-800">${g.concepto}</p><p class="text-[9px] text-amber-600 font-black uppercase">${g.fecha}</p></div>
                             <div class="flex items-center gap-3 font-black"><p class="${esIn?'text-emerald-500':'text-rose-500'}">${monto.toFixed(2)}€</p>${botones}</div>
                         </li>`;
                     }
-
                     if (g.fecha.startsWith(mesSel)) {
                         if (esIn) inMes += monto; else { gasMes += monto; resCats[g.categoria] = (resCats[g.categoria] || 0) + monto; }
                         listaM.innerHTML += `<li class="bg-white p-3 rounded-xl border border-slate-100 flex justify-between items-center animate-fade">
@@ -163,48 +157,36 @@
                         </li>`;
                     }
                 });
-
                 document.getElementById('totalRealCuenta').innerText = balAct.toFixed(2) + '€';
                 document.getElementById('totalEstimado').innerText = (balAct + balPrev).toFixed(2) + '€';
                 document.getElementById('totalPendiente').innerText = (balPrev >= 0 ? '+' : '') + balPrev.toFixed(2) + '€';
                 document.getElementById('ingresosMes').innerText = inMes.toFixed(2) + '€';
                 document.getElementById('gastosMes').innerText = gasMes.toFixed(2) + '€';
-                actualizarGrafico(resCats, gasMes);
-            } catch (e) { console.error("Error cargando:", e); }
-        }
-
-        function actualizarGrafico(resCats, totalGas) {
-            const ctx = document.getElementById('graficoGastos').getContext('2d');
-            if (miGrafico) miGrafico.destroy();
-            const divLeyenda = document.getElementById('leyendaPersonalizada');
-            divLeyenda.innerHTML = '';
-            const cats = Object.keys(resCats);
-            if (cats.length === 0) return;
-
-            miGrafico = new Chart(ctx, {
-                type: 'doughnut',
-                data: { labels: cats, datasets: [{ data: Object.values(resCats), backgroundColor: COLORES, borderWidth: 0 }] },
-                options: { plugins: { legend: { display: false } }, maintainAspectRatio: false, cutout: '75%' }
-            });
-
-            cats.forEach((cat, i) => {
-                const porc = ((resCats[cat] / totalGas) * 100).toFixed(0);
-                divLeyenda.innerHTML += `<div class="flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-100">
-                    <div class="w-2 h-2 rounded-full" style="background:${COLORES[i]}"></div>
-                    <div class="flex flex-col leading-tight"><span class="text-[8px] font-black uppercase text-slate-400">${cat}</span><span class="text-[10px] font-black text-slate-700">${resCats[cat].toFixed(1)}€ (${porc}%)</span></div>
-                </div>`;
-            });
+                
+                const ctx = document.getElementById('graficoGastos').getContext('2d');
+                if (miGrafico) miGrafico.destroy();
+                const divLeyenda = document.getElementById('leyendaPersonalizada'); divLeyenda.innerHTML = '';
+                const cats = Object.keys(resCats);
+                if (cats.length > 0) {
+                    miGrafico = new Chart(ctx, { type: 'doughnut', data: { labels: cats, datasets: [{ data: Object.values(resCats), backgroundColor: COLORES, borderWidth: 0 }] }, options: { plugins: { legend: { display: false } }, maintainAspectRatio: false, cutout: '75%' } });
+                    cats.forEach((cat, i) => {
+                        const porc = ((resCats[cat] / gasMes) * 100).toFixed(0);
+                        divLeyenda.innerHTML += `<div class="flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-100"><div class="w-2 h-2 rounded-full" style="background:${COLORES[i]}"></div><div class="flex flex-col leading-tight"><span class="text-[8px] font-black uppercase text-slate-400">${cat}</span><span class="text-[10px] font-black text-slate-700">${resCats[cat].toFixed(1)}€ (${porc}%)</span></div></div>`;
+                    });
+                }
+                const tj = document.getElementById('tarjetaBalance');
+                tj.className = balAct < 0 ? 'bg-rose-500 text-white p-6 rounded-[2rem] shadow-xl mb-4 text-center' : 'bg-emerald-500 text-white p-6 rounded-[2rem] shadow-xl mb-4 text-center';
+            } catch (e) { console.error(e); }
         }
 
         function prepararEdicion(id) {
-            const g = gastosCache.find(i => i._id === id);
-            if (!g) return;
+            const g = gastosCache.find(i => i._id === id); if (!g) return;
             document.getElementById('edit_id').value = g._id;
             document.getElementById('concepto').value = g.concepto;
             document.getElementById('importe').value = g.importe;
             document.getElementById('categoria').value = g.categoria;
             document.getElementById('fecha').value = g.fecha;
-            document.getElementById('btnGuardar').innerText = "ACTUALIZAR GASTO";
+            document.getElementById('btnGuardar').innerText = "GUARDAR CAMBIOS";
             document.getElementById('btnGuardar').classList.replace('bg-slate-900', 'bg-orange-500');
             document.getElementById('btnCancelarEdicion').classList.remove('hidden');
             document.getElementById('tituloForm').innerText = "Modo Edición";
@@ -212,8 +194,7 @@
         }
 
         function cancelarEdicion() {
-            document.getElementById('edit_id').value = "";
-            document.getElementById('gastoForm').reset();
+            document.getElementById('edit_id').value = ""; document.getElementById('gastoForm').reset();
             document.getElementById('btnGuardar').innerText = "GUARDAR";
             document.getElementById('btnGuardar').className = "w-full bg-slate-900 text-white font-black p-5 rounded-2xl shadow-xl";
             document.getElementById('btnCancelarEdicion').classList.add('hidden');
@@ -223,7 +204,7 @@
 
         document.getElementById('gastoForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const id = document.getElementById('edit_id').value;
+            const idViejo = document.getElementById('edit_id').value;
             const data = {
                 concepto: document.getElementById('concepto').value,
                 importe: parseFloat(document.getElementById('importe').value),
@@ -231,33 +212,27 @@
                 fecha: document.getElementById('fecha').value
             };
 
-            const url = id ? `${API_URL}/${id}` : API_URL;
-            const metodo = id ? 'PUT' : 'POST';
-
             try {
-                const res = await fetch(url, {
-                    method: metodo,
+                // ESTRATEGIA INFALIBLE: SI EDITAMOS, PRIMERO BORRAMOS EL VIEJO
+                if (idViejo) {
+                    await fetch(`${API_URL}/${idViejo}`, { method: 'DELETE' });
+                }
+                
+                // LUEGO CREAMOS EL NUEVO (O SIMPLEMENTE CREAMOS SI NO ES EDICIÓN)
+                const res = await fetch(API_URL, {
+                    method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
 
                 if (res.ok) {
-                    cancelarEdicion();
-                    await cargarDatos();
+                    cancelarEdicion(); await cargarDatos();
                     cambiarTab('vista-total', document.querySelectorAll('.tab-btn')[0]);
-                } else {
-                    const errorMsg = await res.text();
-                    console.error("Respuesta servidor no OK:", errorMsg);
-                    alert("El servidor rechazó el guardado. Revisa la consola.");
-                }
-            } catch (err) {
-                console.error("Error conexión:", err);
-                alert("Error de conexión con Render. ¿Está activo el servidor?");
-            }
+                } else { alert("Error al guardar."); }
+            } catch (err) { console.error(err); alert("Error de conexión."); }
         });
 
         async function eliminarGasto(id) { if (confirm("¿Eliminar?")) { await fetch(`${API_URL}/${id}`, { method: 'DELETE' }); await cargarDatos(); } }
-        
         cargarDatos();
     </script>
 </body>
