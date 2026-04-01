@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi Gestor Pro + Gráficos</title>
+    <title>Mi Gestor Pro v6.4</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -16,7 +16,7 @@
 
     <nav class="bg-slate-900 text-white p-4 shadow-md sticky top-0 z-50 flex justify-between items-center">
         <h1 id="tituloFiltro" class="text-lg font-black tracking-tighter">Mi Cuenta Real</h1>
-        <span class="bg-emerald-500 px-2 py-1 rounded text-[10px] font-black uppercase">v6.2 📊</span>
+        <span class="bg-emerald-500 px-2 py-1 rounded text-[10px] font-black uppercase">v6.4 💎</span>
     </nav>
 
     <main class="max-w-md mx-auto p-4">
@@ -33,33 +33,36 @@
                 </div>
                 <div class="h-8 w-[1px] bg-slate-700"></div>
                 <div>
-                    <p class="text-[9px] uppercase tracking-widest opacity-70 font-black text-emerald-300">Pendiente</p>
+                    <p class="text-[9px] uppercase tracking-widest opacity-70 font-black text-emerald-300">En Plan</p>
                     <p id="totalPendiente" class="text-xl font-black text-emerald-400">0.00€</p>
                 </div>
             </div>
 
             <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 mb-6">
-                <h3 class="text-[11px] font-black uppercase text-slate-400 mb-4 text-center tracking-widest">Distribución de Gastos (Mes Actual)</h3>
+                <h3 class="text-[11px] font-black uppercase text-slate-400 mb-4 text-center tracking-widest">Gastos por Categoría</h3>
                 <div class="relative h-64">
                     <canvas id="graficoGastos"></canvas>
                 </div>
-                <div id="mensajeSinDatos" class="hidden text-center py-10 text-slate-400 text-xs italic">Aún no hay gastos este mes para mostrar el gráfico.</div>
+                <div id="mensajeSinDatos" class="hidden text-center py-10 text-slate-400 text-xs italic">No hay gastos este mes.</div>
             </div>
         </section>
 
         <section id="vista-prevision" class="seccion-tab hidden">
+            <div class="bg-indigo-50 p-4 rounded-2xl mb-4 border border-indigo-100">
+                <p class="text-[10px] font-black text-indigo-600 uppercase">Movimientos Futuros</p>
+            </div>
             <ul id="listaPrevision" class="space-y-3 pt-2"></ul>
         </section>
 
         <section id="vista-mes" class="seccion-tab hidden">
-            <div class="bg-white p-4 rounded-2xl shadow-sm mb-4 border border-slate-100">
-                <input type="month" id="mesFiltro" class="w-full p-2 bg-slate-50 rounded-xl font-black text-center border-none outline-none" onchange="cargarDatos()">
+            <div class="bg-white p-4 rounded-2xl shadow-sm mb-4 border border-slate-100 text-center">
+                <input type="month" id="mesFiltro" class="font-black outline-none border-none bg-transparent" onchange="cargarDatos()">
             </div>
             <div class="grid grid-cols-2 gap-3 mb-6 font-black uppercase text-[10px]">
-                <div class="bg-emerald-50 p-4 rounded-2xl border border-emerald-100 text-center text-emerald-700">
+                <div class="bg-emerald-50 p-4 rounded-2xl text-center text-emerald-700 border border-emerald-100">
                     <p>Ingresos</p><p id="ingresosMes" class="text-lg">0.00€</p>
                 </div>
-                <div class="bg-rose-50 p-4 rounded-2xl border border-rose-100 text-center text-rose-700">
+                <div class="bg-rose-50 p-4 rounded-2xl text-center text-rose-700 border border-rose-100">
                     <p>Gastos</p><p id="gastosMes" class="text-lg">0.00€</p>
                 </div>
             </div>
@@ -75,16 +78,17 @@
                         <option value="Sueldo">💰 Sueldo</option>
                         <option value="Otros Ingresos">💵 Otros Ingresos</option>
                         <option value="El Corte Inglés">🏬 El Corte Inglés</option>
-                        <option value="BBVA Tarjeta">🟦 BBVA Tarjeta</option>
+                        <option value="Cuenta BBVA">🏦 Cuenta BBVA</option>
+                        <option value="Tarjeta BBVA">🟦 Tarjeta BBVA</option>
                         <option value="Imagine">🟣 Imagine</option>
                         <option value="PayPal">💳 PayPal</option>
                         <option value="Amazon">📦 Amazon</option>
                         <option value="Gasolina">⛽ Gasolina</option>
                     </select>
                     <input type="date" id="fecha" class="w-full p-4 bg-slate-50 rounded-xl outline-none font-bold" required>
-                    <button type="submit" class="w-full bg-slate-900 text-white font-black p-5 rounded-2xl shadow-xl active:scale-95 transition-all">GUARDAR</button>
+                    <button type="submit" class="w-full bg-slate-900 text-white font-black p-5 rounded-2xl shadow-xl">GUARDAR</button>
                 </form>
-                <button onclick="resetearTodo()" class="w-full mt-10 text-slate-300 text-[9px] font-black uppercase tracking-widest p-2">♻️ Resetear Sistema</button>
+                <button onclick="resetearTodo()" class="w-full mt-10 text-slate-300 text-[9px] font-black uppercase p-2">♻️ Limpiar Sistema</button>
             </div>
         </section>
     </main>
@@ -96,135 +100,4 @@
         <button onclick="cambiarTab('vista-prevision', this)" class="tab-btn flex flex-col items-center p-2 text-slate-400">
             <span class="text-2xl">🗓️</span><span class="text-[9px] uppercase font-black">Plan</span>
         </button>
-        <button onclick="cambiarTab('vista-mes', this)" class="tab-btn flex flex-col items-center p-2 text-slate-400">
-            <span class="text-2xl">📊</span><span class="text-[9px] uppercase font-black">Mes</span>
-        </button>
-        <button onclick="cambiarTab('vista-add', this)" class="tab-btn flex flex-col items-center p-2 text-slate-400">
-            <span class="text-2xl">➕</span><span class="text-[9px] uppercase font-black">Add</span>
-        </button>
-    </div>
-
-    <script>
-        const API_URL = 'https://mis-gastos-app.onrender.com/api/gastos'; 
-        let miGrafico = null;
-
-        document.getElementById('mesFiltro').value = new Date().toISOString().slice(0, 7);
-        document.getElementById('fecha').valueAsDate = new Date();
-
-        function cambiarTab(id, el) {
-            document.querySelectorAll('.seccion-tab').forEach(s => s.classList.add('hidden'));
-            document.querySelectorAll('.tab-btn').forEach(b => { b.classList.remove('active-tab'); b.classList.add('text-slate-400'); });
-            document.getElementById(id).classList.remove('hidden');
-            el.classList.add('active-tab'); el.classList.remove('text-slate-400');
-            if(id === 'vista-total') cargarDatos(); 
-        }
-
-        async function cargarDatos() {
-            try {
-                const res = await fetch(API_URL);
-                const todos = await res.json();
-                const hoy = new Date().toISOString().split('T')[0];
-                const mesSel = document.getElementById('mesFiltro').value;
-
-                let balanceActual = 0;
-                let balancePrevision = 0;
-                let ingresosMes = 0;
-                let gastosMes = 0;
-                let resumenCats = {};
-
-                const listaM = document.getElementById('listaGastos');
-                const listaP = document.getElementById('listaPrevision');
-                listaM.innerHTML = ''; listaP.innerHTML = '';
-
-                todos.forEach(g => {
-                    if (!g.importe || !g.categoria) return;
-                    const monto = parseFloat(g.importe);
-                    const esIn = g.categoria === 'Sueldo' || g.categoria === 'Otros Ingresos';
-                    
-                    if (g.fecha <= hoy) {
-                        if (esIn) balanceActual += monto;
-                        else balanceActual -= monto;
-                    } else {
-                        if (esIn) balancePrevision += monto;
-                        else balancePrevision -= monto;
-                        listaP.innerHTML += `<li class="bg-white p-4 rounded-2xl border-l-4 border-amber-400 shadow-sm flex justify-between items-center mb-2">
-                            <div><p class="font-black text-sm text-slate-800">${g.concepto}</p><p class="text-[9px] text-amber-600 font-black uppercase">${g.fecha}</p></div>
-                            <div class="text-right flex items-center gap-2"><p class="font-black ${esIn?'text-emerald-500':'text-rose-500'}">${monto.toFixed(2)}€</p><button onclick="eliminarGasto('${g._id}')">🗑️</button></div>
-                        </li>`;
-                    }
-
-                    if (g.fecha.startsWith(mesSel)) {
-                        if (esIn) ingresosMes += monto;
-                        else {
-                            gastosMes += monto;
-                            resumenCats[g.categoria] = (resumenCats[g.categoria] || 0) + monto;
-                        }
-                        listaM.innerHTML += `<li class="bg-white p-3 rounded-xl border border-slate-100 flex justify-between items-center">
-                            <div><p class="font-bold text-xs text-slate-700">${g.concepto}</p><p class="text-[8px] text-slate-400 font-black uppercase">${g.categoria}</p></div>
-                            <div class="text-right flex items-center gap-2"><p class="font-black text-xs ${esIn?'text-emerald-500':'text-rose-500'}">${monto.toFixed(2)}€</p><button onclick="eliminarGasto('${g._id}')">🗑️</button></div>
-                        </li>`;
-                    }
-                });
-
-                document.getElementById('totalRealCuenta').innerText = balanceActual.toFixed(2) + '€';
-                document.getElementById('totalEstimado').innerText = (balanceActual + balancePrevision).toFixed(2) + '€';
-                document.getElementById('totalPendiente').innerText = balancePrevision.toFixed(2) + '€';
-                document.getElementById('ingresosMes').innerText = ingresosMes.toFixed(2) + '€';
-                document.getElementById('gastosMes').innerText = gastosMes.toFixed(2) + '€';
-                
-                // ACTUALIZAR QUESITOS
-                const ctx = document.getElementById('graficoGastos').getContext('2d');
-                const labels = Object.keys(resumenCats);
-                const data = Object.values(resumenCats);
-
-                if (miGrafico) miGrafico.destroy();
-                
-                if (data.length > 0) {
-                    document.getElementById('mensajeSinDatos').classList.add('hidden');
-                    document.getElementById('graficoGastos').classList.remove('hidden');
-                    miGrafico = new Chart(ctx, {
-                        type: 'doughnut',
-                        data: {
-                            labels: labels,
-                            datasets: [{
-                                data: data,
-                                backgroundColor: ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316'],
-                                borderWidth: 2,
-                                borderRadius: 5
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: { position: 'bottom', labels: { font: { size: 10, weight: 'bold' }, padding: 15 } }
-                            }
-                        }
-                    });
-                } else {
-                    document.getElementById('mensajeSinDatos').classList.remove('hidden');
-                    document.getElementById('graficoGastos').classList.add('hidden');
-                }
-
-                const tj = document.getElementById('tarjetaBalance');
-                if (balanceActual < 0) tj.className = 'bg-rose-500 text-white p-6 rounded-[2rem] shadow-xl mb-4 text-center animate-pulse';
-                else tj.className = 'bg-emerald-500 text-white p-6 rounded-[2rem] shadow-xl mb-4 text-center';
-
-            } catch (e) { console.error(e); }
-        }
-
-        document.getElementById('gastoForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const n = { concepto: document.getElementById('concepto').value, importe: document.getElementById('importe').value, categoria: document.getElementById('categoria').value, fecha: document.getElementById('fecha').value };
-            await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(n) });
-            e.target.reset(); document.getElementById('fecha').valueAsDate = new Date();
-            await cargarDatos(); cambiarTab('vista-total', document.querySelectorAll('.tab-btn')[0]);
-        });
-
-        async function eliminarGasto(id) { if (confirm("¿Eliminar?")) { await fetch(`${API_URL}/${id}`, { method: 'DELETE' }); await cargarDatos(); } }
-        async function resetearTodo() { if (confirm("⚠️ ¿Borrar todo?")) { const res = await fetch(API_URL); const todos = await res.json(); for (let g of todos) { await fetch(`${API_URL}/${g._id}`, { method: 'DELETE' }); } location.reload(); } }
-        
-        cargarDatos();
-    </script>
-</body>
-</html>
+        <button onclick="cambiarTab('vista-mes', this)" class="tab-btn flex
