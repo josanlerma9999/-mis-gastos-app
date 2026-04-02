@@ -3,45 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mi Cuenta Real v8.4 Pro</title>
+    <title>Mi Cuenta Real v8.5 Dark</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
-        .active-tab { color: #10b981; border-top: 4px solid #10b981; }
+        :root { --accent: #10b981; }
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; background-color: #000000; color: #ffffff; }
+        .active-tab { color: var(--accent); border-top: 4px solid var(--accent); }
         .hidden { display: none !important; }
         .font-900 { font-weight: 900; }
+        .bg-dark-card { background-color: #0a0a0a; border: 1px solid #1a1a1a; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-up { animation: slideUp 0.4s ease-out; }
     </style>
 </head>
-<body class="bg-slate-50 pb-28">
+<body class="pb-28">
 
-    <div id="pantalla-pin" class="fixed inset-0 bg-slate-900 z-[100] flex flex-col items-center justify-center p-6 text-white">
-        <h2 class="font-900 text-2xl mb-2 italic italic tracking-tighter">MI CUENTA REAL</h2>
-        <p id="pin-msg" class="text-emerald-500 text-[10px] uppercase font-black mb-8 tracking-widest text-center">Introduce tu PIN</p>
+    <div id="pantalla-pin" class="fixed inset-0 bg-black z-[100] flex flex-col items-center justify-center p-6 text-white">
+        <h2 class="font-900 text-2xl mb-2 italic tracking-tighter text-white">MI CUENTA REAL</h2>
+        <p id="pin-msg" class="text-[10px] uppercase font-black mb-8 tracking-widest text-slate-500">Introduce tu PIN</p>
         <div class="flex gap-4 mb-12" id="pin-dots">
-            <div class="w-4 h-4 rounded-full border-2 border-slate-700"></div>
-            <div class="w-4 h-4 rounded-full border-2 border-slate-700"></div>
-            <div class="w-4 h-4 rounded-full border-2 border-slate-700"></div>
-            <div class="w-4 h-4 rounded-full border-2 border-slate-700"></div>
+            <div class="w-4 h-4 rounded-full border-2 border-slate-800"></div>
+            <div class="w-4 h-4 rounded-full border-2 border-slate-800"></div>
+            <div class="w-4 h-4 rounded-full border-2 border-slate-800"></div>
+            <div class="w-4 h-4 rounded-full border-2 border-slate-800"></div>
         </div>
         <div class="grid grid-cols-3 gap-6 max-w-[280px]">
             <script>
-                for(let i=1; i<=9; i++) document.write(`<button onclick="teclado(${i})" class="w-16 h-16 bg-slate-800 rounded-full font-black text-2xl active:bg-emerald-500">${i}</button>`);
+                for(let i=1; i<=9; i++) document.write(`<button onclick="teclado(${i})" class="w-16 h-16 bg-slate-900 rounded-full font-black text-2xl active:bg-emerald-500">${i}</button>`);
             </script>
             <div></div>
-            <button onclick="teclado(0)" class="w-16 h-16 bg-slate-800 rounded-full font-black text-2xl active:bg-emerald-500">0</button>
+            <button onclick="teclado(0)" class="w-16 h-16 bg-slate-900 rounded-full font-black text-2xl active:bg-emerald-500">0</button>
             <button onclick="borrarPin()" class="w-16 h-16 text-rose-500 font-black text-[10px] uppercase">DEL</button>
         </div>
     </div>
 
-    <header class="bg-slate-900 text-white p-5 sticky top-0 z-50 flex justify-between items-center shadow-lg">
+    <header class="bg-black/80 backdrop-blur-md text-white p-5 sticky top-0 z-50 flex justify-between items-center border-b border-white/5">
         <h1 class="font-900 text-xl tracking-tighter italic">MI CUENTA REAL</h1>
         <div class="flex gap-2">
-            <button onclick="checkRecurrentes(true)" class="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-lg shadow-lg">🔄</button>
-            <button onclick="togglePrivacy()" class="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center text-lg">
+            <button onclick="checkRecurrentes(true)" class="w-10 h-10 bg-slate-900 rounded-full flex items-center justify-center text-lg">🔄</button>
+            <button onclick="togglePrivacy()" class="w-10 h-10 bg-slate-900 rounded-full flex items-center justify-center text-lg">
                 <span id="ojo-icon">👁️</span>
             </button>
         </div>
@@ -49,186 +51,150 @@
 
     <main class="max-w-md mx-auto p-4">
         
-        <div id="modalRecurrente" class="hidden bg-indigo-600 text-white p-4 rounded-2xl mb-4 shadow-xl animate-up">
-            <p class="text-[10px] font-black uppercase tracking-widest mb-2">🔄 Pagos recurrentes detectados</p>
-            <button onclick="procesarRecurrentes()" class="w-full bg-white text-indigo-600 font-black py-2 rounded-xl text-xs">GENERAR ESTE MES</button>
+        <div id="statsComp" class="hidden bg-dark-card p-4 rounded-2xl mb-4 text-center border-l-4 border-emerald-500 animate-up">
+            <p id="compTexto" class="text-[10px] font-black uppercase tracking-widest text-slate-400"></p>
         </div>
 
         <section id="tab-cuenta" class="tab-content animate-up">
-            <div id="cardMain" class="p-8 rounded-[2.5rem] text-center shadow-2xl mb-6 transition-all duration-500">
-                <p class="text-[11px] uppercase font-black tracking-[0.2em] mb-2 opacity-80">Saldo Actual</p>
-                <h2 id="valReal" class="text-5xl font-900 tracking-tighter transition-all">0.00€</h2>
+            <div id="cardMain" class="p-10 rounded-[2.5rem] text-center mb-6 transition-all duration-700 bg-slate-900 border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+                <p class="text-[11px] uppercase font-black tracking-[0.2em] mb-2 text-slate-400">Balance Total</p>
+                <h2 id="valReal" class="text-6xl font-900 tracking-tighter">0.00€</h2>
             </div>
             <div class="grid grid-cols-2 gap-4 mb-8">
-                <div class="bg-slate-800 text-white p-5 rounded-[2rem] text-center border-b-4 border-indigo-500">
-                    <p class="text-[9px] font-black uppercase text-indigo-300 mb-1">Final Mes</p>
-                    <p id="valEstimado" class="text-xl font-900">0.00€</p>
+                <div class="bg-dark-card p-5 rounded-[2rem] text-center border-b-4 border-indigo-500/50">
+                    <p class="text-[9px] font-black uppercase text-slate-500 mb-1">Final de Mes</p>
+                    <p id="valEstimado" class="text-xl font-900 text-white">0.00€</p>
                 </div>
-                <div class="bg-slate-800 text-white p-5 rounded-[2rem] text-center border-b-4 border-emerald-500">
-                    <p class="text-[9px] font-black uppercase text-emerald-300 mb-1">Previsión</p>
-                    <p id="valPendiente" class="text-xl font-900">0.00€</p>
+                <div class="bg-dark-card p-5 rounded-[2rem] text-center border-b-4 border-emerald-500/50">
+                    <p class="text-[9px] font-black uppercase text-slate-500 mb-1">Previsiones</p>
+                    <p id="valPendiente" class="text-xl font-900 text-white">0.00€</p>
                 </div>
             </div>
-            <div class="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 mb-20">
+            <div class="bg-dark-card p-6 rounded-[2.5rem] mb-20">
                 <div class="h-56 mb-6"><canvas id="chartGastos"></canvas></div>
                 <div id="legendBox" class="grid grid-cols-2 gap-2"></div>
             </div>
         </section>
 
         <section id="tab-mes" class="tab-content hidden animate-up">
-            <div class="bg-white p-4 rounded-2xl mb-4 shadow-sm flex flex-col gap-3 border border-slate-100">
-                <div class="flex justify-between items-center px-2">
-                    <input type="month" id="filtroMes" class="font-black bg-transparent outline-none text-slate-700" onchange="renderApp()">
-                    <button onclick="exportarCSV()" class="bg-emerald-100 text-emerald-700 text-[10px] font-black px-4 py-2 rounded-xl uppercase tracking-tighter">📦 Exportar Excel</button>
-                </div>
+            <div class="bg-dark-card p-4 rounded-2xl mb-4 flex justify-between items-center">
+                <input type="month" id="filtroMes" class="font-black bg-transparent outline-none text-white invert" onchange="renderApp()">
+                <button onclick="exportarCSV()" class="text-emerald-500 text-[10px] font-black px-3 py-1 bg-emerald-500/10 rounded-lg uppercase">CSV</button>
             </div>
             <div id="resumenMes" class="grid grid-cols-2 gap-3 mb-4"></div>
             <div id="listaMes" class="space-y-2"></div>
         </section>
 
-        <section id="tab-plan" class="tab-content hidden animate-up">
-            <h3 class="font-black uppercase text-[10px] text-slate-400 mb-4 px-2 tracking-widest">Próximos Pagos</h3>
-            <div id="listaPlan" class="space-y-3"></div>
-        </section>
-
         <section id="tab-add" class="tab-content hidden animate-up">
-            <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
-                <h2 id="formTitle" class="text-center font-black uppercase text-[10px] text-slate-400 mb-6 tracking-widest">Movimiento</h2>
+            <div class="bg-dark-card p-8 rounded-[2.5rem]">
+                <h2 id="formTitle" class="text-center font-black uppercase text-[10px] text-slate-500 mb-6 tracking-widest">Registrar Movimiento</h2>
                 <form id="mainForm" class="space-y-4">
                     <input type="hidden" id="in-id">
-                    <input type="text" id="in-concepto" placeholder="Concepto" class="w-full p-4 bg-slate-50 rounded-2xl font-bold outline-none" required>
-                    <input type="number" id="in-importe" step="0.01" placeholder="0.00" class="w-full p-4 bg-slate-50 rounded-2xl font-900 text-3xl outline-none" required>
+                    <input type="text" id="in-concepto" placeholder="Concepto" class="w-full p-4 bg-black border border-white/10 rounded-2xl font-bold text-white outline-none focus:border-emerald-500 transition-all" required>
+                    <input type="number" id="in-importe" step="0.01" placeholder="0.00" class="w-full p-4 bg-black border border-white/10 rounded-2xl font-900 text-4xl text-white outline-none" required>
                     
-                    <div class="flex items-center gap-3 p-4 bg-indigo-50 rounded-2xl border border-indigo-100">
-                        <input type="checkbox" id="in-recurrente" class="w-5 h-5 accent-indigo-600">
-                        <label for="in-recurrente" class="text-xs font-black text-indigo-700 uppercase">Recurrente Mensual</label>
+                    <div class="flex items-center gap-3 p-4 bg-slate-900/50 rounded-2xl border border-white/5">
+                        <input type="checkbox" id="in-recurrente" class="w-5 h-5 accent-emerald-500">
+                        <label for="in-recurrente" class="text-xs font-black text-slate-400 uppercase tracking-tighter">Es un pago recurrente</label>
                     </div>
 
-                    <select id="in-categoria" class="w-full p-4 bg-slate-50 rounded-2xl font-bold outline-none">
-                        <option value="Sueldo">💰 Sueldo</option>
-                        <option value="Otros Ingresos">💵 Otros Ingresos</option>
-                        <option value="El Corte Inglés">🏬 El Corte Inglés</option>
-                        <option value="Cuenta BBVA">🏦 Cuenta BBVA</option>
-                        <option value="Tarjeta BBVA">🟦 Tarjeta BBVA</option>
-                        <option value="Tarjeta Explora">🧭 Tarjeta Explora</option>
-                        <option value="Imagine">🟣 Imagine</option>
-                        <option value="PayPal">💳 PayPal</option>
-                        <option value="Amazon">📦 Amazon</option>
-                        <option value="Gasolina">⛽ Gasolina</option>
+                    <select id="in-categoria" class="w-full p-4 bg-black border border-white/10 rounded-2xl font-bold text-white outline-none">
+                        <optgroup label="INGRESOS"><option value="Sueldo">💰 Sueldo</option><option value="Otros Ingresos">💵 Otros</option></optgroup>
+                        <optgroup label="GASTOS"><option value="El Corte Inglés">🏬 El Corte Inglés</option><option value="Cuenta BBVA">🏦 BBVA</option><option value="Tarjeta BBVA">🟦 Tarjeta BBVA</option><option value="Tarjeta Explora">🧭 Explora</option><option value="Imagine">🟣 Imagine</option><option value="PayPal">💳 PayPal</option><option value="Amazon">📦 Amazon</option><option value="Gasolina">⛽ Gasolina</option></optgroup>
                     </select>
-                    <input type="date" id="in-fecha" class="w-full p-4 bg-slate-50 rounded-2xl font-bold outline-none" required>
-                    <button type="submit" id="btnSubmit" class="w-full bg-slate-900 text-white font-900 p-5 rounded-2xl shadow-xl">GUARDAR</button>
-                    <button type="button" id="btnCancel" onclick="resetForm()" class="hidden w-full text-rose-500 font-black text-[10px] uppercase py-2">Cancelar</button>
+                    <input type="date" id="in-fecha" class="w-full p-4 bg-black border border-white/10 rounded-2xl font-bold text-white outline-none" required>
+                    <button type="submit" id="btnSubmit" class="w-full bg-white text-black font-900 p-5 rounded-2xl shadow-xl active:scale-95 transition-all">GUARDAR</button>
                 </form>
             </div>
         </section>
     </main>
 
-    <nav class="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-slate-100 flex justify-around p-3 pb-8 z-50">
+    <nav class="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-xl border-t border-white/5 flex justify-around p-3 pb-8 z-50">
         <button onclick="switchTab('tab-cuenta', this)" class="nav-btn flex flex-col items-center gap-1 active-tab">
-            <span class="text-2xl">💰</span><span class="text-[9px] font-black uppercase">Cuenta</span>
+            <span class="text-2xl">📊</span><span class="text-[9px] font-black uppercase tracking-widest">Status</span>
         </button>
-        <button onclick="switchTab('tab-plan', this)" class="nav-btn flex flex-col items-center gap-1 text-slate-400">
-            <span class="text-2xl">🗓️</span><span class="text-[9px] font-black uppercase">Plan</span>
+        <button onclick="switchTab('tab-mes', this)" class="nav-btn flex flex-col items-center gap-1 text-slate-600">
+            <span class="text-2xl">📓</span><span class="text-[9px] font-black uppercase tracking-widest">Historial</span>
         </button>
-        <button onclick="switchTab('tab-mes', this)" class="nav-btn flex flex-col items-center gap-1 text-slate-400">
-            <span class="text-2xl">📊</span><span class="text-[9px] font-black uppercase">Mes</span>
-        </button>
-        <button onclick="switchTab('tab-add', this)" class="nav-btn flex flex-col items-center gap-1 text-slate-400">
-            <span class="text-2xl">➕</span><span class="text-[9px] font-black uppercase">Nuevo</span>
+        <button onclick="switchTab('tab-add', this)" class="nav-btn flex flex-col items-center gap-1 text-slate-600">
+            <span class="text-2xl">➕</span><span class="text-[9px] font-black uppercase tracking-widest">Añadir</span>
         </button>
     </nav>
 
     <script>
         const API_URL = 'https://mis-gastos-app.onrender.com/api/gastos';
-        const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316', '#3b82f6', '#0f172a'];
+        const COLORS = ['#10b981', '#6366f1', '#f59e0b', '#ef4444', '#ec4899', '#06b6d4', '#8b5cf6'];
         let appData = [], mainChart = null, pinEntrada = "", privacyMode = false;
 
-        // SEGURIDAD (PIN)
+        // PIN SEGURIDAD
         const pinGuardado = localStorage.getItem('user_pin');
-        if (pinGuardado) document.getElementById('pin-msg').innerText = "Introduce tu PIN";
         function teclado(num) { if (pinEntrada.length < 4) { pinEntrada += num; updateDots(); if (pinEntrada.length === 4) setTimeout(checkPin, 200); } }
-        function updateDots() { const dots = document.getElementById('pin-dots').children; for (let i=0; i<4; i++) dots[i].className = i < pinEntrada.length ? "w-4 h-4 rounded-full bg-emerald-500 shadow-[0_0_10px_#10b981]" : "w-4 h-4 rounded-full border-2 border-slate-700"; }
+        function updateDots() { const dots = document.getElementById('pin-dots').children; for (let i=0; i<4; i++) dots[i].className = i < pinEntrada.length ? "w-4 h-4 rounded-full bg-emerald-500" : "w-4 h-4 rounded-full border-2 border-slate-800"; }
         function borrarPin() { pinEntrada = ""; updateDots(); }
-        function checkPin() { if (!pinGuardado) { localStorage.setItem('user_pin', pinEntrada); desbloquear(); } else if (pinEntrada === pinGuardado) desbloquear(); else { alert("PIN Incorrecto"); borrarPin(); } }
-        function desbloquear() { document.getElementById('pantalla-pin').classList.add('hidden'); renderApp(); checkRecurrentes(false); }
+        function checkPin() { if (!pinGuardado) { localStorage.setItem('user_pin', pinEntrada); desbloquear(); } else if (pinEntrada === pinGuardado) desbloquear(); else { alert("Error"); borrarPin(); } }
+        function desbloquear() { document.getElementById('pantalla-pin').classList.add('hidden'); renderApp(); }
 
-        // PRIVACIDAD
-        function togglePrivacy() { privacyMode = !privacyMode; document.getElementById('ojo-icon').innerText = privacyMode ? "🙈" : "👁️"; renderApp(); }
-        function mask(v) { return privacyMode ? "****€" : v; }
-
-        // --- EXPORTAR A EXCEL (CSV) ---
-        function exportarCSV() {
-            let csv = "Fecha,Concepto,Importe,Categoria\n";
-            appData.forEach(g => { csv += `${g.fecha},${g.concepto},${g.importe},${g.categoria}\n`; });
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = `Mis_Gastos_${new Date().toISOString().slice(0,10)}.csv`;
-            link.click();
-        }
-
-        // --- RECURRENTES (v8.4 mejorado) ---
-        function checkRecurrentes(manual) {
-            const recurrentes = JSON.parse(localStorage.getItem('recurrentes') || "[]");
-            const mesActual = new Date().toISOString().slice(0, 7);
-            const ultimoMes = localStorage.getItem('ultimo_mes_recurrente');
-            
-            if (recurrentes.length > 0 && ultimoMes !== mesActual) {
-                document.getElementById('modalRecurrente').classList.remove('hidden');
-            } else if (manual) {
-                alert("✅ Todo al día. No hay pagos recurrentes pendientes de generar.");
-            }
-        }
-
-        async function procesarRecurrentes() {
-            const recurrentes = JSON.parse(localStorage.getItem('recurrentes') || "[]");
-            const mesHoy = new Date().toISOString().slice(0, 7);
-            for (let r of recurrentes) {
-                const nuevaFecha = mesHoy + "-" + r.fecha.split('-')[2];
-                await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({...r, fecha: nuevaFecha}) });
-            }
-            localStorage.setItem('ultimo_mes_recurrente', mesHoy);
-            document.getElementById('modalRecurrente').classList.add('hidden');
-            renderApp();
-        }
-
-        // --- MOTOR RENDER ---
+        // MOTOR RENDER & COMPARATIVA
         async function renderApp() {
             try {
                 const res = await fetch(API_URL);
                 appData = await res.json();
-                const hoy = new Date().toISOString().split('T')[0], mesSel = document.getElementById('filtroMes').value;
-                let real=0, plan=0, inM=0, outM=0, cats={};
-                const lPlan=document.getElementById('listaPlan'), lMes=document.getElementById('listaMes');
-                lPlan.innerHTML=''; lMes.innerHTML='';
+                const hoy = new Date().toISOString().split('T')[0];
+                const mesActual = document.getElementById('filtroMes').value;
+                
+                // Cálculo comparativa
+                const fechaAnterior = new Date(mesActual + "-01");
+                fechaAnterior.setMonth(fechaAnterior.getMonth() - 1);
+                const mesAnterior = fechaAnterior.toISOString().slice(0, 7);
+
+                let real=0, plan=0, inM=0, outM=0, outMesAnterior=0, cats={};
+                const lMes = document.getElementById('listaMes');
+                lMes.innerHTML='';
 
                 appData.sort((a,b) => new Date(a.fecha) - new Date(b.fecha)).forEach(g => {
                     const val=parseFloat(g.importe), isIn=["Sueldo", "Otros Ingresos"].includes(g.categoria);
                     if (g.fecha <= hoy) isIn ? real+=val : real-=val;
-                    else { isIn ? plan+=val : plan-=val; lPlan.innerHTML += itemHTML(g, isIn, true); }
-                    if (g.fecha.startsWith(mesSel)) {
+                    else isIn ? plan+=val : plan-=val;
+
+                    if (g.fecha.startsWith(mesActual)) {
                         isIn ? inM+=val : (outM+=val, cats[g.categoria]=(cats[g.categoria]||0)+val);
-                        lMes.innerHTML += itemHTML(g, isIn, false);
+                        lMes.innerHTML += itemHTML(g, isIn);
                     }
+                    if (g.fecha.startsWith(mesAnterior) && !isIn) outMesAnterior += val;
                 });
 
+                // UI Update
                 document.getElementById('valReal').innerText = mask(real.toFixed(2)+"€");
                 document.getElementById('valEstimado').innerText = mask((real+plan).toFixed(2)+"€");
                 document.getElementById('valPendiente').innerText = mask(plan.toFixed(2)+"€");
-                document.getElementById('cardMain').className = real >= 0 ? "p-8 rounded-[2.5rem] text-center shadow-2xl mb-6 bg-emerald-500 text-white" : "p-8 rounded-[2.5rem] text-center shadow-2xl mb-6 bg-rose-500 text-white";
-                document.getElementById('resumenMes').innerHTML = `<div class="bg-white p-4 rounded-2xl border border-slate-100 text-center"><p class="text-[8px] font-black text-slate-400 uppercase">Ingresos</p><p class="text-emerald-500 font-900">${mask(inM.toFixed(2)+"€")}</p></div><div class="bg-white p-4 rounded-2xl border border-slate-100 text-center"><p class="text-[8px] font-black text-slate-400 uppercase">Gastos</p><p class="text-rose-500 font-900">${mask(outM.toFixed(2)+"€")}</p></div>`;
+                
+                // Mostrar Comparativa
+                if (outMesAnterior > 0) {
+                    const diff = ((outM / outMesAnterior) * 100 - 100).toFixed(1);
+                    const elComp = document.getElementById('statsComp');
+                    elComp.classList.remove('hidden');
+                    if (diff < 0) {
+                        document.getElementById('compTexto').innerHTML = `📉 Ahorras un <span class="text-emerald-500">${Math.abs(diff)}%</span> vs mes pasado`;
+                    } else {
+                        document.getElementById('compTexto').innerHTML = `📈 Gastas un <span class="text-rose-500">${diff}%</span> más que mes pasado`;
+                    }
+                }
+
+                document.getElementById('resumenMes').innerHTML = `
+                    <div class="bg-dark-card p-4 rounded-2xl border border-emerald-500/20"><p class="text-[8px] text-slate-500 font-black uppercase">Ingresos</p><p class="text-emerald-500 font-900">${mask(inM.toFixed(2)+"€")}</p></div>
+                    <div class="bg-dark-card p-4 rounded-2xl border border-rose-500/20"><p class="text-[8px] text-slate-500 font-black uppercase">Gastos</p><p class="text-rose-500 font-900">${mask(outM.toFixed(2)+"€")}</p></div>
+                `;
                 drawChart(cats, outM);
             } catch (e) { console.error(e); }
         }
 
-        function itemHTML(g, isI, isP) {
-            return `<div class="bg-white p-4 rounded-2xl border border-slate-100 flex justify-between items-center shadow-sm">
-                <div><p class="font-black text-slate-800 text-sm">${g.concepto}</p><p class="text-[9px] font-black uppercase text-slate-400">${isP ? g.fecha : g.categoria}</p></div>
+        function itemHTML(g, isI) {
+            return `<div class="bg-dark-card p-4 rounded-2xl flex justify-between items-center shadow-sm border border-white/5">
+                <div><p class="font-black text-slate-200 text-sm">${g.concepto}</p><p class="text-[8px] font-black uppercase text-slate-600">${g.categoria} · ${g.fecha.split('-')[2]}</p></div>
                 <div class="flex items-center gap-3">
                     <p class="font-900 ${isI?'text-emerald-500':'text-rose-500'}">${mask(parseFloat(g.importe).toFixed(2)+"€")}</p>
-                    <button onclick="editMode('${g._id}')" class="p-2 bg-slate-50 rounded-lg">✏️</button>
-                    <button onclick="deleteItem('${g._id}')" class="p-2 bg-slate-50 rounded-lg text-slate-300">🗑️</button>
+                    <button onclick="editMode('${g._id}')" class="p-2 bg-slate-900 rounded-lg text-xs">✏️</button>
+                    <button onclick="deleteItem('${g._id}')" class="p-2 bg-slate-900 rounded-lg text-slate-600 text-xs">🗑️</button>
                 </div>
             </div>`;
         }
@@ -239,37 +205,27 @@
             const labels = Object.keys(data);
             if (labels.length === 0 || privacyMode) { document.getElementById('legendBox').innerHTML = ""; return; }
             mainChart = new Chart(ctx, { type: 'doughnut', data: { labels: labels, datasets: [{ data: Object.values(data), backgroundColor: COLORS, borderWidth: 0 }] }, options: { plugins: { legend: { display: false } }, maintainAspectRatio: false, cutout: '85%' } });
-            document.getElementById('legendBox').innerHTML = labels.map((l, i) => `<div class="flex items-center gap-2 p-2 bg-slate-50 rounded-xl"><div class="w-2 h-2 rounded-full" style="background:${COLORS[i]}"></div><div class="flex flex-col"><span class="text-[7px] font-black text-slate-400 uppercase leading-none">${l}</span><span class="text-[10px] font-900 text-slate-700">${data[l].toFixed(1)}€</span></div></div>`).join('');
+            document.getElementById('legendBox').innerHTML = labels.map((l, i) => `<div class="flex items-center gap-2 p-2 bg-slate-900/50 rounded-xl"><div class="w-1.5 h-1.5 rounded-full" style="background:${COLORS[i]}"></div><div class="flex flex-col"><span class="text-[7px] font-black text-slate-500 uppercase">${l}</span><span class="text-[9px] font-900 text-slate-300">${data[l].toFixed(0)}€</span></div></div>`).join('');
         }
 
+        // FUNCIONES AUXILIARES
+        function togglePrivacy() { privacyMode = !privacyMode; document.getElementById('ojo-icon').innerText = privacyMode ? "🙈" : "👁️"; renderApp(); }
+        function mask(v) { return privacyMode ? "****€" : v; }
+        function switchTab(id, el) { document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden')); document.querySelectorAll('.nav-btn').forEach(b => b.classList.replace('active-tab', 'text-slate-600')); el.classList.replace('text-slate-600', 'active-tab'); document.getElementById(id).classList.remove('hidden'); renderApp(); }
+        function exportarCSV() { let csv = "Fecha,Concepto,Importe,Categoria\n"; appData.forEach(g => { csv += `${g.fecha},${g.concepto},${g.importe},${g.categoria}\n`; }); const blob = new Blob([csv], { type: 'text/csv' }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `Cuentas_Dark.csv`; link.click(); }
+        async function deleteItem(id) { if(confirm("¿Borrar?")) { await fetch(`${API_URL}/${id}`, { method: 'DELETE' }); renderApp(); } }
+        
         document.getElementById('mainForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const esRec = document.getElementById('in-recurrente').checked;
             const data = { concepto: document.getElementById('in-concepto').value, importe: parseFloat(document.getElementById('in-importe').value), categoria: document.getElementById('in-categoria').value, fecha: document.getElementById('in-fecha').value };
-            if (esRec) { let recs = JSON.parse(localStorage.getItem('recurrentes') || "[]"); recs.push(data); localStorage.setItem('recurrentes', JSON.stringify(recs)); }
+            if (document.getElementById('in-recurrente').checked) { let recs = JSON.parse(localStorage.getItem('recurrentes') || "[]"); recs.push(data); localStorage.setItem('recurrentes', JSON.stringify(recs)); }
             const idV = document.getElementById('in-id').value;
             if (idV) await fetch(`${API_URL}/${idV}`, { method: 'DELETE' });
             await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-            resetForm(); switchTab('tab-cuenta', document.querySelectorAll('.nav-btn')[0]);
+            document.getElementById('mainForm').reset();
+            switchTab('tab-cuenta', document.querySelectorAll('.nav-btn')[0]);
         });
 
-        async function deleteItem(id) { if(confirm("¿Eliminar?")) { await fetch(`${API_URL}/${id}`, { method: 'DELETE' }); renderApp(); } }
-        function switchTab(id, el) { document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden')); document.querySelectorAll('.nav-btn').forEach(b => b.classList.replace('active-tab', 'text-slate-400')); el.classList.replace('text-slate-400', 'active-tab'); document.getElementById(id).classList.remove('hidden'); if(id !== 'tab-add') renderApp(); }
-        function resetForm() { document.getElementById('mainForm').reset(); document.getElementById('in-id').value = ""; document.getElementById('btnSubmit').innerText = "GUARDAR"; document.getElementById('btnCancel').classList.add('hidden'); document.getElementById('in-fecha').valueAsDate = new Date(); }
-        
-        function editMode(id) {
-            const g = appData.find(x => x._id === id);
-            document.getElementById('in-id').value = g._id;
-            document.getElementById('in-concepto').value = g.concepto;
-            document.getElementById('in-importe').value = g.importe;
-            document.getElementById('in-categoria').value = g.categoria;
-            document.getElementById('in-fecha').value = g.fecha;
-            document.getElementById('btnSubmit').innerText = "ACTUALIZAR";
-            document.getElementById('btnSubmit').classList.replace('bg-slate-900', 'bg-orange-500');
-            document.getElementById('btnCancel').classList.remove('hidden');
-            switchTab('tab-add', document.querySelectorAll('.nav-btn')[3]);
-        }
-        
         document.getElementById('filtroMes').value = new Date().toISOString().slice(0, 7);
         document.getElementById('in-fecha').valueAsDate = new Date();
     </script>
