@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mi Cuenta Real v8.2 Pro</title>
+    <title>Mi Cuenta Real v8.3 Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -14,13 +14,14 @@
         .font-900 { font-weight: 900; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-up { animation: slideUp 0.4s ease-out; }
+        input[type="checkbox"]:checked { background-color: #10b981; }
     </style>
 </head>
 <body class="bg-slate-50 pb-28">
 
     <div id="pantalla-pin" class="fixed inset-0 bg-slate-900 z-[100] flex flex-col items-center justify-center p-6">
         <h2 class="text-white font-900 text-2xl mb-2 italic tracking-tighter">MI CUENTA REAL</h2>
-        <p id="pin-msg" class="text-emerald-500 text-[10px] uppercase font-black mb-8 tracking-widest text-center">Configura tu nuevo PIN</p>
+        <p id="pin-msg" class="text-emerald-500 text-[10px] uppercase font-black mb-8 tracking-widest text-center">Introduce tu PIN</p>
         <div class="flex gap-4 mb-12" id="pin-dots">
             <div class="w-4 h-4 rounded-full border-2 border-slate-700"></div>
             <div class="w-4 h-4 rounded-full border-2 border-slate-700"></div>
@@ -44,26 +45,27 @@
     </div>
 
     <header class="bg-slate-900 text-white p-5 sticky top-0 z-50 flex justify-between items-center shadow-lg">
-        <div class="flex items-center gap-2">
-            <h1 class="font-900 text-xl tracking-tighter italic">MI CUENTA REAL</h1>
+        <h1 class="font-900 text-xl tracking-tighter italic">MI CUENTA REAL</h1>
+        <div class="flex gap-2">
+            <button onclick="checkRecurrentes()" class="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-lg shadow-lg">🔄</button>
+            <button onclick="togglePrivacy()" class="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center text-lg">
+                <span id="ojo-icon">👁️</span>
+            </button>
         </div>
-        <button onclick="togglePrivacy()" class="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center text-lg">
-            <span id="ojo-icon">👁️</span>
-        </button>
     </header>
 
     <main class="max-w-md mx-auto p-4">
         
-        <div id="alertHoy" class="hidden bg-rose-600 text-white p-4 rounded-2xl mb-4 text-center shadow-xl">
-            <p class="text-[10px] font-black uppercase tracking-widest">⚠️ Tienes pagos para hoy</p>
+        <div id="modalRecurrente" class="hidden bg-indigo-600 text-white p-4 rounded-2xl mb-4 shadow-xl animate-up">
+            <p class="text-[10px] font-black uppercase tracking-widest mb-2">🔄 Tienes pagos recurrentes pendientes</p>
+            <button onclick="procesarRecurrentes()" class="w-full bg-white text-indigo-600 font-black py-2 rounded-xl text-xs">GENERAR PAGOS DE ESTE MES</button>
         </div>
 
         <section id="tab-cuenta" class="tab-content animate-up">
-            <div id="cardMain" class="p-8 rounded-[2.5rem] text-center shadow-2xl mb-6 transition-all duration-500">
+            <div id="cardMain" class="p-8 rounded-[2.5rem] text-center shadow-2xl mb-6 transition-all">
                 <p class="text-[11px] uppercase font-black tracking-[0.2em] mb-2 opacity-80">Saldo Actual</p>
-                <h2 id="valReal" class="text-5xl font-900 tracking-tighter transition-all">0.00€</h2>
+                <h2 id="valReal" class="text-5xl font-900 tracking-tighter">0.00€</h2>
             </div>
-
             <div class="grid grid-cols-2 gap-4 mb-8">
                 <div class="bg-slate-800 text-white p-5 rounded-[2rem] text-center border-b-4 border-indigo-500">
                     <p class="text-[9px] font-black uppercase text-indigo-300 mb-1">Final Mes</p>
@@ -74,7 +76,6 @@
                     <p id="valPendiente" class="text-xl font-900">0.00€</p>
                 </div>
             </div>
-
             <div class="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 mb-20">
                 <div class="h-56 mb-6"><canvas id="chartGastos"></canvas></div>
                 <div id="legendBox" class="grid grid-cols-2 gap-2"></div>
@@ -82,7 +83,7 @@
         </section>
 
         <section id="tab-plan" class="tab-content hidden animate-up">
-            <h3 class="font-black uppercase text-[10px] text-slate-400 mb-4 px-2 tracking-widest">Calendario de Pagos</h3>
+            <h3 class="font-black uppercase text-[10px] text-slate-400 mb-4 px-2 tracking-widest">Próximos movimientos</h3>
             <div id="listaPlan" class="space-y-3"></div>
         </section>
 
@@ -101,6 +102,12 @@
                     <input type="hidden" id="in-id">
                     <input type="text" id="in-concepto" placeholder="Concepto" class="w-full p-4 bg-slate-50 rounded-2xl font-bold outline-none border-2 border-transparent focus:border-emerald-500 transition-all" required>
                     <input type="number" id="in-importe" step="0.01" placeholder="0.00" class="w-full p-4 bg-slate-50 rounded-2xl font-900 text-3xl outline-none" required>
+                    
+                    <div class="flex items-center gap-3 p-4 bg-indigo-50 rounded-2xl border border-indigo-100">
+                        <input type="checkbox" id="in-recurrente" class="w-5 h-5 accent-indigo-600">
+                        <label for="in-recurrente" class="text-xs font-black text-indigo-700 uppercase">Gasto Recurrente Mensual</label>
+                    </div>
+
                     <select id="in-categoria" class="w-full p-4 bg-slate-50 rounded-2xl font-bold outline-none">
                         <option value="Sueldo">💰 Sueldo</option>
                         <option value="Otros Ingresos">💵 Otros Ingresos</option>
@@ -121,7 +128,7 @@
         </section>
     </main>
 
-    <nav id="navBar" class="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-slate-100 flex justify-around p-3 pb-8 z-50">
+    <nav class="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-slate-100 flex justify-around p-3 pb-8 z-50">
         <button onclick="switchTab('tab-cuenta', this)" class="nav-btn flex flex-col items-center gap-1 active-tab">
             <span class="text-2xl">💰</span><span class="text-[9px] font-black uppercase">Cuenta</span>
         </button>
@@ -144,77 +151,46 @@
         let pinEntrada = "";
         let privacyMode = false;
 
-        // --- SISTEMA DE SEGURIDAD (PIN) ---
+        // SEGURIDAD PIN (v8.2)
         const pinGuardado = localStorage.getItem('user_pin');
-        if (pinGuardado) {
-            document.getElementById('pin-msg').innerText = "Introduce tu PIN de acceso";
-        }
+        function teclado(num) { if (pinEntrada.length < 4) { pinEntrada += num; actualizarDots(); if (pinEntrada.length === 4) setTimeout(verificarPin, 200); } }
+        function actualizarDots() { const dots = document.getElementById('pin-dots').children; for (let i = 0; i < 4; i++) dots[i].className = i < pinEntrada.length ? "w-4 h-4 rounded-full bg-emerald-500 shadow-[0_0_10px_#10b981]" : "w-4 h-4 rounded-full border-2 border-slate-700"; }
+        function borrarPin() { pinEntrada = ""; actualizarDots(); }
+        function verificarPin() { if (!pinGuardado) { localStorage.setItem('user_pin', pinEntrada); alert("✅ PIN creado"); desbloquearApp(); } else if (pinEntrada === pinGuardado) desbloquearApp(); else { alert("❌ Incorrecto"); borrarPin(); } }
+        function desbloquearApp() { document.getElementById('pantalla-pin').classList.add('hidden'); renderApp(); checkRecurrentes(); }
 
-        function teclado(num) {
-            if (pinEntrada.length < 4) {
-                pinEntrada += num;
-                actualizarDots();
-                if (pinEntrada.length === 4) {
-                    setTimeout(verificarPin, 200);
-                }
+        // MODO PRIVACIDAD
+        function togglePrivacy() { privacyMode = !privacyMode; document.getElementById('ojo-icon').innerText = privacyMode ? "🙈" : "👁️"; renderApp(); }
+        function mask(v) { return privacyMode ? "****€" : v; }
+
+        // --- LÓGICA DE RECURRENTES v8.3 ---
+        function checkRecurrentes() {
+            const recurrentes = JSON.parse(localStorage.getItem('recurrentes') || "[]");
+            const mesActual = new Date().toISOString().slice(0, 7);
+            const ultimoMesProcesado = localStorage.getItem('ultimo_mes_recurrente');
+            
+            if (recurrentes.length > 0 && ultimoMesProcesado !== mesActual) {
+                document.getElementById('modalRecurrente').classList.remove('hidden');
             }
         }
 
-        function actualizarDots() {
-            const dots = document.getElementById('pin-dots').children;
-            for (let i = 0; i < 4; i++) {
-                dots[i].className = i < pinEntrada.length ? "w-4 h-4 rounded-full bg-emerald-500 shadow-[0_0_10px_#10b981]" : "w-4 h-4 rounded-full border-2 border-slate-700";
+        async function procesarRecurrentes() {
+            const recurrentes = JSON.parse(localStorage.getItem('recurrentes') || "[]");
+            const mesHoy = new Date().toISOString().slice(0, 7);
+            
+            for (let r of recurrentes) {
+                const nuevaFecha = mesHoy + "-" + r.fecha.split('-')[2];
+                const data = { concepto: r.concepto, importe: r.importe, categoria: r.categoria, fecha: nuevaFecha };
+                await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
             }
-        }
-
-        function borrarPin() {
-            pinEntrada = "";
-            actualizarDots();
-        }
-
-        function verificarPin() {
-            if (!pinGuardado) {
-                localStorage.setItem('user_pin', pinEntrada);
-                alert("✅ PIN creado con éxito");
-                desbloquearApp();
-            } else if (pinEntrada === pinGuardado) {
-                desbloquearApp();
-            } else {
-                alert("❌ PIN Incorrecto");
-                borrarPin();
-            }
-        }
-
-        function desbloquearApp() {
-            document.getElementById('pantalla-pin').classList.add('hidden');
+            
+            localStorage.setItem('ultimo_mes_recurrente', mesHoy);
+            document.getElementById('modalRecurrente').classList.add('hidden');
             renderApp();
+            alert("🚀 Pagos recurrentes generados para este mes.");
         }
 
-        // --- MODO PRIVACIDAD ---
-        function togglePrivacy() {
-            privacyMode = !privacyMode;
-            document.getElementById('ojo-icon').innerText = privacyMode ? "🙈" : "👁️";
-            renderApp();
-        }
-
-        function mask(valor) {
-            return privacyMode ? "****€" : valor;
-        }
-
-        // --- LÓGICA DE LA APP ---
-        document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('filtroMes').value = new Date().toISOString().slice(0, 7);
-            document.getElementById('in-fecha').valueAsDate = new Date();
-        });
-
-        function switchTab(id, el) {
-            document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.replace('active-tab', 'text-slate-400'));
-            el.classList.replace('text-slate-400', 'active-tab');
-            document.getElementById(id).classList.remove('hidden');
-            if(id !== 'tab-add') renderApp();
-        }
-
+        // --- LÓGICA GENERAL ---
         async function renderApp() {
             try {
                 const response = await fetch(API_URL);
@@ -222,15 +198,14 @@
                 const hoy = new Date().toISOString().split('T')[0];
                 const mesSel = document.getElementById('filtroMes').value;
 
-                let real = 0, plan = 0, inM = 0, outM = 0, cats = {}, alertH = false;
+                let real = 0, plan = 0, inM = 0, outM = 0, cats = {};
                 const lPlan = document.getElementById('listaPlan'), lMes = document.getElementById('listaMes');
                 lPlan.innerHTML = ''; lMes.innerHTML = '';
 
                 appData.sort((a,b) => new Date(a.fecha) - new Date(b.fecha)).forEach(g => {
                     const val = parseFloat(g.importe), isIn = ["Sueldo", "Otros Ingresos"].includes(g.categoria);
-                    if (g.fecha <= hoy) { isIn ? real += val : real -= val; }
+                    if (g.fecha <= hoy) isIn ? real += val : real -= val;
                     else { isIn ? plan += val : plan -= val; lPlan.innerHTML += itemHTML(g, isIn, true); }
-                    if (g.fecha === hoy && !isIn) alertH = true;
                     if (g.fecha.startsWith(mesSel)) {
                         isIn ? inM += val : (outM += val, cats[g.categoria] = (cats[g.categoria] || 0) + val);
                         lMes.innerHTML += itemHTML(g, isIn, false);
@@ -241,18 +216,13 @@
                 document.getElementById('valEstimado').innerText = mask((real + plan).toFixed(2) + "€");
                 document.getElementById('valPendiente').innerText = mask(plan.toFixed(2) + "€");
                 document.getElementById('cardMain').className = real >= 0 ? "p-8 rounded-[2.5rem] text-center shadow-2xl mb-6 bg-emerald-500 text-white" : "p-8 rounded-[2.5rem] text-center shadow-2xl mb-6 bg-rose-500 text-white";
-                document.getElementById('alertHoy').classList.toggle('hidden', !alertH);
-                document.getElementById('resumenMes').innerHTML = `
-                    <div class="bg-white p-4 rounded-2xl border border-slate-100 text-center"><p class="text-[8px] font-black uppercase text-slate-400">Ingresos</p><p class="text-emerald-500 font-900">${mask(inM.toFixed(2)+"€")}</p></div>
-                    <div class="bg-white p-4 rounded-2xl border border-slate-100 text-center"><p class="text-[8px] font-black uppercase text-slate-400">Gastos</p><p class="text-rose-500 font-900">${mask(outM.toFixed(2)+"€")}</p></div>
-                `;
                 drawChart(cats, outM);
             } catch (e) { console.log(e); }
         }
 
-        function itemHTML(g, isI, isPlan) {
+        function itemHTML(g, isI, isP) {
             return `<div class="bg-white p-4 rounded-2xl border border-slate-100 flex justify-between items-center shadow-sm">
-                <div><p class="font-black text-slate-800 text-sm">${g.concepto}</p><p class="text-[9px] font-black uppercase text-slate-400">${isPlan ? g.fecha : g.categoria}</p></div>
+                <div><p class="font-black text-slate-800 text-sm">${g.concepto}</p><p class="text-[9px] font-black uppercase text-slate-400">${isP ? g.fecha : g.categoria}</p></div>
                 <div class="flex items-center gap-3">
                     <p class="font-900 ${isI?'text-emerald-500':'text-rose-500'}">${mask(parseFloat(g.importe).toFixed(2)+"€")}</p>
                     <button onclick="editMode('${g._id}')" class="p-2 bg-slate-50 rounded-lg">✏️</button>
@@ -267,11 +237,37 @@
             const labels = Object.keys(data);
             if (labels.length === 0 || privacyMode) { document.getElementById('legendBox').innerHTML = ""; return; }
             mainChart = new Chart(ctx, { type: 'doughnut', data: { labels: labels, datasets: [{ data: Object.values(data), backgroundColor: COLORS, borderWidth: 0 }] }, options: { plugins: { legend: { display: false } }, maintainAspectRatio: false, cutout: '85%' } });
-            document.getElementById('legendBox').innerHTML = labels.map((l, i) => `<div class="flex items-center gap-2 p-2 bg-slate-50 rounded-xl"><div class="w-2 h-2 rounded-full" style="background:${COLORS[i]}"></div><div class="flex flex-col"><span class="text-[7px] font-black text-slate-400 uppercase">${l}</span><span class="text-[10px] font-900 text-slate-700">${data[l].toFixed(1)}€</span></div></div>`).join('');
+            document.getElementById('legendBox').innerHTML = labels.map((l, i) => `<div class="flex items-center gap-2 p-2 bg-slate-50 rounded-xl"><div class="w-2 h-2 rounded-full" style="background:${COLORS[i]}"></div><div class="flex flex-col"><span class="text-[7px] font-black text-slate-400 uppercase leading-none">${l}</span><span class="text-[10px] font-900 text-slate-700">${data[l].toFixed(1)}€</span></div></div>`).join('');
         }
 
-        async function deleteItem(id) { if(confirm("¿Eliminar?")) { await fetch(`${API_URL}/${id}`, { method: 'DELETE' }); renderApp(); } }
+        document.getElementById('mainForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const esRecurrente = document.getElementById('in-recurrente').checked;
+            const data = {
+                concepto: document.getElementById('in-concepto').value,
+                importe: parseFloat(document.getElementById('in-importe').value),
+                categoria: document.getElementById('in-categoria').value,
+                fecha: document.getElementById('in-fecha').value
+            };
 
+            // Guardar en la lista de recurrentes si está marcado
+            if (esRecurrente) {
+                let recurrentes = JSON.parse(localStorage.getItem('recurrentes') || "[]");
+                recurrentes.push(data);
+                localStorage.setItem('recurrentes', JSON.stringify(recurrentes));
+            }
+
+            const idV = document.getElementById('in-id').value;
+            if (idV) await fetch(`${API_URL}/${idV}`, { method: 'DELETE' });
+            await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+            resetForm();
+            switchTab('tab-cuenta', document.querySelectorAll('.nav-btn')[0]);
+        });
+
+        async function deleteItem(id) { if(confirm("¿Eliminar?")) { await fetch(`${API_URL}/${id}`, { method: 'DELETE' }); renderApp(); } }
+        function switchTab(id, el) { document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden')); document.querySelectorAll('.nav-btn').forEach(b => b.classList.replace('active-tab', 'text-slate-400')); el.classList.replace('text-slate-400', 'active-tab'); document.getElementById(id).classList.remove('hidden'); if(id !== 'tab-add') renderApp(); }
+        function resetForm() { document.getElementById('mainForm').reset(); document.getElementById('in-id').value = ""; document.getElementById('btnSubmit').innerText = "GUARDAR"; document.getElementById('btnCancel').classList.add('hidden'); document.getElementById('in-fecha').valueAsDate = new Date(); }
+        
         function editMode(id) {
             const g = appData.find(x => x._id === id);
             document.getElementById('in-id').value = g._id;
@@ -284,25 +280,9 @@
             document.getElementById('btnCancel').classList.remove('hidden');
             switchTab('tab-add', document.querySelectorAll('.nav-btn')[3]);
         }
-
-        function resetForm() {
-            document.getElementById('mainForm').reset();
-            document.getElementById('in-id').value = "";
-            document.getElementById('btnSubmit').innerText = "GUARDAR";
-            document.getElementById('btnSubmit').className = "w-full bg-slate-900 text-white font-900 p-5 rounded-2xl shadow-xl";
-            document.getElementById('btnCancel').classList.add('hidden');
-            document.getElementById('in-fecha').valueAsDate = new Date();
-        }
-
-        document.getElementById('mainForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const idV = document.getElementById('in-id').value;
-            const data = { concepto: document.getElementById('in-concepto').value, importe: parseFloat(document.getElementById('in-importe').value), categoria: document.getElementById('in-categoria').value, fecha: document.getElementById('in-fecha').value };
-            if (idV) await fetch(`${API_URL}/${idV}`, { method: 'DELETE' });
-            await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-            resetForm();
-            switchTab('tab-cuenta', document.querySelectorAll('.nav-btn')[0]);
-        });
+        
+        document.getElementById('filtroMes').value = new Date().toISOString().slice(0, 7);
+        document.getElementById('in-fecha').valueAsDate = new Date();
     </script>
 </body>
 </html>
