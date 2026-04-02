@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BBVA Suite v9.0</title>
+    <title>BBVA Suite v9.1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -15,7 +15,7 @@
         .font-900 { font-weight: 900; }
         .bg-bbva-card { background-color: var(--bbva-navy); border: 1px solid rgba(0, 168, 225, 0.15); }
         .bbva-gradient { background: linear-gradient(135deg, #072146 0%, #004481 100%); }
-        .debug-text { font-family: 'JetBrains Mono', monospace; font-size: 8px; color: #00ff00; opacity: 0.7; }
+        .text-bbva-cyan { color: var(--bbva-cyan); }
         @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-up { animation: slideUp 0.4s ease-out; }
     </style>
@@ -23,9 +23,9 @@
 <body class="pb-32">
 
     <div id="pantalla-pin" class="fixed inset-0 bg-[#072146] z-[100] flex flex-col items-center justify-center p-6 text-white text-center">
-        <div class="mb-8">
+        <div class="mb-8 text-center">
             <h2 class="font-900 text-4xl tracking-tighter italic mb-1">BBVA</h2>
-            <p class="text-[7px] uppercase tracking-[0.4em] text-cyan-400">Acceso Encriptado</p>
+            <p class="text-[7px] uppercase tracking-[0.4em] text-bbva-cyan">Acceso Biométrico</p>
         </div>
         <div class="flex gap-4 mb-12" id="pin-dots">
             <div class="w-3 h-3 rounded-full border border-white/30"></div>
@@ -46,15 +46,13 @@
     <header class="bg-black/95 backdrop-blur-xl text-white p-5 sticky top-0 z-50 flex justify-between items-start border-b border-white/5">
         <div class="flex flex-col">
             <h1 class="font-900 text-2xl tracking-tighter italic leading-none">BBVA</h1>
-            <span class="text-[7px] uppercase tracking-widest text-cyan-400 font-black">Private Banking</span>
+            <span class="text-[7px] uppercase tracking-widest text-bbva-cyan font-black">Private Banking</span>
         </div>
         <div class="flex flex-col items-end gap-2">
-            <span class="text-[8px] font-mono text-white/30 bg-white/5 px-2 py-0.5 rounded border border-white/10 tracking-widest">v9.0.4-PRO</span>
-            <div class="flex gap-2">
-                <button onclick="togglePrivacy()" class="w-8 h-8 bg-slate-900 rounded-full flex items-center justify-center text-sm border border-white/10">
-                    <span id="ojo-icon">👁️</span>
-                </button>
-            </div>
+            <span class="text-[8px] font-mono text-bbva-cyan bg-cyan-500/10 px-2 py-1 rounded border border-cyan-500/30 tracking-widest font-bold">v9.1-PRO</span>
+            <button onclick="togglePrivacy()" class="w-8 h-8 bg-slate-900 rounded-full flex items-center justify-center text-sm border border-white/10">
+                <span id="ojo-icon">👁️</span>
+            </button>
         </div>
     </header>
 
@@ -67,17 +65,16 @@
             </div>
             
             <div class="bg-bbva-card p-6 rounded-[2.5rem] mb-6">
+                <p class="text-[9px] font-black uppercase text-center text-cyan-500/60 mb-4">Análisis de Gastos</p>
                 <div class="h-60 mb-6"><canvas id="chartGastos"></canvas></div>
                 <div id="legendBox" class="grid grid-cols-2 gap-3"></div>
             </div>
 
             <div class="bg-zinc-900/50 p-4 rounded-2xl border border-zinc-800 border-dashed">
-                <p class="text-[8px] font-black text-zinc-500 uppercase mb-2">💻 Estado del Sistema (Debug)</p>
-                <div id="debugLog" class="debug-text space-y-1">
-                    <p>> Inicializando protocolos...</p>
-                    <p>> Base de Datos: <span class="text-emerald-400">Online</span></p>
-                    <p>> Latencia API: <span id="debug-ping">--ms</span></p>
-                    <p>> Registros cargados: <span id="debug-count">0</span></p>
+                <div id="debugLog" class="font-mono text-[8px] space-y-1">
+                    <p class="text-zinc-500">> STATUS: <span class="text-emerald-400">EN LÍNEA</span></p>
+                    <p class="text-zinc-500">> LATENCIA: <span id="debug-ping" class="text-bbva-cyan">--ms</span></p>
+                    <p class="text-zinc-500">> REGISTROS: <span id="debug-count" class="text-bbva-cyan">0</span></p>
                 </div>
             </div>
         </section>
@@ -85,28 +82,40 @@
         <section id="tab-mes" class="tab-content hidden animate-up">
             <div class="bg-bbva-card p-4 rounded-2xl mb-6 flex justify-between items-center">
                 <input type="month" id="filtroMes" class="font-black bg-transparent outline-none text-white invert opacity-80" onchange="renderApp()">
-                <button onclick="exportarCSV()" class="bg-cyan-500 text-white text-[10px] font-black px-5 py-2 rounded-xl uppercase tracking-widest shadow-lg shadow-cyan-500/30">Exportar CSV</button>
+                <button onclick="exportarCSV()" class="bg-cyan-500 text-white text-[10px] font-black px-5 py-2 rounded-xl uppercase tracking-widest shadow-lg shadow-cyan-500/30">Exportar</button>
             </div>
             <div id="listaMes" class="space-y-4"></div>
         </section>
 
         <section id="tab-add" class="tab-content hidden animate-up">
             <div class="bg-bbva-card p-8 rounded-[2.5rem]">
-                <h2 class="text-center font-black uppercase text-[10px] text-cyan-500 mb-6 tracking-[0.4em]">Nueva Orden de Pago</h2>
+                <h2 class="text-center font-black uppercase text-[10px] text-cyan-500 mb-6 tracking-[0.4em]">Nueva Operación</h2>
                 <form id="mainForm" class="space-y-4">
                     <input type="hidden" id="in-id">
-                    <input type="text" id="in-concepto" placeholder="Concepto" class="w-full p-4 bg-black/40 border border-white/10 rounded-2xl font-bold text-white outline-none focus:border-cyan-500 transition-all" required>
+                    <input type="text" id="in-concepto" placeholder="Concepto" class="w-full p-4 bg-black/40 border border-white/10 rounded-2xl font-bold text-white outline-none focus:border-cyan-500" required>
                     <input type="number" id="in-importe" step="0.01" placeholder="0.00" class="w-full p-4 bg-black/40 border border-white/10 rounded-2xl font-900 text-4xl text-white outline-none" required>
+                    
                     <select id="in-categoria" class="w-full p-4 bg-black/40 border border-white/10 rounded-2xl font-bold text-white outline-none">
-                        <option value="Sueldo">💰 Sueldo</option>
-                        <option value="Amazon">📦 Amazon</option>
-                        <option value="Tarjeta BBVA">🟦 Tarjeta BBVA</option>
-                        <option value="Gasolina">⛽ Gasolina</option>
-                        <option value="El Corte Inglés">🏬 El Corte Inglés</option>
-                        <option value="Otros Ingresos">💵 Otros</option>
+                        <optgroup label="INGRESOS">
+                            <option value="Sueldo">💰 Sueldo</option>
+                            <option value="Otros Ingresos">💵 Otros Ingresos</option>
+                        </optgroup>
+                        <optgroup label="GASTOS">
+                            <option value="El Corte Inglés">🏬 El Corte Inglés</option>
+                            <option value="Cuenta BBVA">🏦 Cuenta BBVA</option>
+                            <option value="Tarjeta BBVA">🟦 Tarjeta BBVA</option>
+                            <option value="Tarjeta Explora">🧭 Tarjeta Explora</option>
+                            <option value="Imagine">🟣 Imagine</option>
+                            <option value="PayPal">💳 PayPal</option>
+                            <option value="Amazon">📦 Amazon</option>
+                            <option value="Gasolina">⛽ Gasolina</option>
+                            <option value="Supermercado">🛒 Supermercado</option>
+                            <option value="Varios">🌀 Varios</option>
+                        </optgroup>
                     </select>
+
                     <input type="date" id="in-fecha" class="w-full p-4 bg-black/40 border border-white/10 rounded-2xl font-bold text-white outline-none" required>
-                    <button type="submit" class="w-full bg-cyan-600 text-white font-900 p-5 rounded-2xl shadow-xl active:scale-95 transition-all uppercase tracking-widest text-sm">Ejecutar Orden</button>
+                    <button type="submit" class="w-full bg-cyan-600 text-white font-900 p-5 rounded-2xl shadow-xl active:scale-95 transition-all uppercase tracking-widest text-sm">Confirmar Orden</button>
                 </form>
             </div>
         </section>
@@ -126,26 +135,22 @@
 
     <script>
         const API_URL = 'https://mis-gastos-app.onrender.com/api/gastos';
-        const COLORS = ['#004481', '#00a8e1', '#8b5cf6', '#10b981', '#f59e0b', '#fb7185', '#d946ef', '#ff0055'];
+        const COLORS = ['#004481', '#00a8e1', '#8b5cf6', '#10b981', '#f59e0b', '#fb7185', '#d946ef', '#4ade80'];
         let appData = [], mainChart = null, pinEntrada = "", privacyMode = false;
 
-        // PIN
         const pinGuardado = localStorage.getItem('user_pin');
         function teclado(n) { if (pinEntrada.length < 4) { pinEntrada += n; updateDots(); if (pinEntrada.length === 4) setTimeout(checkPin, 200); } }
         function updateDots() { [...document.getElementById('pin-dots').children].forEach((d, i) => d.className = i < pinEntrada.length ? "w-3 h-3 rounded-full bg-cyan-400 shadow-[0_0_10px_rgba(0,168,225,0.8)]" : "w-3 h-3 rounded-full border border-white/30"); }
         function borrarPin() { pinEntrada = ""; updateDots(); }
-        function checkPin() { if (pinEntrada === pinGuardado || !pinGuardado) { if(!pinGuardado) localStorage.setItem('user_pin', pinEntrada); desbloquear(); } else { alert("Error de identificación"); borrarPin(); } }
+        function checkPin() { if (pinEntrada === pinGuardado || !pinGuardado) { if(!pinGuardado) localStorage.setItem('user_pin', pinEntrada); desbloquear(); } else { alert("Error de acceso"); borrarPin(); } }
         function desbloquear() { document.getElementById('pantalla-pin').classList.add('hidden'); renderApp(); }
 
-        // RENDER & DEBUG
         async function renderApp() {
-            const startPing = Date.now();
+            const start = Date.now();
             try {
                 const res = await fetch(API_URL);
                 appData = await res.json();
-                
-                // Debug Info
-                document.getElementById('debug-ping').innerText = (Date.now() - startPing) + "ms";
+                document.getElementById('debug-ping').innerText = (Date.now() - start) + "ms";
                 document.getElementById('debug-count').innerText = appData.length;
 
                 const hoy = new Date().toISOString().split('T')[0], mesSel = document.getElementById('filtroMes').value;
@@ -160,20 +165,20 @@
                         lMes.innerHTML += itemHTML(g, isI);
                     }
                 });
-
                 document.getElementById('valReal').innerText = mask(real.toFixed(2)+"€");
                 drawChart(cats);
-            } catch (e) { console.error("DEBUG ERROR:", e); }
+            } catch (e) { console.error(e); }
         }
 
+        // FECHA EN CELESTE DENTRO DEL EXTRACTO
         function itemHTML(g, isI) {
-            return `<div class="bg-bbva-card p-5 rounded-2xl flex justify-between items-center border-l-2 ${isI?'border-cyan-400':'border-rose-500'}">
+            return `<div class="bg-bbva-card p-5 rounded-2xl flex justify-between items-center border-l-2 ${isI?'border-cyan-400':'border-rose-500'} animate-up">
                 <div>
                     <p class="font-black text-white text-sm leading-none mb-1.5">${g.concepto}</p>
                     <p class="text-[9px] font-black uppercase tracking-tighter">
                         <span class="text-slate-500">${g.categoria}</span> 
                         <span class="mx-1 text-slate-700">•</span> 
-                        <span class="text-cyan-400 font-bold">Día ${g.fecha.split('-')[2]}</span>
+                        <span class="text-bbva-cyan font-bold">Día ${g.fecha.split('-')[2]}</span>
                     </p>
                 </div>
                 <div class="flex items-center gap-4">
@@ -220,8 +225,8 @@
             switchTab('tab-cuenta', document.querySelectorAll('.nav-btn')[0]);
         });
 
-        function exportarCSV() { let csv = "Fecha,Concepto,Importe,Categoria\n"; appData.forEach(g => csv += `${g.fecha},${g.concepto},${g.importe},${g.categoria}\n`); const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'})); link.download = "Extracto_BBVA.csv"; link.click(); }
-        async function deleteItem(id) { if(confirm("Anular transacción?")) { await fetch(`${API_URL}/${id}`, { method: 'DELETE' }); renderApp(); } }
+        function exportarCSV() { let csv = "Fecha,Concepto,Importe,Categoria\n"; appData.forEach(g => csv += `${g.fecha},${g.concepto},${g.importe},${g.categoria}\n`); const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'})); link.download = "Extracto_Financiero.csv"; link.click(); }
+        async function deleteItem(id) { if(confirm("¿Anular transacción?")) { await fetch(`${API_URL}/${id}`, { method: 'DELETE' }); renderApp(); } }
 
         document.getElementById('filtroMes').value = new Date().toISOString().slice(0, 7);
         document.getElementById('in-fecha').valueAsDate = new Date();
