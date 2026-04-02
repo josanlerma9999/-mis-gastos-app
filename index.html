@@ -3,125 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BBVA Premium v16.3 - Ironclad</title>
+    <title>BBVA Premium v16.4 - Data Recovery</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
         :root { --bbva-navy: #072146; --bbva-blue: #004481; --bbva-cyan: #00e5ff; }
-        html, body { height: 100%; margin: 0; padding: 0; background: #000; overflow: hidden; }
-        body { font-family: 'Inter', sans-serif; color: #fff; -webkit-tap-highlight-color: transparent; }
+        html, body { height: 100%; margin: 0; padding: 0; background: #000; overflow: hidden; font-family: 'Inter', sans-serif; }
         
         .num-btn { 
-            width: 75px; height: 75px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1); 
-            font-size: 1.6rem; font-weight: 700; display: flex; align-items: center; justify-content: center;
-            transition: all 0.1s ease; background: rgba(255,255,255,0.02);
+            width: 72px; height: 72px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1); 
+            font-size: 1.5rem; font-weight: 600; display: flex; align-items: center; justify-content: center;
+            background: rgba(255,255,255,0.03); transition: 0.1s;
         }
-        .num-btn:active { background: var(--bbva-cyan) !important; color: #000 !important; box-shadow: 0 0 40px var(--bbva-cyan) !important; transform: scale(0.9); }
+        .num-btn:active { background: var(--bbva-cyan); color: #000; box-shadow: 0 0 30px var(--bbva-cyan); }
 
-        .bg-bbva-card { background: var(--bbva-navy); border: 1px solid rgba(255,255,255,0.05); border-radius: 2rem; }
-        .bbva-gradient { background: linear-gradient(135deg, #072146 0%, #004481 100%); border-radius: 2.2rem; border: 1px solid rgba(0, 229, 255, 0.2); }
-        .bbva-input { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 1.25rem; padding: 1.1rem; width: 100%; color: white; outline: none; }
-        .active-tab { color: var(--bbva-cyan) !important; border-top: 3px solid var(--bbva-cyan); }
+        .bbva-card { background: var(--bbva-navy); border-radius: 1.5rem; border: 1px solid rgba(255,255,255,0.05); }
+        .bbva-gradient { background: linear-gradient(135deg, #072146 0%, #004481 100%); border-radius: 2rem; }
+        .bbva-input { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 1rem; padding: 1rem; width: 100%; color: white; outline: none; }
         
-        #viewport { width: 100%; height: calc(100% - 150px); overflow: hidden; position: relative; }
+        #viewport { width: 100%; height: calc(100% - 140px); overflow: hidden; position: relative; }
         #main-view { display: flex; width: 400%; height: 100%; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .tab-content { width: 25%; height: 100%; overflow-y: auto; padding: 1.2rem; -webkit-overflow-scrolling: touch; }
+        .tab-content { width: 25%; height: 100%; overflow-y: auto; padding: 1.25rem; -webkit-overflow-scrolling: touch; }
         
-        /* BOTONES BLINDADOS */
-        .action-btn { 
-            background: rgba(255, 255, 255, 0.15) !important; 
-            border: 1px solid rgba(255, 255, 255, 0.3) !important; 
-            border-radius: 1rem; width: 48px; height: 48px; 
+        .active-tab { color: var(--bbva-cyan) !important; border-top: 3px solid var(--bbva-cyan); }
+
+        .btn-action { 
+            z-index: 50; position: relative; width: 42px; height: 42px; 
             display: flex; align-items: center; justify-content: center;
-            position: relative; z-index: 99999 !important; 
-            pointer-events: auto !important; 
-            touch-action: manipulation;
+            background: rgba(255,255,255,0.1); border-radius: 0.8rem;
         }
-        .action-btn:active { background: var(--bbva-cyan) !important; transform: scale(0.8); }
     </style>
 </head>
 <body>
 
     <div id="pin-screen" class="fixed inset-0 bg-black z-[9999] flex flex-col items-center justify-center">
-        <h1 class="text-4xl font-black italic opacity-20 mb-12 uppercase tracking-tighter">BBVA</h1>
+        <div class="text-3xl font-black italic mb-12 text-white">BBVA</div>
         <div class="flex mb-16" id="pin-dots">
-            <div class="w-3 h-3 rounded-full border-2 border-cyan-400 mx-2"></div><div class="w-3 h-3 rounded-full border-2 border-cyan-400 mx-2"></div><div class="w-3 h-3 rounded-full border-2 border-cyan-400 mx-2"></div><div class="w-3 h-3 rounded-full border-2 border-cyan-400 mx-2"></div>
+            <div class="w-3 h-3 rounded-full border-2 border-cyan-400 mx-2"></div>
+            <div class="w-3 h-3 rounded-full border-2 border-cyan-400 mx-2"></div>
+            <div class="w-3 h-3 rounded-full border-2 border-cyan-400 mx-2"></div>
+            <div class="w-3 h-3 rounded-full border-2 border-cyan-400 mx-2"></div>
         </div>
-        <div class="grid grid-cols-3 gap-6" id="pin-pad"></div>
+        <div class="grid grid-cols-3 gap-5" id="pin-pad"></div>
     </div>
 
-    <div id="app-content" class="hidden h-full flex flex-col">
-        <header class="p-5 flex justify-between items-center bg-black/90 z-50">
-            <h1 class="font-black text-2xl italic tracking-tighter">BBVA</h1>
-            <div class="flex gap-3">
-                <button onclick="togglePrivacy()" class="w-10 h-10 bg-white/5 rounded-full border border-white/10 flex items-center justify-center">👁️</button>
-                <button onclick="location.reload()" class="w-10 h-10 bg-white/5 rounded-full border border-white/10 flex items-center justify-center">🔒</button>
+    <div id="app-content" class="hidden h-full flex flex-col text-white">
+        <header class="p-5 flex justify-between items-center bg-black">
+            <div class="font-black italic text-xl">BBVA</div>
+            <div class="flex gap-4">
+                <button onclick="togglePrivacy()">👁️</button>
+                <button onclick="renderApp()">🔄</button>
             </div>
         </header>
 
         <div id="viewport">
             <div id="main-view">
-                <section class="tab-content space-y-6">
-                    <div class="p-10 bbva-gradient text-center">
-                        <p class="text-[11px] font-black tracking-[0.3em] text-cyan-200/40 mb-1 uppercase">Saldo Disponible</p>
-                        <h2 id="valReal" class="text-5xl font-black tracking-tighter">0.00€</h2>
+                <section class="tab-content space-y-5">
+                    <div class="p-8 bbva-gradient text-center">
+                        <p class="text-[10px] font-bold uppercase text-cyan-300/60 mb-2">Saldo Disponible</p>
+                        <h2 id="valReal" class="text-4xl font-black">0.00€</h2>
                     </div>
-                    <div class="grid grid-cols-2 gap-4 text-center">
-                        <div class="bg-bbva-card p-6"><p class="text-[10px] font-bold text-slate-500 uppercase">Cierre</p><p id="valProj" class="text-2xl font-black text-cyan-400">0.00€</p></div>
-                        <div class="bg-bbva-card p-6"><p class="text-[10px] font-bold text-slate-500 uppercase">A pagar</p><p id="valPend" class="text-2xl font-black text-rose-400">0.00€</p></div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="bbva-card p-5 text-center">
+                            <p class="text-[9px] text-slate-400 uppercase">Cierre Mes</p>
+                            <p id="valProj" class="text-xl font-bold text-cyan-400 mt-1">0.00€</p>
+                        </div>
+                        <div class="bbva-card p-5 text-center">
+                            <p class="text-[9px] text-slate-400 uppercase">A Pagar</p>
+                            <p id="valPend" class="text-xl font-bold text-rose-400 mt-1">0.00€</p>
+                        </div>
                     </div>
-                </section>
-
-                <section class="tab-content space-y-4">
-                    <h3 class="text-xs font-black uppercase text-cyan-400 italic px-2 tracking-widest">Próximos</h3>
-                    <div id="listaFuturo" class="space-y-4"></div>
-                </section>
-
-                <section class="tab-content space-y-3">
-                    <input type="month" id="filtroMes" class="bbva-input mb-4" onchange="renderApp()">
-                    <div id="listaPasado" class="space-y-3 pb-24"></div>
                 </section>
 
                 <section class="tab-content">
-                    <form id="mainForm" class="bg-bbva-card p-8 space-y-5">
-                        <h2 id="form-title" class="text-xs font-black uppercase text-cyan-400 tracking-widest mb-2">Operación</h2>
+                    <h3 class="text-xs font-bold text-cyan-400 uppercase mb-4 tracking-widest">Próximos movimientos</h3>
+                    <div id="listaFuturo" class="space-y-3"></div>
+                </section>
+
+                <section class="tab-content">
+                    <input type="month" id="filtroMes" class="bbva-input mb-4" onchange="renderApp()">
+                    <div id="listaPasado" class="space-y-2 pb-20"></div>
+                </section>
+
+                <section class="tab-content">
+                    <form id="mainForm" class="bbva-card p-6 space-y-4">
                         <input type="hidden" id="in-id">
                         <input type="text" id="in-concepto" placeholder="Concepto" class="bbva-input" required>
-                        <input type="number" id="in-importe" step="0.01" placeholder="0.00" class="bbva-input text-4xl font-black text-center" required>
-                        <select id="in-categoria" class="bbva-input font-bold" required>
+                        <input type="number" id="in-importe" step="0.01" class="bbva-input text-2xl text-center font-bold" required>
+                        <select id="in-categoria" class="bbva-input" required>
                             <option value="Sueldo">💰 Sueldo</option>
                             <option value="Otros Ingresos">💵 Otros Ingresos</option>
                             <option value="Cuenta BBVA">🏦 Cuenta BBVA</option>
-                            <option value="Tarjeta Aqua BBVA">🟦 Tarjeta Aqua BBVA</option>
-                            <option value="Tarjeta Explora">✈️ Tarjeta Explora</option>
-                            <option value="Imagine">📱 Imagine</option>
+                            <option value="Tarjeta Aqua">🟦 Tarjeta Aqua</option>
                             <option value="PayPal">💳 PayPal</option>
                             <option value="Amazon">📦 Amazon</option>
                             <option value="Gasolina">⛽ Gasolina</option>
                             <option value="Varios">🛍️ Varios</option>
                         </select>
                         <input type="date" id="in-fecha" class="bbva-input" required>
-                        <button type="submit" id="btn-submit" class="w-full bg-cyan-400 text-black font-black py-5 rounded-2xl uppercase">Confirmar</button>
-                        <button type="button" id="btn-cancel" class="w-full hidden text-slate-500 font-bold text-xs uppercase" onclick="resetForm()">Cancelar</button>
+                        <button type="submit" id="btn-submit" class="w-full bg-cyan-400 text-black font-black py-4 rounded-xl">Confirmar</button>
                     </form>
                 </section>
             </div>
         </div>
 
-        <nav class="bg-black/95 border-t border-white/10 flex justify-around p-4 pb-10">
-            <button onclick="goToTab(0)" class="nav-btn active-tab flex-1 flex flex-col items-center gap-1"><span class="text-2xl">🏦</span><span class="text-[7px] font-black uppercase">Global</span></button>
-            <button onclick="goToTab(1)" class="nav-btn text-slate-500 flex-1 flex flex-col items-center gap-1"><span class="text-2xl">⏳</span><span class="text-[7px] font-black uppercase">Próximos</span></button>
-            <button onclick="goToTab(2)" class="nav-btn text-slate-500 flex-1 flex flex-col items-center gap-1"><span class="text-2xl">📋</span><span class="text-[7px] font-black uppercase">Extracto</span></button>
-            <button onclick="goToTab(3)" class="nav-btn text-slate-500 flex-1 flex flex-col items-center gap-1"><span class="text-2xl">➕</span><span class="text-[7px] font-black uppercase">Operar</span></button>
+        <nav class="bg-black border-t border-white/10 flex justify-around p-3 pb-8">
+            <button onclick="goToTab(0)" class="nav-btn active-tab flex-1 flex flex-col items-center gap-1"><span class="text-xl">🏠</span><span class="text-[8px] uppercase">Inicio</span></button>
+            <button onclick="goToTab(1)" class="nav-btn text-slate-500 flex-1 flex flex-col items-center gap-1"><span class="text-xl">⏳</span><span class="text-[8px] uppercase">Planes</span></button>
+            <button onclick="goToTab(2)" class="nav-btn text-slate-500 flex-1 flex flex-col items-center gap-1"><span class="text-xl">📋</span><span class="text-[8px] uppercase">Movs</span></button>
+            <button onclick="goToTab(3)" class="nav-btn text-slate-500 flex-1 flex flex-col items-center gap-1"><span class="text-xl">➕</span><span class="text-[8px] uppercase">Operar</span></button>
         </nav>
     </div>
 
     <script>
         const API_URL = 'https://mis-gastos-app.onrender.com/api/gastos';
-        let pin = "", isPrivate = false, currentTabIndex = 0, appData = [];
+        let pin = "", isPrivate = false, appData = [];
         const categIngresos = ["Sueldo", "Otros Ingresos"];
 
-        // PIN 1763
         [1,2,3,4,5,6,7,8,9,'C',0,'DEL'].forEach(v => {
             const b = document.createElement('button'); b.className = "num-btn"; b.innerText = v;
             b.onclick = () => {
@@ -133,115 +131,96 @@
         });
 
         function goToTab(i) {
-            currentTabIndex = i;
             document.getElementById('main-view').style.transform = `translateX(-${i * 25}%)`;
-            document.querySelectorAll('.nav-btn').forEach((b, idx) => {
-                if(idx === i) b.classList.replace('text-slate-500', 'active-tab');
-                else b.classList.replace('active-tab', 'text-slate-500');
-            });
+            document.querySelectorAll('.nav-btn').forEach((b, idx) => idx === i ? b.classList.add('active-tab') : b.classList.remove('active-tab'));
+            if(i === 1) renderApp(); // Forzar recarga al entrar en planes
         }
 
         async function renderApp() {
-            let saldoReal = 0, gastosFuturos = 0, ingresosFuturos = 0;
             const res = await fetch(API_URL); appData = await res.json();
             const hoy = new Date().toISOString().split('T')[0];
             const mesSel = document.getElementById('filtroMes').value;
-            document.getElementById('listaPasado').innerHTML = ''; document.getElementById('listaFuturo').innerHTML = '';
+            
+            let saldoReal = 0, gFuturos = 0, iFuturos = 0;
+            document.getElementById('listaPasado').innerHTML = '';
+            document.getElementById('listaFuturo').innerHTML = '';
 
-            appData.sort((a,b) => {
-                const aF = a.fecha > hoy; const bF = b.fecha > hoy;
-                if(aF && !bF) return 1; if(!aF && bF) return -1;
-                return b.fecha.localeCompare(a.fecha);
-            }).forEach(g => {
+            appData.sort((a,b) => b.fecha.localeCompare(a.fecha)).forEach(g => {
                 const val = Math.abs(parseFloat(g.importe));
                 const esIngreso = categIngresos.includes(g.categoria);
                 const esPasado = g.fecha <= hoy;
-                const disp = isPrivate ? "****€" : val.toLocaleString('de-DE', {minimumFractionDigits: 2}) + "€";
 
-                if(esPasado) { if(esIngreso) saldoReal += val; else saldoReal -= val; }
-                else { if(esIngreso) ingresosFuturos += val; else gastosFuturos += val; }
+                if(esPasado) { esIngreso ? saldoReal += val : saldoReal -= val; }
+                else { esIngreso ? iFuturos += val : gFuturos += val; }
 
+                const disp = isPrivate ? "****€" : val.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
+
+                // Lista de Movimientos (Pasados y Futuros filtrados por mes)
                 if(g.fecha.startsWith(mesSel)) {
                     document.getElementById('listaPasado').insertAdjacentHTML('beforeend', `
-                        <div class="bg-bbva-card p-5 flex justify-between items-center ${!esPasado ? 'opacity-40' : ''}">
+                        <div class="bbva-card p-4 flex justify-between items-center ${!esPasado ? 'border-l-4 border-cyan-400' : ''}">
                             <div class="flex-1">
-                                <p class="text-sm font-bold text-white">${g.concepto}</p>
-                                <p class="text-[9px] text-slate-500 font-bold uppercase mt-1">${g.fecha} • ${g.categoria}</p>
+                                <p class="text-sm font-bold">${g.concepto}</p>
+                                <p class="text-[9px] text-slate-500 uppercase mt-1">${g.fecha} • ${g.categoria}</p>
                             </div>
                             <div class="flex items-center gap-3">
-                                <p class="text-lg font-black ${esIngreso ? 'text-cyan-400' : 'text-white'}">${esIngreso ? '+' : '-'}${disp}</p>
+                                <p class="font-black ${esIngreso ? 'text-cyan-400' : 'text-white'}">${esIngreso ? '+' : '-'}${disp}</p>
                                 <div class="flex gap-2">
-                                    <button onclick="preEdit('${g._id}')" class="action-btn text-cyan-400">✏️</button>
-                                    <button onclick="deleteGasto('${g._id}')" class="action-btn text-rose-500">🗑️</button>
+                                    <button onclick="preEdit('${g._id}')" class="btn-action text-cyan-400">✏️</button>
+                                    <button onclick="deleteGasto('${g._id}')" class="btn-action text-rose-500">🗑️</button>
                                 </div>
                             </div>
                         </div>`);
                 }
+
+                // Lista de Próximos (Cualquier fecha mayor a hoy, sin filtro de mes)
+                if(!esPasado) {
+                    document.getElementById('listaFuturo').insertAdjacentHTML('afterbegin', `
+                        <div class="bg-bbva-card p-5 border-l-4 border-cyan-400 flex justify-between items-center">
+                            <div><p class="font-black">${g.concepto}</p><p class="text-xs text-slate-500">${g.fecha}</p></div>
+                            <p class="text-xl font-black text-cyan-400">${esIngreso ? '+' : '-'}${disp}</p>
+                        </div>`);
+                }
             });
-            document.getElementById('valReal').innerText = isPrivate ? "****€" : saldoReal.toLocaleString('de-DE', {minimumFractionDigits: 2}) + "€";
-            document.getElementById('valPend').innerText = isPrivate ? "****€" : "-" + gastosFuturos.toLocaleString('de-DE', {minimumFractionDigits: 2}) + "€";
-            document.getElementById('valProj').innerText = isPrivate ? "****€" : (saldoReal - gastosFuturos + ingresosFuturos).toLocaleString('de-DE', {minimumFractionDigits: 2}) + "€";
+
+            document.getElementById('valReal').innerText = isPrivate ? "****€" : saldoReal.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
+            document.getElementById('valPend').innerText = isPrivate ? "****€" : "-" + gFuturos.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
+            document.getElementById('valProj').innerText = isPrivate ? "****€" : (saldoReal - gFuturos + iFuturos).toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
         }
 
-        // FUNCIÓN LÁPIZ REFORZADA
         function preEdit(id) {
-            // Buscamos el gasto en los datos
             const g = appData.find(x => x._id === id);
-            if(!g) {
-                alert("Error al encontrar el registro");
-                return;
-            }
-
-            // Llenamos el formulario con los datos exactos
+            if(!g) return;
             document.getElementById('in-id').value = g._id;
             document.getElementById('in-concepto').value = g.concepto;
             document.getElementById('in-importe').value = Math.abs(g.importe);
             document.getElementById('in-categoria').value = g.categoria;
             document.getElementById('in-fecha').value = g.fecha;
-
-            // Cambiamos el aspecto visual del formulario
-            document.getElementById('form-title').innerText = "Editando Movimiento";
-            document.getElementById('btn-submit').innerText = "Guardar Cambios";
-            document.getElementById('btn-submit').classList.replace('bg-cyan-400', 'bg-amber-500');
-            document.getElementById('btn-cancel').classList.remove('hidden');
-
-            // Saltamos a la pestaña de Operar
+            document.getElementById('btn-submit').innerText = "Actualizar";
             goToTab(3);
         }
 
-        function resetForm() {
-            document.getElementById('mainForm').reset();
-            document.getElementById('in-id').value = "";
-            document.getElementById('form-title').innerText = "Nueva Operación";
-            document.getElementById('btn-submit').innerText = "Confirmar";
-            document.getElementById('btn-submit').classList.replace('bg-amber-500', 'bg-cyan-400');
-            document.getElementById('btn-cancel').classList.add('hidden');
-        }
-
         async function deleteGasto(id) {
-            if(confirm("¿Borrar definitivamente?")) { 
-                await fetch(`${API_URL}/${id}`, { method: 'DELETE' }); 
-                renderApp(); 
-            }
+            if(confirm("¿Seguro?")) { await fetch(`${API_URL}/${id}`, {method:'DELETE'}); renderApp(); }
         }
 
         document.getElementById('mainForm').onsubmit = async (e) => {
             e.preventDefault();
             const id = document.getElementById('in-id').value;
-            const data = { 
-                concepto: document.getElementById('in-concepto').value, 
-                importe: parseFloat(document.getElementById('in-importe').value), 
-                categoria: document.getElementById('in-categoria').value, 
-                fecha: document.getElementById('in-fecha').value 
+            const data = {
+                concepto: document.getElementById('in-concepto').value,
+                importe: parseFloat(document.getElementById('in-importe').value),
+                categoria: document.getElementById('in-categoria').value,
+                fecha: document.getElementById('in-fecha').value
             };
-            await fetch(id ? `${API_URL}/${id}` : API_URL, { 
-                method: id ? 'PUT' : 'POST', 
-                headers: {'Content-Type':'application/json'}, 
-                body: JSON.stringify(data) 
+            await fetch(id ? `${API_URL}/${id}` : API_URL, {
+                method: id ? 'PUT' : 'POST',
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify(data)
             });
-            resetForm(); 
-            await renderApp(); 
-            goToTab(0);
+            e.target.reset(); document.getElementById('in-id').value = "";
+            document.getElementById('btn-submit').innerText = "Confirmar";
+            await renderApp(); goToTab(0);
         };
 
         function togglePrivacy() { isPrivate = !isPrivate; renderApp(); }
