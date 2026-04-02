@@ -3,162 +3,275 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BBVA v10 Original</title>
+    <title>BBVA Master v11.3</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=JetBrains+Mono&display=swap');
         :root { --bbva-navy: #072146; --bbva-blue: #004481; --bbva-cyan: #00e5ff; }
-        
-        body { font-family: 'Inter', sans-serif; background-color: #000; color: #fff; margin:0; height: 100vh; overflow: hidden; }
-
-        /* PIN v10 - Limpio */
-        #pin-screen { position: fixed; inset: 0; background: #000; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .num-btn { width: 72px; height: 72px; border-radius: 50%; border: 1px solid #222; font-size: 1.6rem; font-weight: 700; display: flex; align-items: center; justify-content: center; background: #050505; }
-        .pin-dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--bbva-cyan); margin: 0 10px; }
-        .pin-dot.on { background: var(--bbva-cyan); }
-
-        /* DISEÑO EDGE-TO-EDGE v10 */
-        .main-container { height: calc(100vh - 80px); overflow-y: auto; width: 100%; }
-        .bbva-bg { background-color: var(--bbva-navy); width: 100%; }
-        .header-box { padding: 45px 20px; text-align: center; background-color: var(--bbva-navy); }
-
-        /* NAVEGACIÓN v10 */
-        nav { height: 80px; background: #000; border-top: 1px solid #111; display: flex; position: fixed; bottom: 0; width: 100%; z-index: 100; padding-bottom: 12px; }
-        .nav-link { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #444; }
-        .nav-link.active { color: var(--bbva-cyan); }
-
+        body { font-family: 'Inter', sans-serif; background-color: #000; color: #fff; margin:0; }
+        .bg-bbva-card { background-color: var(--bbva-navy); border: 1px solid rgba(0, 229, 255, 0.1); }
+        .bbva-gradient { background: linear-gradient(135deg, #072146 0%, #004481 100%); }
+        .active-tab { color: var(--bbva-cyan); border-top: 3px solid var(--bbva-cyan); }
         .hidden { display: none !important; }
+        
+        #pin-screen { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .pin-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--bbva-cyan); margin: 0 10px; }
+        .pin-dot.filled { background: var(--bbva-cyan); box-shadow: 0 0 10px var(--bbva-cyan); }
+        .num-btn { width: 70px; height: 70px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1); font-size: 1.5rem; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+
+        #alert-pago {
+            background: linear-gradient(90deg, #004481 0%, #072146 100%);
+            border-left: 5px solid var(--bbva-cyan);
+            padding: 15px; border-radius: 15px; margin-bottom: 10px; display: none;
+            font-weight: 900; text-transform: uppercase; text-align: center; font-size: 11px;
+            color: var(--bbva-cyan); border: 1px solid rgba(0, 229, 255, 0.3);
+        }
+
+        .donut-container { height: 200px; width: 100%; display: flex; justify-content: center; align-items: center; margin: 5px 0; }
+        .debug-panel { font-family: 'JetBrains Mono', monospace; background: #111; border-top: 2px solid #333; }
+        
+        /* Estilos botones edición */
+        .btn-edit { color: #00e5ff; padding: 8px; border-radius: 8px; background: rgba(0, 229, 255, 0.1); }
+        .btn-delete { color: #ff4d4d; padding: 8px; border-radius: 8px; background: rgba(255, 77, 77, 0.1); }
     </style>
 </head>
-<body>
+<body class="pb-24">
 
     <div id="pin-screen">
-        <div class="mb-10 italic font-black text-[#00e5ff] text-3xl uppercase tracking-tighter">BBVA</div>
-        <div class="flex mb-16">
+        <div class="text-center mb-10">
+            <h1 class="text-4xl font-[900] italic text-[#00e5ff] tracking-tighter">BBVA</h1>
+            <p class="text-[9px] uppercase tracking-[0.4em] text-white/40 mt-2">Acceso Privado</p>
+        </div>
+        <div class="flex mb-16" id="pin-dots">
             <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
         </div>
-        <div class="grid grid-cols-3 gap-6">
-            <button onclick="k('1')" class="num-btn">1</button><button onclick="k('2')" class="num-btn">2</button><button onclick="k('3')" class="num-btn">3</button>
-            <button onclick="k('4')" class="num-btn">4</button><button onclick="k('5')" class="num-btn">5</button><button onclick="k('6')" class="num-btn">6</button>
-            <button onclick="k('7')" class="num-btn">7</button><button onclick="k('8')" class="num-btn">8</button><button onclick="k('9')" class="num-btn">9</button>
-            <div></div><button onclick="k('0')" class="num-btn">0</button><button onclick="location.reload()" class="text-[10px] opacity-40 font-bold">DEL</button>
+        <div class="grid grid-cols-3 gap-5">
+            <button onclick="pressPin('1')" class="num-btn">1</button><button onclick="pressPin('2')" class="num-btn">2</button><button onclick="pressPin('3')" class="num-btn">3</button>
+            <button onclick="pressPin('4')" class="num-btn">4</button><button onclick="pressPin('5')" class="num-btn">5</button><button onclick="pressPin('6')" class="num-btn">6</button>
+            <button onclick="pressPin('7')" class="num-btn">7</button><button onclick="pressPin('8')" class="num-btn">8</button><button onclick="pressPin('9')" class="num-btn">9</button>
+            <button onclick="clearPin()" class="text-[10px] uppercase font-bold opacity-30">Reset</button>
+            <button onclick="pressPin('0')" class="num-btn">0</button>
+            <button onclick="deleteLast()" class="text-[10px] uppercase font-bold opacity-30">Borrar</button>
         </div>
     </div>
 
-    <div id="app" class="hidden">
-        <header class="p-4 flex justify-between items-center bg-black">
-            <span class="font-black text-xl italic tracking-tighter">BBVA</span>
-            <button onclick="toggleP()" id="eye" class="text-xl">👁️</button>
+    <div id="app-content" class="hidden">
+        <header class="bg-black/90 p-4 sticky top-0 z-50 flex justify-between items-center border-b border-white/10">
+            <div class="flex flex-col">
+                <h1 class="font-[900] text-xl italic text-white leading-none">BBVA</h1>
+                <span class="text-[9px] font-bold text-[#00e5ff] mt-1 uppercase tracking-wider">v11.3 Editor</span>
+            </div>
+            <button onclick="location.reload()" class="bg-white/5 p-2 rounded-full border border-white/10">🔒</button>
         </header>
 
-        <main class="main-container">
-            <div id="p1" class="page">
-                <div class="header-box">
-                    <p class="text-[10px] uppercase tracking-widest opacity-40 mb-1 font-bold italic">Posición Global</p>
-                    <h2 id="total" class="text-4xl font-black italic tracking-tighter">****€</h2>
+        <main class="max-w-md mx-auto p-2">
+            <section id="tab-cuenta" class="tab-content flex flex-col gap-2">
+                <div id="alert-pago"></div>
+                <div class="p-6 rounded-[2rem] text-center bbva-gradient border border-white/10 shadow-xl relative">
+                    <div class="flex justify-center items-center gap-2 mb-1">
+                        <p class="text-[9px] uppercase font-black tracking-widest text-cyan-300/40">Patrimonio Neto</p>
+                        <span id="toggle-visibility" onclick="togglePrivacy()" class="text-lg cursor-pointer">👁️</span>
+                    </div>
+                    <h2 id="valReal" class="text-5xl font-[900] tracking-tighter text-white">0.00€</h2>
                 </div>
-                <div class="bbva-bg p-6 border-t border-white/5">
-                    <div style="height:250px;"><canvas id="chart"></canvas></div>
-                    <div id="legs" class="grid grid-cols-2 gap-3 mt-8"></div>
+                <div class="bg-bbva-card p-3 rounded-[2rem] flex flex-col items-center">
+                    <div class="donut-container"><canvas id="chartGastos"></canvas></div>
+                    <div id="legendBox" class="grid grid-cols-2 gap-2 w-full mt-2"></div>
                 </div>
-            </div>
 
-            <div id="p2" class="page hidden">
-                <div id="lista" class="w-full"></div>
-            </div>
+                <div class="debug-panel p-6 rounded-[2rem] mt-10 mb-20">
+                    <h3 class="text-[10px] font-black uppercase text-cyan-400 mb-4 tracking-[0.3em]">System Debugger</h3>
+                    <div class="space-y-3 text-[10px] font-mono">
+                        <div class="flex justify-between border-b border-white/5 pb-1"><span class="text-slate-500">API:</span><span class="text-emerald-400">ONLINE</span></div>
+                        <div class="flex justify-between border-b border-white/5 pb-1"><span class="text-slate-500">PING:</span><span id="debug-ping" class="text-white">--ms</span></div>
+                        <div class="flex justify-between border-b border-white/5 pb-1"><span class="text-slate-500">TOTAL_RECORDS:</span><span id="debug-count" class="text-white">--</span></div>
+                    </div>
+                </div>
+            </section>
 
-            <div id="p3" class="page hidden">
-                <div class="bbva-bg p-8 min-h-screen">
-                    <form id="form" class="space-y-4">
-                        <input type="text" id="con" placeholder="Concepto" class="w-full p-4 bg-black/30 border border-white/5 rounded text-white outline-none font-bold">
-                        <input type="number" id="imp" step="0.01" placeholder="0.00" class="w-full p-6 bg-black/30 border border-white/5 rounded font-black text-5xl text-center outline-none">
-                        <select id="cat" class="w-full p-4 bg-black/30 border border-white/5 rounded font-black text-sm uppercase">
-                            <option value="Sueldo">Sueldo / Ingreso</option>
-                            <option value="Tarjeta BBVA">Tarjeta BBVA</option>
-                            <option value="Amazon">Amazon / Compras</option>
-                            <option value="Hogar">Hogar / Luz</option>
+            <section id="tab-mes" class="tab-content hidden space-y-2">
+                <div class="bg-bbva-card p-4 rounded-xl flex justify-between gap-3 items-center">
+                    <input type="month" id="filtroMes" class="bg-transparent text-white font-black outline-none w-full" onchange="renderApp()">
+                </div>
+                <div id="listaMes" class="space-y-2"></div>
+            </section>
+
+            <section id="tab-add" class="tab-content hidden flex flex-col pt-4">
+                <div class="bg-bbva-card p-6 rounded-[2.5rem] border-t-4 border-[#00e5ff] w-full">
+                    <form id="mainForm" class="space-y-4">
+                        <input type="hidden" id="in-id">
+                        <input type="text" id="in-concepto" placeholder="Concepto" class="w-full p-4 bg-black/40 border border-white/10 rounded-xl text-white outline-none" required>
+                        <input type="number" id="in-importe" step="0.01" placeholder="0.00" class="w-full p-4 bg-black/40 border border-white/10 rounded-xl font-bold text-3xl text-white outline-none" required>
+                        
+                        <div class="flex justify-between items-center bg-white/5 p-3 rounded-xl border border-white/10">
+                            <span class="text-[10px] font-black uppercase text-slate-400 italic">¿Pago recurrente?</span>
+                            <input type="checkbox" id="in-es-recurrente" class="w-5 h-5 accent-[#00e5ff]">
+                        </div>
+
+                        <div id="config-recurrente" class="hidden">
+                            <input type="number" id="in-dia-pago" min="1" max="31" placeholder="Día mensual" class="w-full p-4 bg-cyan-900/20 border border-cyan-500/30 rounded-xl text-white outline-none">
+                        </div>
+
+                        <select id="in-categoria" class="w-full p-4 bg-black/40 border border-white/10 rounded-xl text-white outline-none">
+                            <optgroup label="INGRESOS"><option value="Sueldo">💰 Sueldo</option><option value="Otros Ingresos">💵 Otros Ingresos</option></optgroup>
+                            <optgroup label="GASTOS"><option value="Tarjeta BBVA">🟦 Tarjeta BBVA</option><option value="PayPal">💳 PayPal</option><option value="Amazon">📦 Amazon</option><option value="Gasolina">⛽ Gasolina</option><option value="Cuenta BBVA">🏦 Cuenta BBVA</option></optgroup>
                         </select>
-                        <input type="date" id="fec" class="w-full p-4 bg-black/30 border border-white/5 rounded font-bold text-center">
-                        <button type="submit" class="w-full bg-[#00e5ff] text-[#072146] font-black py-5 rounded uppercase tracking-widest mt-4">Confirmar Operación</button>
+                        <input type="date" id="in-fecha" class="w-full p-4 bg-black/40 border border-white/10 rounded-xl text-white outline-none">
+                        <button type="submit" id="btn-submit" class="w-full bg-[#00e5ff] text-[#072146] font-black py-4 rounded-xl text-[10px] uppercase shadow-xl">Confirmar Operación</button>
                     </form>
                 </div>
-            </div>
+            </section>
         </main>
 
-        <nav>
-            <button onclick="tab('p1',this)" class="nav-link active">
-                <span class="text-2xl">🏦</span><span class="text-[9px] font-black mt-1">GLOBAL</span>
-            </button>
-            <button onclick="tab('p2',this)" class="nav-link">
-                <span class="text-2xl">📋</span><span class="text-[9px] font-black mt-1">LISTA</span>
-            </button>
-            <button onclick="tab('p3',this)" class="nav-link">
-                <span class="text-2xl">➕</span><span class="text-[9px] font-black mt-1">OPERAR</span>
-            </button>
+        <nav class="fixed bottom-0 left-0 right-0 bg-black/95 border-t border-white/10 flex justify-around p-3 pb-8 z-50">
+            <button onclick="switchTab('tab-cuenta', this)" class="nav-btn flex flex-col items-center gap-1 active-tab"><span class="text-xl">🏦</span><span class="text-[7px] font-black uppercase">Global</span></button>
+            <button onclick="switchTab('tab-mes', this)" class="nav-btn flex flex-col items-center gap-1 text-slate-500"><span class="text-xl">📋</span><span class="text-[7px] font-black uppercase">Extracto</span></button>
+            <button onclick="switchTab('tab-add', this)" class="nav-btn flex flex-col items-center gap-1 text-slate-500"><span class="text-xl">➕</span><span class="text-[7px] font-black uppercase">Operar</span></button>
         </nav>
     </div>
 
     <script>
-        const API = 'https://mis-gastos-app.onrender.com/api/gastos';
-        let store = [], pin = "", priv = true, myChart = null;
+        const API_URL = 'https://mis-gastos-app.onrender.com/api/gastos';
+        let appData = [], currentPinInput = "", isPrivate = false, mainChart = null;
+        let recurrentes = JSON.parse(localStorage.getItem('bbva_recurrentes') || '[]');
 
-        function k(n) {
-            if(pin.length < 4) {
-                pin += n;
-                const ds = document.querySelectorAll('.pin-dot');
-                ds[pin.length-1].classList.add('on');
-                if(pin.length === 4) {
-                    if(pin === "1234") {
-                        document.getElementById('pin-screen').classList.add('hidden');
-                        document.getElementById('app').classList.remove('hidden');
-                        refresh();
-                    } else { pin = ""; ds.forEach(d => d.classList.remove('on')); }
+        // PIN y Acceso
+        let savedPin = localStorage.getItem('bbva_user_pin');
+        function pressPin(n) {
+            if(currentPinInput.length < 4) {
+                currentPinInput += n;
+                document.querySelectorAll('.pin-dot').forEach((d, i) => i < currentPinInput.length ? d.classList.add('filled') : d.classList.remove('filled'));
+                if(currentPinInput.length === 4) {
+                    if(!savedPin) { localStorage.setItem('bbva_user_pin', currentPinInput); savedPin = currentPinInput; unlock(); }
+                    else if(currentPinInput === savedPin) unlock();
+                    else { alert("PIN INCORRECTO"); clearPin(); }
                 }
             }
         }
+        function clearPin() { currentPinInput = ""; document.querySelectorAll('.pin-dot').forEach(d => d.classList.remove('filled')); }
+        function deleteLast() { currentPinInput = currentPinInput.slice(0, -1); pressPin(''); }
+        function unlock() { document.getElementById('pin-screen').classList.add('hidden'); document.getElementById('app-content').classList.remove('hidden'); renderApp(); }
 
-        async function refresh() {
-            const res = await fetch(API); store = await res.json();
-            let total = 0, cats = {};
-            const l = document.getElementById('lista'); l.innerHTML = '';
-            
-            store.forEach(g => {
-                const v = parseFloat(g.importe); const isS = g.categoria === "Sueldo";
-                total += isS ? v : -v; if(!isS) cats[g.categoria] = (cats[g.categoria]||0) + v;
-                
-                l.innerHTML += `<div class="p-5 border-b border-white/5 flex justify-between items-center bg-[#072146]">
-                    <div><div class="font-black text-white text-base">${g.concepto}</div><div class="text-[9px] opacity-40 font-bold uppercase tracking-wider">${g.fecha}</div></div>
-                    <div class="font-black text-lg ${isS?'text-[#00e5ff]':'text-rose-400'}">${priv?'****':v.toFixed(2)+'€'}</div>
-                </div>`;
-            });
-            document.getElementById('total').innerText = priv ? "****€" : total.toFixed(2) + "€";
-            draw(cats);
+        function togglePrivacy() { isPrivate = !isPrivate; document.getElementById('toggle-visibility').innerText = isPrivate ? '🙈' : '👁️'; renderApp(); }
+
+        async function renderApp() {
+            const start = Date.now();
+            try {
+                const res = await fetch(API_URL);
+                appData = await res.json();
+                document.getElementById('debug-ping').innerText = (Date.now() - start) + "ms";
+                document.getElementById('debug-count').innerText = appData.length;
+
+                const hoy = new Date();
+                const hoyStr = hoy.toISOString().split('T')[0];
+                const mesSel = document.getElementById('filtroMes').value;
+                let real = 0, cats = {};
+                const lMes = document.getElementById('listaMes'); lMes.innerHTML = '';
+
+                appData.forEach(g => {
+                    const val = parseFloat(g.importe);
+                    const esIngreso = (g.categoria === "Sueldo" || g.categoria === "Otros Ingresos");
+                    if (g.fecha <= hoyStr) esIngreso ? real += val : real -= val;
+
+                    if (g.fecha.startsWith(mesSel)) {
+                        if(!esIngreso) cats[g.categoria] = (cats[g.categoria]||0) + val;
+                        const disp = isPrivate ? "****€" : (esIngreso?'+':'') + val.toFixed(2) + '€';
+                        lMes.innerHTML += `
+                            <div class="bg-bbva-card p-4 rounded-2xl flex justify-between items-center border-l-2 ${esIngreso?'border-[#00e5ff]':'border-rose-500'}">
+                                <div class="flex-1">
+                                    <p class="font-bold text-white text-sm mb-1">${g.concepto}</p>
+                                    <p class="text-[10px] text-slate-500 uppercase font-bold">${g.categoria} • Día ${g.fecha.split('-')[2]}</p>
+                                </div>
+                                <div class="flex items-center gap-4">
+                                    <p class="font-black text-lg ${esIngreso?'text-[#00e5ff]':'text-rose-400'}">${disp}</p>
+                                    <div class="flex gap-1">
+                                        <button onclick="preEdit('${g._id}')" class="btn-edit">✏️</button>
+                                        <button onclick="deleteGasto('${g._id}')" class="btn-delete">🗑️</button>
+                                    </div>
+                                </div>
+                            </div>`;
+                    }
+                });
+
+                // Pagos Automáticos (Aviso y Resta)
+                const diaHoy = hoy.getDate();
+                document.getElementById('alert-pago').style.display = 'none';
+                recurrentes.forEach(r => {
+                    if (diaHoy >= r.dia) {
+                        real -= r.importe;
+                        if(diaHoy === r.dia) {
+                            document.getElementById('alert-pago').innerText = `🔔 PAGO PROGRAMADO HOY: ${r.concepto} (-${r.importe}€)`;
+                            document.getElementById('alert-pago').style.display = 'block';
+                        }
+                    }
+                });
+
+                document.getElementById('valReal').innerText = isPrivate ? "****€" : real.toLocaleString('de-DE', {minimumFractionDigits: 2}) + "€";
+                drawChart(cats);
+            } catch (e) { console.error(e); }
         }
 
-        function draw(d) {
-            const ctx = document.getElementById('chart').getContext('2d');
-            if(myChart) myChart.destroy();
-            myChart = new Chart(ctx, { type:'doughnut', data:{ labels:Object.keys(d), datasets:[{data:Object.values(d), backgroundColor:['#00e5ff','#004481','#8b5cf6','#10b981'], borderWidth:0}]}, options:{plugins:{legend:{display:false}}, maintainAspectRatio:false, cutout:'85%'}});
-            document.getElementById('legs').innerHTML = Object.keys(d).map((k, i) => `<div class="flex items-center gap-2 text-[10px] font-bold uppercase tracking-tighter"><div class="w-2 h-2 rounded-full" style="background:${['#00e5ff','#004481','#8b5cf6','#10b981'][i]}"></div>${k}</div>`).join('');
+        function drawChart(data) {
+            const ctx = document.getElementById('chartGastos').getContext('2d');
+            if (mainChart) mainChart.destroy();
+            const labels = Object.keys(data), values = Object.values(data);
+            mainChart = new Chart(ctx, { type: 'doughnut', data: { labels: labels, datasets: [{ data: values, backgroundColor: ['#004481','#00e5ff','#8b5cf6','#10b981','#f59e0b','#fb7185'], borderWidth: 2, borderColor: '#072146' }] }, options: { plugins: { legend: { display: false } }, maintainAspectRatio: false, cutout: '80%' } });
+            document.getElementById('legendBox').innerHTML = labels.map((l, i) => `<div class="flex items-center justify-between p-2 bg-white/5 rounded-xl"><span class="text-[7px] font-bold text-slate-400 uppercase">${l}</span><span class="text-[8px] font-black text-white">${isPrivate ? "***" : data[l].toFixed(0)}€</span></div>`).join('');
         }
 
-        function tab(id, el) {
-            document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
-            document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
-            document.getElementById(id).classList.remove('hidden');
-            el.classList.add('active');
+        function preEdit(id) {
+            const g = appData.find(x => x._id === id);
+            document.getElementById('in-id').value = g._id;
+            document.getElementById('in-concepto').value = g.concepto;
+            document.getElementById('in-importe').value = g.importe;
+            document.getElementById('in-categoria').value = g.categoria;
+            document.getElementById('in-fecha').value = g.fecha;
+            document.getElementById('btn-submit').innerText = "Actualizar Registro";
+            switchTab('tab-add', document.querySelectorAll('.nav-btn')[2]);
         }
 
-        function toggleP() { priv = !priv; document.getElementById('eye').innerText = priv?'👁️':'🙈'; refresh(); }
+        async function deleteGasto(id) {
+            if(confirm("¿Seguro que quieres borrar este registro?")) {
+                await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+                renderApp();
+            }
+        }
 
-        document.getElementById('form').addEventListener('submit', async (e) => {
+        document.getElementById('mainForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const b = { concepto: document.getElementById('con').value, importe: parseFloat(document.getElementById('imp').value), categoria: document.getElementById('cat').value, fecha: document.getElementById('fec').value };
-            await fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b) });
-            document.getElementById('form').reset(); refresh(); tab('p1', document.querySelectorAll('.nav-link')[0]);
+            const id = document.getElementById('in-id').value;
+            const data = { 
+                concepto: document.getElementById('in-concepto').value, 
+                importe: parseFloat(document.getElementById('in-importe').value),
+                categoria: document.getElementById('in-categoria').value,
+                fecha: document.getElementById('in-fecha').value
+            };
+
+            const method = id ? 'PUT' : 'POST';
+            const url = id ? `${API_URL}/${id}` : API_URL;
+
+            await fetch(url, { method: method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+            
+            document.getElementById('mainForm').reset();
+            document.getElementById('in-id').value = "";
+            document.getElementById('btn-submit').innerText = "Confirmar Operación";
+            switchTab('tab-cuenta', document.querySelectorAll('.nav-btn')[0]);
+            renderApp();
         });
-        document.getElementById('fec').valueAsDate = new Date();
+
+        function switchTab(id, el) { 
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden')); 
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.replace('active-tab', 'text-slate-500')); 
+            el.classList.replace('text-slate-500', 'active-tab'); 
+            document.getElementById(id).classList.remove('hidden'); 
+        }
+
+        document.getElementById('filtroMes').value = new Date().toISOString().slice(0, 7);
+        document.getElementById('in-fecha').valueAsDate = new Date();
+        document.getElementById('in-es-recurrente').addEventListener('change', function() {
+            document.getElementById('config-recurrente').classList.toggle('hidden', !this.checked);
+        });
     </script>
 </body>
 </html>
