@@ -3,12 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BBVA Premium v14.9 - Edit & Delete</title>
+    <title>BBVA Premium v15.2 - Smart Scroll</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
         :root { --bbva-navy: #072146; --bbva-blue: #004481; --bbva-cyan: #00e5ff; }
-        body { font-family: 'Inter', sans-serif; background: #000; color: #fff; margin:0; -webkit-tap-highlight-color: transparent; }
+        
+        /* Evitar scroll global innecesario */
+        html, body { height: 100%; margin: 0; padding: 0; background: #000; overflow: hidden; }
+        body { font-family: 'Inter', sans-serif; color: #fff; -webkit-tap-highlight-color: transparent; }
         
         .bg-bbva-card { background: var(--bbva-navy); border: 1px solid rgba(255,255,255,0.05); border-radius: 2rem; }
         .bbva-gradient { background: linear-gradient(135deg, #072146 0%, #004481 100%); border-radius: 2.2rem; border: 1px solid rgba(0, 229, 255, 0.2); }
@@ -22,13 +25,25 @@
         .bbva-input { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 1.25rem; padding: 1.1rem; width: 100%; color: white; outline: none; }
         .active-tab { color: var(--bbva-cyan) !important; border-top: 3px solid var(--bbva-cyan); }
         
-        .num-btn { width: 72px; height: 72px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1); font-size: 1.5rem; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+        /* Estructura de navegación por Swiping */
+        #viewport { width: 100%; height: calc(100% - 150px); overflow: hidden; position: relative; }
+        #main-view { display: flex; width: 400%; height: 100%; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); will-change: transform; }
+        
+        /* Scroll independiente por cada pestaña */
+        .tab-content { 
+            width: 25%; 
+            height: 100%; 
+            overflow-y: auto; 
+            overflow-x: hidden;
+            padding: 1rem;
+            -webkit-overflow-scrolling: touch; 
+        }
 
-        /* Estilo Botones de Acción (Lápiz/Papelera) como la captura */
-        .action-btn { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 0.8rem; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; }
+        .num-btn { width: 72px; height: 72px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1); font-size: 1.5rem; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+        .action-btn { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 0.8rem; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; }
     </style>
 </head>
-<body class="pb-32">
+<body>
 
     <div id="pin-screen" class="fixed inset-0 bg-black z-[9999] flex flex-col items-center justify-center">
         <h1 class="text-4xl font-black italic opacity-20 mb-12 uppercase tracking-tighter">BBVA</h1>
@@ -36,8 +51,8 @@
         <div class="grid grid-cols-3 gap-6" id="pin-pad"></div>
     </div>
 
-    <div id="app-content" class="hidden">
-        <header class="p-5 flex justify-between items-center sticky top-0 bg-black/90 backdrop-blur-md z-50">
+    <div id="app-content" class="hidden h-full flex flex-col">
+        <header class="p-5 flex justify-between items-center bg-black/90 backdrop-blur-md z-50">
             <h1 class="font-black text-2xl italic tracking-tighter">BBVA</h1>
             <div class="flex gap-3">
                 <button onclick="togglePrivacy()" class="w-10 h-10 bg-white/5 rounded-full border border-white/10 flex items-center justify-center text-lg">👁️</button>
@@ -45,83 +60,80 @@
             </div>
         </header>
 
-        <main class="p-4 max-w-md mx-auto space-y-6">
-            
-            <section id="tab-home" class="tab-content space-y-6">
-                <div class="p-10 bbva-gradient text-center shadow-2xl">
-                    <p class="text-[11px] font-black tracking-[0.3em] text-cyan-200/40 mb-1 uppercase">Saldo Real Hoy</p>
-                    <h2 id="valReal" class="text-6xl font-black tracking-tighter">0.00€</h2>
-                    <div class="mt-10 space-y-2 text-left">
-                        <div class="flex justify-between text-[11px] font-black uppercase text-cyan-300/70">
-                            <span>Gasto del mes</span> <span id="pctText">0%</span>
+        <div id="viewport">
+            <div id="main-view">
+                <section id="tab-home" class="tab-content space-y-6">
+                    <div class="p-10 bbva-gradient text-center">
+                        <p class="text-[11px] font-black tracking-[0.3em] text-cyan-200/40 mb-1 uppercase">Saldo Real Hoy</p>
+                        <h2 id="valReal" class="text-6xl font-black tracking-tighter">0.00€</h2>
+                        <div class="mt-10 space-y-2 text-left">
+                            <div class="flex justify-between text-[11px] font-black uppercase text-cyan-300/70">
+                                <span>Gasto del mes</span> <span id="pctText">0%</span>
+                            </div>
+                            <div class="progress-container"><div id="progBar" class="progress-bar" style="width: 0%"></div></div>
                         </div>
-                        <div class="progress-container"><div id="progBar" class="progress-bar" style="width: 0%"></div></div>
                     </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4 text-center">
-                    <div class="bg-bbva-card p-6 border-white/5">
-                        <p class="text-[10px] font-bold text-slate-500 uppercase">Cierre Mes</p>
-                        <p id="valProj" class="text-3xl font-black text-cyan-400 mt-1">0.00€</p>
+                    <div class="grid grid-cols-2 gap-4 text-center">
+                        <div class="bg-bbva-card p-6 border-white/5">
+                            <p class="text-[10px] font-bold text-slate-500 uppercase">Cierre Mes</p>
+                            <p id="valProj" class="text-3xl font-black text-cyan-400 mt-1">0.00€</p>
+                        </div>
+                        <div class="bg-bbva-card p-6 border-white/5">
+                            <p class="text-[10px] font-bold text-slate-500 uppercase">A Pagar</p>
+                            <p id="valPend" class="text-3xl font-black text-rose-400 mt-1">0.00€</p>
+                        </div>
                     </div>
-                    <div class="bg-bbva-card p-6 border-white/5">
-                        <p class="text-[10px] font-bold text-slate-500 uppercase">A Pagar</p>
-                        <p id="valPend" class="text-3xl font-black text-rose-400 mt-1">0.00€</p>
-                    </div>
-                </div>
-            </section>
+                </section>
 
-            <section id="tab-futuro" class="tab-content hidden space-y-4">
-                <h3 class="text-xs font-black uppercase text-cyan-400 italic px-2 tracking-widest">Gastos Futuros</h3>
-                <div id="listaFuturo" class="space-y-4"></div>
-            </section>
+                <section id="tab-futuro" class="tab-content space-y-4">
+                    <h3 class="text-xs font-black uppercase text-cyan-400 italic px-2 tracking-widest">Gastos Futuros</h3>
+                    <div id="listaFuturo" class="space-y-4"></div>
+                </section>
 
-            <section id="tab-lista" class="tab-content hidden space-y-3">
-                <input type="month" id="filtroMes" class="bg-bbva-card w-full p-4 text-white font-black uppercase text-xs outline-none" onchange="renderApp()">
-                <div id="listaPasado" class="space-y-3"></div>
-            </section>
+                <section id="tab-lista" class="tab-content space-y-3">
+                    <input type="month" id="filtroMes" class="bg-bbva-card w-full p-4 text-white font-black uppercase text-xs outline-none sticky top-0 z-10" onchange="renderApp()">
+                    <div id="listaPasado" class="space-y-3"></div>
+                </section>
 
-            <section id="tab-add" class="tab-content hidden relative">
-                <button id="cancel-edit" onclick="resetForm(); switchTab('tab-home', document.querySelectorAll('.nav-btn')[0]);" class="hidden absolute top-0 right-0 text-[10px] font-black uppercase opacity-50 px-4 py-2">Cancelar</button>
-                
-                <form id="mainForm" class="bg-bbva-card p-8 space-y-5">
-                    <input type="hidden" id="in-id"> <input type="text" id="in-concepto" placeholder="Concepto" class="bbva-input" required>
-                    <input type="number" id="in-importe" step="0.01" placeholder="0.00" class="bbva-input text-4xl font-black text-center" required>
-                    
-                    <select id="in-categoria" class="bbva-input font-bold appearance-none">
-                        <optgroup label="INGRESOS">
-                            <option value="Sueldo">💰 Sueldo</option>
-                            <option value="Otros Ingresos">💵 Otros Ingresos</option>
-                        </optgroup>
-                        <optgroup label="GASTOS / CUENTAS">
-                            <option value="Cuenta BBVA">🏦 Cuenta BBVA</option>
-                            <option value="Tarjeta Aqua BBVA">🟦 Tarjeta Aqua BBVA</option>
-                            <option value="Tarjeta Explora">✈️ Tarjeta Explora</option>
-                            <option value="Imagine">📱 Imagine</option>
-                            <option value="PayPal">💳 PayPal</option>
-                            <option value="Amazon">📦 Amazon</option>
-                            <option value="El Corte Inglés">🏬 El Corte Inglés</option>
-                            <option value="Gasolina">⛽ Gasolina</option>
-                        </optgroup>
-                    </select>
+                <section id="tab-add" class="tab-content">
+                    <form id="mainForm" class="bg-bbva-card p-8 space-y-5">
+                        <input type="hidden" id="in-id">
+                        <input type="text" id="in-concepto" placeholder="Concepto" class="bbva-input" required>
+                        <input type="number" id="in-importe" step="0.01" placeholder="0.00" class="bbva-input text-4xl font-black text-center" required>
+                        <select id="in-categoria" class="bbva-input font-bold appearance-none">
+                            <optgroup label="INGRESOS">
+                                <option value="Sueldo">💰 Sueldo</option>
+                                <option value="Otros Ingresos">💵 Otros Ingresos</option>
+                            </optgroup>
+                            <optgroup label="GASTOS / CUENTAS">
+                                <option value="Cuenta BBVA">🏦 Cuenta BBVA</option>
+                                <option value="Tarjeta Aqua BBVA">🟦 Tarjeta Aqua BBVA</option>
+                                <option value="Tarjeta Explora">✈️ Tarjeta Explora</option>
+                                <option value="Imagine">📱 Imagine</option>
+                                <option value="PayPal">💳 PayPal</option>
+                                <option value="Amazon">📦 Amazon</option>
+                                <option value="El Corte Inglés">🏬 El Corte Inglés</option>
+                                <option value="Gasolina">⛽ Gasolina</option>
+                            </optgroup>
+                        </select>
+                        <input type="date" id="in-fecha" class="bbva-input">
+                        <button type="submit" id="btn-submit" class="w-full bg-cyan-400 text-black font-black py-5 rounded-2xl uppercase text-[11px] shadow-lg">Confirmar</button>
+                    </form>
+                </section>
+            </div>
+        </div>
 
-                    <input type="date" id="in-fecha" class="bbva-input">
-                    <button type="submit" id="btn-submit" class="w-full bg-cyan-400 text-black font-black py-5 rounded-2xl uppercase text-[11px] shadow-lg">Confirmar</button>
-                </form>
-            </section>
-        </main>
-
-        <nav class="fixed bottom-0 left-0 right-0 bg-black/95 backdrop-blur-xl border-t border-white/10 flex justify-around p-4 pb-10 z-50">
-            <button onclick="switchTab('tab-home', this)" class="nav-btn active-tab flex flex-col items-center gap-1 flex-1">
+        <nav class="bg-black/95 backdrop-blur-xl border-t border-white/10 flex justify-around p-4 pb-10">
+            <button onclick="goToTab(0)" class="nav-btn active-tab flex flex-col items-center gap-1 flex-1">
                 <span class="text-2xl">🏦</span><span class="text-[7px] font-black uppercase">Global</span>
             </button>
-            <button onclick="switchTab('tab-futuro', this)" class="nav-btn text-slate-500 flex flex-col items-center gap-1 flex-1">
+            <button onclick="goToTab(1)" class="nav-btn text-slate-500 flex flex-col items-center gap-1 flex-1">
                 <span class="text-2xl">⏳</span><span class="text-[7px] font-black uppercase">Próximos</span>
             </button>
-            <button onclick="switchTab('tab-lista', this)" class="nav-btn text-slate-500 flex flex-col items-center gap-1 flex-1">
+            <button onclick="goToTab(2)" class="nav-btn text-slate-500 flex flex-col items-center gap-1 flex-1">
                 <span class="text-2xl">📋</span><span class="text-[7px] font-black uppercase">Extracto</span>
             </button>
-            <button onclick="switchTab('tab-add', this)" class="nav-btn text-slate-500 flex flex-col items-center gap-1 flex-1">
+            <button onclick="goToTab(3)" class="nav-btn text-slate-500 flex flex-col items-center gap-1 flex-1">
                 <span class="text-2xl">➕</span><span class="text-[7px] font-black uppercase">Operar</span>
             </button>
         </nav>
@@ -129,8 +141,8 @@
 
     <script>
         const API_URL = 'https://mis-gastos-app.onrender.com/api/gastos';
-        let pin = "", isPrivate = false;
-        const listaIngresos = ["Sueldo", "Otros Ingresos"];
+        let pin = "", isPrivate = false, currentTabIndex = 0, appData = [];
+        let touchStartX = 0, touchEndX = 0;
 
         // PIN PAD
         [1,2,3,4,5,6,7,8,9,'C',0,'DEL'].forEach(v => {
@@ -143,21 +155,47 @@
             document.getElementById('pin-pad').appendChild(b);
         });
 
+        function goToTab(index) {
+            if (index < 0 || index > 3) return;
+            currentTabIndex = index;
+            document.getElementById('main-view').style.transform = `translateX(-${index * 25}%)`;
+            const btns = document.querySelectorAll('.nav-btn');
+            btns.forEach((b, i) => {
+                if(i === index) b.classList.replace('text-slate-500', 'active-tab');
+                else b.classList.replace('active-tab', 'text-slate-500');
+            });
+        }
+
+        // Mejorado: Swipe ahora funciona sin bloquear el scroll vertical
+        const viewport = document.getElementById('viewport');
+        viewport.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; }, {passive: true});
+        viewport.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            const diff = touchStartX - touchEndX;
+            if (Math.abs(diff) > 80) { // Umbral para deslizar
+                if (diff > 0) goToTab(currentTabIndex + 1);
+                else goToTab(currentTabIndex - 1);
+            }
+        });
+
         async function renderApp() {
-            const res = await fetch(API_URL); const data = await res.json();
-            appData = data; // Guardar datos globalmente para edición
+            const res = await fetch(API_URL); appData = await res.json();
             const hoy = new Date().toISOString().split('T')[0];
             const mesSel = document.getElementById('filtroMes').value;
 
-            let saldoReal = 0, gastosFuturos = 0, ingresosFuturos = 0;
-            let gastoMesActual = 0, ingresoMesActual = 0;
-
+            let saldoReal = 0, gastosFuturos = 0, ingresosFuturos = 0, gastoMesActual = 0, ingresoMesActual = 0;
             document.getElementById('listaPasado').innerHTML = '';
             document.getElementById('listaFuturo').innerHTML = '';
 
-            data.sort((a,b) => a.fecha.localeCompare(b.fecha)).forEach(g => {
+            appData.sort((a, b) => {
+                const aFuturo = a.fecha > hoy;
+                const bFuturo = b.fecha > hoy;
+                if (aFuturo && !bFuturo) return 1;
+                if (!aFuturo && bFuturo) return -1;
+                return b.fecha.localeCompare(a.fecha);
+            }).forEach(g => {
                 const val = parseFloat(g.importe);
-                const esIngreso = listaIngresos.includes(g.categoria);
+                const esIngreso = ["Sueldo", "Otros Ingresos"].includes(g.categoria);
                 const esPasado = (g.fecha <= hoy);
                 const disp = isPrivate ? "****€" : val.toLocaleString('de-DE', {minimumFractionDigits: 2}) + "€";
 
@@ -171,10 +209,10 @@
                 }
 
                 if(g.fecha.startsWith(mesSel)) {
-                    document.getElementById('listaPasado').insertAdjacentHTML('afterbegin', `
+                    document.getElementById('listaPasado').insertAdjacentHTML('beforeend', `
                         <div class="bg-bbva-card p-5 flex justify-between items-center ${!esPasado ? 'opacity-30' : ''}">
                             <div class="flex-1">
-                                <p class="text-sm font-bold text-white leading-tight">${g.concepto}</p>
+                                <p class="text-sm font-bold text-white">${g.concepto}</p>
                                 <p class="text-[9px] text-slate-500 font-bold uppercase mt-1 tracking-tight">${g.fecha} • ${g.categoria}</p>
                             </div>
                             <div class="flex items-center gap-3">
@@ -212,51 +250,19 @@
             document.getElementById('pctText').innerText = Math.round(pct) + "%";
         }
 
-        // LÓGICA DE BORRADO REAL
         async function deleteGasto(id) {
-            if(confirm("¿Seguro que quieres borrar este registro de forma permanente?")) {
-                await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
-                renderApp(); // Recargar datos
-            }
+            if(confirm("¿Borrar?")) { await fetch(`${API_URL}/${id}`, { method: 'DELETE' }); renderApp(); }
         }
 
-        // LÓGICA DE PRE-EDICIÓN (Cargar formulario)
         function preEdit(id) {
             const g = appData.find(x => x._id === id);
-            if(!g) return;
-            
-            // Llenar campos
             document.getElementById('in-id').value = g._id;
             document.getElementById('in-concepto').value = g.concepto;
             document.getElementById('in-importe').value = g.importe;
             document.getElementById('in-categoria').value = g.categoria;
             document.getElementById('in-fecha').value = g.fecha;
-            
-            // Cambiar aspecto del formulario
-            document.getElementById('btn-submit').innerText = "Actualizar Registro";
-            document.getElementById('btn-submit').classList.replace('bg-cyan-400', 'bg-amber-400');
-            document.getElementById('cancel-edit').classList.remove('hidden');
-            
-            // Ir a la pestaña de operar
-            switchTab('tab-add', document.querySelectorAll('.nav-btn')[3]);
-        }
-
-        // Limpiar formulario al cancelar o guardar
-        function resetForm() {
-            document.getElementById('mainForm').reset();
-            document.getElementById('in-id').value = "";
-            document.getElementById('btn-submit').innerText = "Confirmar";
-            document.getElementById('btn-submit').classList.replace('bg-amber-400', 'bg-cyan-400');
-            document.getElementById('cancel-edit').classList.add('hidden');
-            document.getElementById('in-fecha').valueAsDate = new Date();
-        }
-
-        function switchTab(id, el) {
-            document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.replace('active-tab', 'text-slate-500'));
-            el.classList.replace('text-slate-500', 'active-tab'); document.getElementById(id).classList.remove('hidden');
-            // Si salimos de 'Operar' sin guardar, resetear el form por seguridad
-            if(id !== 'tab-add') resetForm();
+            document.getElementById('btn-submit').innerText = "Actualizar";
+            goToTab(3);
         }
 
         document.getElementById('mainForm').onsubmit = async (e) => {
@@ -268,20 +274,12 @@
                 categoria: document.getElementById('in-categoria').value, 
                 fecha: document.getElementById('in-fecha').value 
             };
-            
-            // Lógica PUT (editar) o POST (crear)
-            const method = id ? 'PUT' : 'POST';
-            const url = id ? `${API_URL}/${id}` : API_URL;
-
-            await fetch(url, { 
-                method: method, 
-                headers: {'Content-Type':'application/json'}, 
-                body: JSON.stringify(data) 
+            await fetch(id ? `${API_URL}/${id}` : API_URL, { 
+                method: id ? 'PUT' : 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) 
             });
-            
-            resetForm(); // Limpiar
-            renderApp(); // Recargar
-            switchTab('tab-home', document.querySelectorAll('.nav-btn')[0]); // Volver al inicio
+            e.target.reset(); document.getElementById('in-id').value = "";
+            document.getElementById('btn-submit').innerText = "Confirmar";
+            renderApp(); goToTab(0);
         };
 
         function togglePrivacy() { isPrivate = !isPrivate; renderApp(); }
