@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BBVA Total Privacy v10.5</title>
+    <title>BBVA Full Blackout v10.6</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -21,14 +21,13 @@
         .pin-dot.filled { background: var(--bbva-cyan); box-shadow: 0 0 10px var(--bbva-cyan); }
         .num-btn { width: 70px; height: 70px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1); font-size: 1.5rem; font-weight: 700; display: flex; align-items: center; justify-content: center; }
 
-        /* Ajustes de Escala Precision v10.5 */
+        /* Ajustes de Escala Precision */
         #tab-cuenta { display: flex; flex-direction: column; gap: 6px; }
         .donut-container { height: 180px; position: relative; margin: -5px 0; }
         .btn-export { background: linear-gradient(90deg, #004481 0%, #00e5ff 100%); border: 1px solid rgba(255,255,255,0.2); }
         
         /* Ojo Privacidad */
         #toggle-visibility { font-size: 1.2rem; cursor: pointer; transition: opacity 0.2s; user-select: none; }
-        #toggle-visibility:active { opacity: 0.5; }
     </style>
 </head>
 <body class="pb-24">
@@ -61,7 +60,7 @@
         <header class="bg-black/90 p-4 sticky top-0 z-50 flex justify-between items-center border-b border-white/10">
             <div class="flex flex-col">
                 <h1 class="font-[900] text-xl italic text-white leading-none">BBVA</h1>
-                <span class="text-[9px] font-mono font-bold text-[#00e5ff] mt-1 uppercase tracking-wider">v10.5 Total Privacy</span>
+                <span class="text-[9px] font-mono font-bold text-[#00e5ff] mt-1 uppercase tracking-wider">v10.6 Full Blackout</span>
             </div>
             <button onclick="location.reload()" class="bg-white/5 p-2 rounded-full border border-white/10">🔒</button>
         </header>
@@ -172,13 +171,7 @@
         function togglePrivacy() {
             isPrivate = !isPrivate;
             document.getElementById('toggle-visibility').innerText = isPrivate ? '🙈' : '👁️';
-            updateSaldoDisplay();
-        }
-
-        function updateSaldoDisplay() {
-            const el = document.getElementById('valReal');
-            if (isPrivate) el.innerText = "****€";
-            else el.innerText = currentSaldo.toLocaleString('de-DE', {minimumFractionDigits: 2}) + "€";
+            renderApp(); // Re-renderizamos para aplicar asteriscos a todo
         }
 
         async function renderApp() {
@@ -199,17 +192,22 @@
                     if (g.fecha <= hoy) esIngreso ? real+=val : real-=val;
                     if (g.fecha.startsWith(mesSel)) {
                         if(!esIngreso) cats[g.categoria] = (cats[g.categoria]||0) + val;
+                        
+                        // Lista de movimientos con asteriscos si está en privado
+                        const displayImporte = isPrivate ? "****€" : (esIngreso ? "+" : "") + val.toFixed(2) + "€";
+                        
                         lMes.innerHTML += `<div class="bg-bbva-card p-4 rounded-2xl flex justify-between items-center border-l-2 ${esIngreso?'border-[#00e5ff]':'border-rose-500'}">
                             <div>
                                 <p class="font-bold text-white text-sm mb-1">${g.concepto}</p>
                                 <p class="text-[10px] font-bold uppercase"><span class="text-slate-500">${g.categoria}</span><span class="text-slate-700 mx-1">•</span><span style="color: #ffffff !important;">Día ${g.fecha.split('-')[2]}</span></p>
                             </div>
-                            <p class="font-black text-lg ${esIngreso?'text-[#00e5ff]':'text-rose-400'}">${esIngreso?'+':''}${val.toFixed(2)}€</p>
+                            <p class="font-black text-lg ${esIngreso?'text-[#00e5ff]':'text-rose-400'}">${displayImporte}</p>
                         </div>`;
                     }
                 });
-                currentSaldo = real;
-                updateSaldoDisplay();
+                
+                // Saldo principal con asteriscos
+                document.getElementById('valReal').innerText = isPrivate ? "****€" : real.toLocaleString('de-DE', {minimumFractionDigits: 2}) + "€";
                 drawChart(cats);
             } catch (e) { console.error(e); }
         }
@@ -219,7 +217,16 @@
             if (mainChart) mainChart.destroy();
             const labels = Object.keys(data), values = Object.values(data);
             mainChart = new Chart(ctx, { type: 'doughnut', data: { labels: labels, datasets: [{ data: values, backgroundColor: COLORS, borderWidth: 2, borderColor: '#072146' }] }, options: { plugins: { legend: { display: false } }, maintainAspectRatio: false, cutout: '80%' } });
-            document.getElementById('legendBox').innerHTML = labels.map((l, i) => `<div class="flex items-center justify-between p-2 bg-white/5 rounded-xl border border-white/5"><div class="flex items-center gap-2 truncate"><div class="w-1.5 h-1.5 rounded-full" style="background:${COLORS[i]}"></div><span class="text-[7px] font-bold text-slate-400 uppercase truncate">${l}</span></div><span class="text-[8px] font-black text-white ml-2">${values[i].toFixed(0)}€</span></div>`).join('');
+            
+            // Leyenda con asteriscos si está en privado
+            document.getElementById('legendBox').innerHTML = labels.map((l, i) => `
+                <div class="flex items-center justify-between p-2 bg-white/5 rounded-xl border border-white/5">
+                    <div class="flex items-center gap-2 truncate">
+                        <div class="w-1.5 h-1.5 rounded-full" style="background:${COLORS[i]}"></div>
+                        <span class="text-[7px] font-bold text-slate-400 uppercase truncate">${l}</span>
+                    </div>
+                    <span class="text-[8px] font-black text-white ml-2">${isPrivate ? "***€" : values[i].toFixed(0) + "€"}</span>
+                </div>`).join('');
         }
 
         function exportarCSV() {
