@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BBVA Master v11.3 - Ajuste Espacio</title>
+    <title>BBVA Master v11.3 - Restaurado</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -30,7 +30,9 @@
         .btn-delete { color: #ff4d4d; padding: 8px; border-radius: 8px; background: rgba(255, 77, 77, 0.1); }
     </style>
 </head>
-<body class="pb-20"> <div id="pin-screen">
+<body class="pb-20">
+
+    <div id="pin-screen">
         <div class="text-center mb-10">
             <h1 class="text-4xl font-[900] italic text-[#00e5ff] tracking-tighter">BBVA</h1>
             <p class="text-[9px] uppercase tracking-[0.4em] text-white/40 mt-2">Acceso Privado</p>
@@ -98,6 +100,16 @@
                         <input type="hidden" id="in-id">
                         <input type="text" id="in-concepto" placeholder="Concepto" class="w-full p-4 bg-black/40 border border-white/10 rounded-xl text-white outline-none" required>
                         <input type="number" id="in-importe" step="0.01" placeholder="0.00" class="w-full p-4 bg-black/40 border border-white/10 rounded-xl font-bold text-3xl text-white outline-none" required>
+                        
+                        <div class="flex justify-between items-center bg-white/5 p-3 rounded-xl border border-white/10">
+                            <span class="text-[10px] font-black uppercase text-slate-400 italic">¿Pago recurrente?</span>
+                            <input type="checkbox" id="in-es-recurrente" class="w-5 h-5 accent-[#00e5ff]">
+                        </div>
+
+                        <div id="config-recurrente" class="hidden">
+                            <input type="number" id="in-dia-pago" min="1" max="31" placeholder="Día mensual de cobro" class="w-full p-4 bg-cyan-900/20 border border-cyan-500/30 rounded-xl text-white outline-none">
+                        </div>
+
                         <select id="in-categoria" class="w-full p-4 bg-black/40 border border-white/10 rounded-xl text-white outline-none">
                             <optgroup label="INGRESOS"><option value="Sueldo">💰 Sueldo</option><option value="Otros Ingresos">💵 Otros Ingresos</option></optgroup>
                             <optgroup label="GASTOS"><option value="Tarjeta BBVA">🟦 Tarjeta BBVA</option><option value="PayPal">💳 PayPal</option><option value="Amazon">📦 Amazon</option><option value="Gasolina">⛽ Gasolina</option><option value="Cuenta BBVA">🏦 Cuenta BBVA</option></optgroup>
@@ -120,6 +132,7 @@
         const API_URL = 'https://mis-gastos-app.onrender.com/api/gastos';
         let appData = [], currentPinInput = "", isPrivate = false, mainChart = null;
 
+        // Lógica PIN
         let savedPin = localStorage.getItem('bbva_user_pin');
         function pressPin(n) {
             if(currentPinInput.length < 4) {
@@ -208,6 +221,11 @@
             document.getElementById('btn-submit').innerText = "Confirmar Operación";
             renderApp();
             switchTab('tab-cuenta', document.querySelectorAll('.nav-btn')[0]);
+        });
+
+        // Lógica para mostrar/ocultar configuración recurrente
+        document.getElementById('in-es-recurrente').addEventListener('change', function() {
+            document.getElementById('config-recurrente').classList.toggle('hidden', !this.checked);
         });
 
         document.getElementById('filtroMes').value = new Date().toISOString().slice(0, 7);
