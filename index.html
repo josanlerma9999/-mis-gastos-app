@@ -3,56 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BBVA Master v12.6</title>
+    <title>BBVA Master v12.7</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
         :root { --bbva-navy: #072146; --bbva-blue: #004481; --bbva-cyan: #00e5ff; }
-        body { font-family: 'Inter', sans-serif; background-color: #000; color: #fff; margin:0; overflow: hidden; height: 100vh; }
+        
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #000; 
+            color: #fff; 
+            margin: 0; 
+            overflow: hidden; 
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* PANTALLA PIN - REFORZADA */
+        #pin-screen { 
+            position: fixed; 
+            top: 0; left: 0; 
+            width: 100%; height: 100%; 
+            background: #000; 
+            z-index: 10000; /* Prioridad máxima */
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+        }
+        
+        .pin-dot { 
+            width: 18px; height: 18px; 
+            border-radius: 50%; 
+            border: 2px solid var(--bbva-cyan); 
+            margin: 0 12px; 
+            transition: all 0.2s ease;
+        }
+        .pin-dot.filled { 
+            background: var(--bbva-cyan); 
+            box-shadow: 0 0 15px var(--bbva-cyan); 
+        }
+
+        .num-btn { 
+            width: 80px; height: 80px; 
+            border-radius: 50%; 
+            border: 1px solid rgba(255,255,255,0.15); 
+            font-size: 1.8rem; 
+            font-weight: 700; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            background: rgba(255,255,255,0.02);
+            transition: background 0.1s;
+        }
+        .num-btn:active { 
+            background: var(--bbva-cyan); 
+            color: var(--bbva-navy);
+            transform: scale(0.95);
+        }
+
+        /* CONTENEDORES (Según tus fotos) */
+        .main-container { height: calc(100vh - 75px); overflow-y: auto; padding: 0; }
+        
+        /* Sección OPERAR (Foto 3: Pegada arriba sin negro) */
+        #tab-add { padding: 0; }
+        .card-operar { 
+            background-color: var(--bbva-navy); 
+            border-radius: 0 0 2.5rem 2.5rem; 
+            padding: 2rem 1.5rem;
+            border-bottom: 6px solid var(--bbva-cyan);
+        }
+
         .bg-bbva-card { background-color: var(--bbva-navy); border: 1px solid rgba(0, 229, 255, 0.1); }
         .bbva-gradient { background: linear-gradient(135deg, #072146 0%, #004481 100%); }
         .active-tab { color: var(--bbva-cyan); border-top: 3px solid var(--bbva-cyan); }
         .hidden { display: none !important; }
-        
-        /* PIN SCREEN FIXED */
-        #pin-screen { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .pin-dot { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--bbva-cyan); margin: 0 10px; transition: all 0.2s; }
-        .pin-dot.filled { background: var(--bbva-cyan); box-shadow: 0 0 15px var(--bbva-cyan); }
-        .num-btn { width: 75px; height: 75px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1); font-size: 1.6rem; font-weight: 700; display: flex; align-items: center; justify-content: center; active: scale(0.9); }
-
-        /* Contenedores Ultra Compactos (Fotos) */
-        .main-container { height: calc(100vh - 75px); overflow-y: auto; padding: 0; }
-        nav { height: 75px; padding-bottom: 20px !important; background: #000; }
-
-        /* Ajuste sección OPERAR (Pegado arriba sin negro) */
-        #tab-add { padding: 0; margin-top: -2px; }
-        #tab-add .bg-bbva-card { border-radius: 0 0 2.5rem 2.5rem; border-top: none; padding-top: 2rem; }
-
-        .btn-action { padding: 10px; border-radius: 12px; font-size: 14px; }
-        .btn-edit { background: rgba(0, 229, 255, 0.1); color: var(--bbva-cyan); margin-right: 5px; }
     </style>
 </head>
 <body>
 
     <div id="pin-screen">
         <div class="text-center mb-10 italic font-[900] text-[#00e5ff] text-4xl tracking-tighter">BBVA</div>
-        <div class="flex mb-16" id="pin-dots">
+        <div class="flex mb-16">
             <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
         </div>
         <div class="grid grid-cols-3 gap-6">
-            <button onclick="pressPin('1')" class="num-btn">1</button>
-            <button onclick="pressPin('2')" class="num-btn">2</button>
-            <button onclick="pressPin('3')" class="num-btn">3</button>
-            <button onclick="pressPin('4')" class="num-btn">4</button>
-            <button onclick="pressPin('5')" class="num-btn">5</button>
-            <button onclick="pressPin('6')" class="num-btn">6</button>
-            <button onclick="pressPin('7')" class="num-btn">7</button>
-            <button onclick="pressPin('8')" class="num-btn">8</button>
-            <button onclick="pressPin('9')" class="num-btn">9</button>
-            <button onclick="clearPin()" class="text-[10px] opacity-30 font-black uppercase">Reset</button>
-            <button onclick="pressPin('0')" class="num-btn">0</button>
-            <button onclick="deleteLast()" class="text-[10px] opacity-30 font-black uppercase">Borrar</button>
+            <button onclick="handlePin('1')" class="num-btn">1</button>
+            <button onclick="handlePin('2')" class="num-btn">2</button>
+            <button onclick="handlePin('3')" class="num-btn">3</button>
+            <button onclick="handlePin('4')" class="num-btn">4</button>
+            <button onclick="handlePin('5')" class="num-btn">5</button>
+            <button onclick="handlePin('6')" class="num-btn">6</button>
+            <button onclick="handlePin('7')" class="num-btn">7</button>
+            <button onclick="handlePin('8')" class="num-btn">8</button>
+            <button onclick="handlePin('9')" class="num-btn">9</button>
+            <button onclick="resetPin()" class="text-[10px] opacity-40 font-black uppercase">Borrar</button>
+            <button onclick="handlePin('0')" class="num-btn">0</button>
+            <button onclick="deleteDigit()" class="text-[10px] opacity-40 font-black uppercase">Retr</button>
         </div>
     </div>
 
@@ -60,7 +108,7 @@
         <header class="p-4 flex justify-between items-center bg-black border-b border-white/10 sticky top-0 z-50">
             <div class="flex flex-col">
                 <h1 class="font-[900] text-2xl italic leading-none tracking-tighter">BBVA</h1>
-                <span class="text-[10px] text-cyan-400 font-black uppercase tracking-widest mt-1">v12.6 Master</span>
+                <span class="text-[10px] text-cyan-400 font-black uppercase tracking-widest mt-1">v12.7 Master</span>
             </div>
             <div class="flex gap-5">
                 <button onclick="togglePrivacy()" id="eye-icon" class="text-2xl">👁️</button>
@@ -74,39 +122,32 @@
                     <p class="text-[11px] uppercase tracking-[0.3em] text-white/40 mb-2 font-bold">Patrimonio Global</p>
                     <h2 id="valReal" class="text-5xl font-[900] tracking-tighter italic">****€</h2>
                 </div>
-
-                <div class="bg-bbva-card p-5 rounded-[2.5rem] border border-white/5">
+                <div class="bg-bbva-card p-5 rounded-[2.5rem]">
                     <div style="height:200px;"><canvas id="chartGastos"></canvas></div>
                     <div id="legendBox" class="grid grid-cols-2 gap-2 mt-6"></div>
-                    <button onclick="resetAllAlerts()" class="w-full mt-8 py-3 text-[10px] text-zinc-600 uppercase font-black tracking-widest border-t border-white/5">Limpiar Pagos Recurrentes</button>
                 </div>
             </section>
 
             <section id="tab-mes" class="tab-content hidden p-4 space-y-2">
-                <input type="month" id="filtroMes" class="w-full bg-bbva-card p-4 rounded-2xl text-white font-black outline-none text-lg mb-2" onchange="renderApp()">
+                <input type="month" id="filtroMes" class="w-full bg-bbva-card p-4 rounded-2xl text-white font-black outline-none text-lg mb-4" onchange="renderApp()">
                 <div id="listaMes" class="space-y-2 pb-24"></div>
             </section>
 
             <section id="tab-add" class="tab-content hidden">
-                <div class="bg-bbva-card p-8 shadow-2xl border-b-8 border-cyan-400">
+                <div class="card-operar shadow-2xl">
                     <form id="mainForm" class="space-y-5">
                         <input type="hidden" id="in-id">
                         <div>
                             <label class="text-[11px] font-[900] text-cyan-400 uppercase ml-1">Concepto</label>
-                            <input type="text" id="in-concepto" placeholder="Ej: Alquiler" class="w-full p-4 bg-black/40 border border-white/10 rounded-xl text-white text-lg outline-none" required>
+                            <input type="text" id="in-concepto" placeholder="Ej: Supermercado" class="w-full p-4 bg-black/40 border border-white/10 rounded-xl text-white text-lg outline-none" required>
                         </div>
                         <input type="number" id="in-importe" step="0.01" placeholder="0.00" class="w-full p-5 bg-black/40 border border-white/10 rounded-2xl font-[900] text-5xl text-white text-center outline-none" required>
                         
-                        <div class="flex justify-between items-center bg-white/5 p-4 rounded-xl">
-                            <span class="text-[11px] font-black uppercase text-slate-400 italic">¿Pago Recurrente?</span>
-                            <input type="checkbox" id="in-es-recurrente" class="w-6 h-6 accent-cyan-400">
-                        </div>
-
                         <select id="in-categoria" class="w-full p-4 bg-black/40 border border-white/10 rounded-xl text-lg font-bold text-center">
                             <option value="Sueldo">💰 Sueldo</option>
                             <option value="Tarjeta BBVA">🟦 Tarjeta BBVA</option>
-                            <option value="PayPal">💳 PayPal</option>
                             <option value="Amazon">📦 Amazon</option>
+                            <option value="Gasolina">⛽ Gasolina</option>
                         </select>
                         <input type="date" id="in-fecha" class="w-full p-4 bg-black/40 border border-white/10 rounded-xl text-lg font-bold text-center">
                         <button type="submit" id="btn-submit" class="w-full bg-cyan-400 text-[#072146] font-[900] py-6 rounded-2xl uppercase text-lg shadow-2xl tracking-widest mt-4">Confirmar</button>
@@ -115,7 +156,7 @@
             </section>
         </main>
 
-        <nav class="fixed bottom-0 left-0 right-0 border-t border-white/10 flex justify-around items-center z-50">
+        <nav class="fixed bottom-0 left-0 right-0 bg-black border-t border-white/10 flex justify-around items-center z-50 h-[75px] pb-4">
             <button onclick="switchTab('tab-cuenta', this)" class="nav-btn flex flex-col items-center active-tab"><span class="text-3xl">🏦</span><span class="text-[8px] font-black uppercase">Global</span></button>
             <button onclick="switchTab('tab-mes', this)" class="nav-btn flex flex-col items-center text-slate-500"><span class="text-3xl">📋</span><span class="text-[8px] font-black uppercase">Lista</span></button>
             <button onclick="switchTab('tab-add', this)" class="nav-btn flex flex-col items-center text-slate-500"><span class="text-3xl">➕</span><span class="text-[8px] font-black uppercase">Operar</span></button>
@@ -125,27 +166,32 @@
     <script>
         const API_URL = 'https://mis-gastos-app.onrender.com/api/gastos';
         const COLORS = ['#00e5ff', '#004481', '#8b5cf6', '#10b981', '#f59e0b', '#fb7185'];
-        let appData = [], currentPinInput = "", isPrivate = true, mainChart = null;
+        let appData = [], pinInput = "", isPrivate = true, mainChart = null;
 
-        // LÓGICA DEL PIN (CORREGIDA)
-        function pressPin(n) {
-            if(currentPinInput.length < 4) {
-                currentPinInput += n;
-                updateDots();
-                if(currentPinInput.length === 4) {
-                    const savedPin = localStorage.getItem('bbva_user_pin') || "1234";
-                    if(currentPinInput === savedPin) unlock();
-                    else { alert("PIN INCORRECTO"); clearPin(); }
+        // LÓGICA PIN REFORZADA
+        function handlePin(n) {
+            if(pinInput.length < 4) {
+                pinInput += n;
+                refreshDots();
+                if(pinInput.length === 4) {
+                    const masterPin = localStorage.getItem('bbva_user_pin') || "1234";
+                    if(pinInput === masterPin) {
+                        document.getElementById('pin-screen').style.display = 'none';
+                        document.getElementById('app-content').classList.remove('hidden');
+                        renderApp();
+                    } else {
+                        alert("PIN ERRÓNEO");
+                        resetPin();
+                    }
                 }
             }
         }
-        function updateDots() {
+        function refreshDots() {
             const dots = document.querySelectorAll('.pin-dot');
-            dots.forEach((dot, i) => i < currentPinInput.length ? dot.classList.add('filled') : dot.classList.remove('filled'));
+            dots.forEach((dot, i) => i < pinInput.length ? dot.classList.add('filled') : dot.classList.remove('filled'));
         }
-        function clearPin() { currentPinInput = ""; updateDots(); }
-        function deleteLast() { currentPinInput = currentPinInput.slice(0, -1); updateDots(); }
-        function unlock() { document.getElementById('pin-screen').classList.add('hidden'); document.getElementById('app-content').classList.remove('hidden'); renderApp(); }
+        function resetPin() { pinInput = ""; refreshDots(); }
+        function deleteDigit() { pinInput = pinInput.slice(0, -1); refreshDots(); }
 
         function togglePrivacy() { isPrivate = !isPrivate; document.getElementById('eye-icon').innerText = isPrivate ? '👁️' : '🙈'; renderApp(); }
 
@@ -153,7 +199,6 @@
             try {
                 const res = await fetch(API_URL);
                 appData = await res.json();
-                const hoy = new Date().toISOString().split('T')[0];
                 const mesSel = document.getElementById('filtroMes').value;
                 let total = 0, cats = {};
                 const list = document.getElementById('listaMes'); list.innerHTML = '';
@@ -161,21 +206,20 @@
                 appData.forEach(g => {
                     const v = parseFloat(g.importe);
                     const isI = (g.categoria === "Sueldo" || g.categoria === "Otros Ingresos");
-                    if (g.fecha <= hoy) isI ? total += v : total -= v;
+                    total += isI ? v : -v;
                     if (g.fecha.startsWith(mesSel)) {
                         if(!isI) cats[g.categoria] = (cats[g.categoria]||0) + v;
                         list.innerHTML += `
                             <div class="bg-bbva-card p-4 rounded-2xl flex justify-between items-center border-l-4 ${isI?'border-cyan-400':'border-rose-500'}">
-                                <div><p class="font-[900] text-white text-base leading-none mb-1">${g.concepto}</p><p class="text-[10px] text-slate-500 uppercase font-black">${g.fecha}</p></div>
+                                <div><p class="font-[900] text-white text-base">${g.concepto}</p><p class="text-[10px] text-slate-500 uppercase font-black">${g.fecha}</p></div>
                                 <div class="flex items-center gap-2">
                                     <p class="font-[900] text-lg ${isI?'text-cyan-400':'text-rose-400'}">${isPrivate?'****':v.toFixed(2)}€</p>
-                                    <button onclick="preEdit('${g._id}')" class="btn-action btn-edit">✏️</button>
-                                    <button onclick="deleteGasto('${g._id}')" class="opacity-20 text-xl ml-2">🗑️</button>
+                                    <button onclick="preEdit('${g._id}')" class="p-2 bg-cyan-400/10 text-cyan-400 rounded-lg text-sm">✏️</button>
                                 </div>
                             </div>`;
                     }
                 });
-                document.getElementById('valReal').innerText = isPrivate ? "****€" : total.toLocaleString('de-DE', {minimumFractionDigits: 2}) + "€";
+                document.getElementById('valReal').innerText = isPrivate ? "****€" : total.toLocaleString('de-DE') + "€";
                 drawChart(cats);
             } catch (e) {}
         }
@@ -183,16 +227,13 @@
         function drawChart(data) {
             const ctx = document.getElementById('chartGastos').getContext('2d');
             if (mainChart) mainChart.destroy();
-            const labels = Object.keys(data);
-            mainChart = new Chart(ctx, { type: 'doughnut', data: { labels: labels, datasets: [{ data: Object.values(data), backgroundColor: COLORS, borderWidth: 0 }] }, options: { plugins: { legend: { display: false } }, maintainAspectRatio: false, cutout: '85%' } });
-            document.getElementById('legendBox').innerHTML = labels.map((l, i) => `
-                <div class="bg-white/5 p-3 rounded-2xl flex justify-between items-center border border-white/5">
-                    <div class="flex items-center gap-2 truncate"><div class="w-3 h-3 rounded-full" style="background:${COLORS[i]}"></div><span class="text-[10px] font-black uppercase text-slate-400 truncate w-16">${l}</span></div>
+            mainChart = new Chart(ctx, { type: 'doughnut', data: { labels: Object.keys(data), datasets: [{ data: Object.values(data), backgroundColor: COLORS, borderWidth: 0 }] }, options: { plugins: { legend: { display: false } }, maintainAspectRatio: false, cutout: '85%' } });
+            document.getElementById('legendBox').innerHTML = Object.keys(data).map((l, i) => `
+                <div class="bg-white/5 p-3 rounded-2xl flex justify-between items-center border border-white/5 truncate">
+                    <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full" style="background:${COLORS[i]}"></div><span class="text-[10px] font-black uppercase text-slate-400 truncate w-16">${l}</span></div>
                     <span class="text-xs font-black text-white">${isPrivate?'***':data[l].toFixed(0)}€</span>
                 </div>`).join('');
         }
-
-        async function deleteGasto(id) { if(confirm("¿Borrar?")) { await fetch(`${API_URL}/${id}`, { method: 'DELETE' }); renderApp(); } }
 
         function preEdit(id) {
             const g = appData.find(x => x._id === id);
@@ -212,7 +253,6 @@
             await fetch(id ? `${API_URL}/${id}` : API_URL, { method: id ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
             document.getElementById('mainForm').reset();
             document.getElementById('in-id').value = "";
-            document.getElementById('btn-submit').innerText = "Confirmar";
             switchTab('tab-cuenta', document.querySelectorAll('.nav-btn')[0]);
             renderApp();
         });
@@ -224,7 +264,6 @@
             document.getElementById(id).classList.remove('hidden'); 
         }
 
-        function resetAllAlerts() { alert("Configuración limpia"); }
         document.getElementById('filtroMes').value = new Date().toISOString().slice(0, 7);
         document.getElementById('in-fecha').valueAsDate = new Date();
     </script>
