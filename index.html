@@ -21,12 +21,12 @@
         .pin-dot.filled { background: var(--bbva-cyan); box-shadow: 0 0 10px var(--bbva-cyan); }
         .num-btn { width: 70px; height: 70px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1); font-size: 1.5rem; font-weight: 700; display: flex; align-items: center; justify-content: center; }
 
-        /* Ajustes de Escala */
+        /* Ajustes de Escala Precision */
         #tab-cuenta { display: flex; flex-direction: column; gap: 6px; }
         .donut-container { height: 180px; position: relative; margin: -5px 0; }
         .btn-export { background: linear-gradient(90deg, #004481 0%, #00e5ff 100%); border: 1px solid rgba(255,255,255,0.2); }
         
-        /* Estilo Ojo Privacidad */
+        /* Ojo Privacidad */
         #toggle-visibility { font-size: 1.2rem; cursor: pointer; transition: opacity 0.2s; }
         #toggle-visibility:active { opacity: 0.5; }
     </style>
@@ -113,8 +113,20 @@
                         <input type="text" id="in-concepto" placeholder="Concepto" class="w-full p-4 bg-black/40 border border-white/10 rounded-xl text-white outline-none">
                         <input type="number" id="in-importe" step="0.01" placeholder="0.00" class="w-full p-4 bg-black/40 border border-white/10 rounded-xl font-bold text-3xl text-white outline-none">
                         <select id="in-categoria" class="w-full p-4 bg-black/40 border border-white/10 rounded-xl text-white outline-none">
-                            <optgroup label="INGRESOS"><option value="Sueldo">💰 Sueldo</option><option value="Otros Ingresos">💵 Otros Ingresos</option></optgroup>
-                            <optgroup label="GASTOS"><option value="Amazon">📦 Amazon</option><option value="Tarjeta BBVA">🟦 Tarjeta BBVA</option><option value="Tarjeta Explora">🧭 Tarjeta Explora</option><option value="Imagine">🟣 Imagine</option><option value="PayPal">💳 PayPal</option><option value="Gasolina">⛽ Gasolina</option><option value="El Corte Inglés">🏬 El Corte Inglés</option><option value="Cuenta BBVA">🏦 Cuenta BBVA</option></optgroup>
+                            <optgroup label="INGRESOS">
+                                <option value="Sueldo">💰 Sueldo</option>
+                                <option value="Otros Ingresos">💵 Otros Ingresos</option>
+                            </optgroup>
+                            <optgroup label="GASTOS">
+                                <option value="Amazon">📦 Amazon</option>
+                                <option value="Tarjeta BBVA">🟦 Tarjeta BBVA</option>
+                                <option value="Tarjeta Explora">🧭 Tarjeta Explora</option>
+                                <option value="Imagine">🟣 Imagine</option>
+                                <option value="PayPal">💳 PayPal</option>
+                                <option value="Gasolina">⛽ Gasolina</option>
+                                <option value="El Corte Inglés">🏬 El Corte Inglés</option>
+                                <option value="Cuenta BBVA">🏦 Cuenta BBVA</option>
+                            </optgroup>
                         </select>
                         <input type="date" id="in-fecha" class="w-full p-4 bg-black/40 border border-white/10 rounded-xl text-white outline-none">
                         <button type="submit" class="w-full bg-[#00e5ff] text-[#072146] font-black py-4 rounded-xl text-[10px] uppercase tracking-widest shadow-xl">Confirmar</button>
