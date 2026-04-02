@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BBVA Premium v14.7 - Math Fix</title>
+    <title>BBVA Premium v14.8 - Full Categories</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
@@ -82,13 +82,24 @@
                 <form id="mainForm" class="bg-bbva-card p-8 space-y-5">
                     <input type="text" id="in-concepto" placeholder="Concepto" class="bbva-input" required>
                     <input type="number" id="in-importe" step="0.01" placeholder="0.00" class="bbva-input text-4xl font-black text-center" required>
-                    <select id="in-categoria" class="bbva-input font-bold">
-                        <option value="Sueldo">💰 Sueldo</option>
-                        <option value="Tarjeta Aqua BBVA">🟦 Tarjeta Aqua</option>
-                        <option value="Amazon">📦 Amazon</option>
-                        <option value="Gasolina">⛽ Gasolina</option>
-                        <option value="Suministros">🏠 Suministros</option>
+                    
+                    <select id="in-categoria" class="bbva-input font-bold appearance-none">
+                        <optgroup label="INGRESOS">
+                            <option value="Sueldo">💰 Sueldo</option>
+                            <option value="Otros Ingresos">💵 Otros Ingresos</option>
+                        </optgroup>
+                        <optgroup label="GASTOS / CUENTAS">
+                            <option value="Cuenta BBVA">🏦 Cuenta BBVA</option>
+                            <option value="Tarjeta Aqua BBVA">🟦 Tarjeta Aqua BBVA</option>
+                            <option value="Tarjeta Explora">✈️ Tarjeta Explora</option>
+                            <option value="Imagine">📱 Imagine</option>
+                            <option value="PayPal">💳 PayPal</option>
+                            <option value="Amazon">📦 Amazon</option>
+                            <option value="El Corte Inglés">🏬 El Corte Inglés</option>
+                            <option value="Gasolina">⛽ Gasolina</option>
+                        </optgroup>
                     </select>
+
                     <input type="date" id="in-fecha" class="bbva-input">
                     <button type="submit" class="w-full bg-cyan-400 text-black font-black py-5 rounded-2xl uppercase text-[11px] shadow-lg">Confirmar</button>
                 </form>
@@ -114,6 +125,7 @@
     <script>
         const API_URL = 'https://mis-gastos-app.onrender.com/api/gastos';
         let pin = "", isPrivate = false;
+        const listaIngresos = ["Sueldo", "Otros Ingresos"];
 
         // PIN PAD
         [1,2,3,4,5,6,7,8,9,'C',0,'DEL'].forEach(v => {
@@ -131,44 +143,35 @@
             const hoy = new Date().toISOString().split('T')[0];
             const mesSel = document.getElementById('filtroMes').value;
 
-            // VARIABLES DE CÁLCULO
-            let saldoReal = 0;      // Movimientos <= hoy
-            let gastosFuturos = 0;  // Gastos > hoy
-            let ingresosFuturos = 0;// Ingresos > hoy
-            let gastoMesActual = 0; // Gastos <= hoy del mes en curso
-            let ingresoMesActual = 0;// Ingresos <= hoy del mes en curso
+            let saldoReal = 0, gastosFuturos = 0, ingresosFuturos = 0;
+            let gastoMesActual = 0, ingresoMesActual = 0;
 
             document.getElementById('listaPasado').innerHTML = '';
             document.getElementById('listaFuturo').innerHTML = '';
 
             data.sort((a,b) => a.fecha.localeCompare(b.fecha)).forEach(g => {
                 const val = parseFloat(g.importe);
-                const esIngreso = (g.categoria === "Sueldo");
+                const esIngreso = listaIngresos.includes(g.categoria);
                 const esPasado = (g.fecha <= hoy);
                 const disp = isPrivate ? "****€" : val.toLocaleString('de-DE', {minimumFractionDigits: 2}) + "€";
 
-                // 1. CALCULAR SALDO REAL (Lo que ya ha pasado)
                 if(esPasado) {
                     esIngreso ? saldoReal += val : saldoReal -= val;
-                    // Para la barra de progreso (solo mes actual pasado)
                     if(g.fecha.startsWith(new Date().toISOString().slice(0, 7))) {
                         esIngreso ? ingresoMesActual += val : gastoMesActual += val;
                     }
                 } else {
-                    // 2. CALCULAR FUTURO
                     esIngreso ? ingresosFuturos += val : gastosFuturos += val;
                 }
 
-                // RENDER LISTA EXTRACTO (POR MES)
                 if(g.fecha.startsWith(mesSel)) {
                     document.getElementById('listaPasado').insertAdjacentHTML('afterbegin', `
                         <div class="bg-bbva-card p-5 flex justify-between items-center ${!esPasado ? 'opacity-30' : ''}">
-                            <div><p class="text-sm font-bold text-white">${g.concepto}</p><p class="text-[9px] text-slate-500 font-bold uppercase">${g.fecha}</p></div>
+                            <div><p class="text-sm font-bold text-white">${g.concepto}</p><p class="text-[9px] text-slate-500 font-black uppercase">${g.fecha} • ${g.categoria}</p></div>
                             <p class="text-lg font-black ${esIngreso ? 'text-cyan-400' : 'text-white'}">${disp}</p>
                         </div>`);
                 }
 
-                // RENDER LISTA PRÓXIMOS
                 if(!esPasado) {
                     const dias = Math.ceil((new Date(g.fecha) - new Date()) / 864e5);
                     document.getElementById('listaFuturo').innerHTML += `
@@ -185,15 +188,10 @@
                 }
             });
 
-            // 3. ASIGNAR VALORES A PANTALLA
             document.getElementById('valReal').innerText = isPrivate ? "****€" : saldoReal.toLocaleString('de-DE', {minimumFractionDigits: 2}) + "€";
             document.getElementById('valPend').innerText = isPrivate ? "****€" : "-" + gastosFuturos.toLocaleString('de-DE', {minimumFractionDigits: 2}) + "€";
-            
-            // Cierre estimado = Saldo ahora - lo que voy a pagar + lo que voy a cobrar
             const cierreMes = saldoReal - gastosFuturos + ingresosFuturos;
             document.getElementById('valProj').innerText = isPrivate ? "****€" : cierreMes.toLocaleString('de-DE', {minimumFractionDigits: 2}) + "€";
-            
-            // Barra de progreso: ¿Qué % del ingreso ya nos hemos gastado?
             const pct = ingresoMesActual > 0 ? (gastoMesActual / ingresoMesActual) * 100 : 0;
             document.getElementById('progBar').style.width = Math.min(pct, 100) + "%";
             document.getElementById('pctText').innerText = Math.round(pct) + "%";
