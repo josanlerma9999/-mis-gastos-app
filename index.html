@@ -3,205 +3,184 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BBVA Finanzas v8.9</title>
+    <title>BBVA Suite v9.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        :root { 
-            --bbva-navy: #072146; 
-            --bbva-blue: #004481; 
-            --bbva-cyan: #00a8e1; 
-        }
-        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; background-color: #000000; color: #ffffff; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=JetBrains+Mono&display=swap');
+        :root { --bbva-navy: #072146; --bbva-blue: #004481; --bbva-cyan: #00a8e1; }
+        body { font-family: 'Inter', sans-serif; background-color: #000000; color: #ffffff; -webkit-tap-highlight-color: transparent; }
         .active-tab { color: var(--bbva-cyan); border-top: 4px solid var(--bbva-cyan); }
         .hidden { display: none !important; }
         .font-900 { font-weight: 900; }
-        .bg-bbva-card { 
-            background-color: var(--bbva-navy); 
-            border: 1px solid rgba(0, 168, 225, 0.2); 
-        }
+        .bg-bbva-card { background-color: var(--bbva-navy); border: 1px solid rgba(0, 168, 225, 0.15); }
         .bbva-gradient { background: linear-gradient(135deg, #072146 0%, #004481 100%); }
+        .debug-text { font-family: 'JetBrains Mono', monospace; font-size: 8px; color: #00ff00; opacity: 0.7; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-up { animation: slideUp 0.4s ease-out; }
     </style>
 </head>
-<body class="pb-28">
+<body class="pb-32">
 
     <div id="pantalla-pin" class="fixed inset-0 bg-[#072146] z-[100] flex flex-col items-center justify-center p-6 text-white text-center">
         <div class="mb-8">
-            <h2 class="font-900 text-3xl tracking-tighter italic mb-1">BBVA</h2>
-            <p class="text-[8px] uppercase tracking-[0.3em] opacity-60">Acceso Seguro</p>
+            <h2 class="font-900 text-4xl tracking-tighter italic mb-1">BBVA</h2>
+            <p class="text-[7px] uppercase tracking-[0.4em] text-cyan-400">Acceso Encriptado</p>
         </div>
         <div class="flex gap-4 mb-12" id="pin-dots">
-            <div class="w-4 h-4 rounded-full border-2 border-white/20"></div>
-            <div class="w-4 h-4 rounded-full border-2 border-white/20"></div>
-            <div class="w-4 h-4 rounded-full border-2 border-white/20"></div>
-            <div class="w-4 h-4 rounded-full border-2 border-white/20"></div>
+            <div class="w-3 h-3 rounded-full border border-white/30"></div>
+            <div class="w-3 h-3 rounded-full border border-white/30"></div>
+            <div class="w-3 h-3 rounded-full border border-white/30"></div>
+            <div class="w-3 h-3 rounded-full border border-white/30"></div>
         </div>
-        <div class="grid grid-cols-3 gap-6 max-w-[280px]">
+        <div class="grid grid-cols-3 gap-8 max-w-[280px]">
             <script>
-                for(let i=1; i<=9; i++) document.write(`<button onclick="teclado(${i})" class="w-16 h-16 bg-white/5 rounded-full font-black text-2xl active:bg-cyan-500">${i}</button>`);
+                for(let i=1; i<=9; i++) document.write(`<button onclick="teclado(${i})" class="w-14 h-14 bg-white/5 rounded-full font-black text-xl active:bg-cyan-500 transition-all">${i}</button>`);
             </script>
             <div></div>
-            <button onclick="teclado(0)" class="w-16 h-16 bg-white/5 rounded-full font-black text-2xl active:bg-cyan-500">0</button>
-            <button onclick="borrarPin()" class="w-16 h-16 text-rose-400 font-black text-[10px] uppercase">Borrar</button>
+            <button onclick="teclado(0)" class="w-14 h-14 bg-white/5 rounded-full font-black text-xl">0</button>
+            <button onclick="borrarPin()" class="w-14 h-14 text-rose-500 font-black text-[9px] uppercase">Borrar</button>
         </div>
     </div>
 
-    <header class="bg-black/95 backdrop-blur-md text-white p-5 sticky top-0 z-50 flex justify-between items-center border-b border-white/10">
+    <header class="bg-black/95 backdrop-blur-xl text-white p-5 sticky top-0 z-50 flex justify-between items-start border-b border-white/5">
         <div class="flex flex-col">
-            <h1 class="font-900 text-xl tracking-tighter italic leading-none">BBVA</h1>
+            <h1 class="font-900 text-2xl tracking-tighter italic leading-none">BBVA</h1>
             <span class="text-[7px] uppercase tracking-widest text-cyan-400 font-black">Private Banking</span>
         </div>
-        <div class="flex gap-2">
-            <button onclick="checkRecurrentes(true)" class="w-10 h-10 bg-slate-900/50 rounded-full flex items-center justify-center text-lg border border-white/10">🔄</button>
-            <button onclick="togglePrivacy()" class="w-10 h-10 bg-slate-900/50 rounded-full flex items-center justify-center text-lg border border-white/10">
-                <span id="ojo-icon">👁️</span>
-            </button>
+        <div class="flex flex-col items-end gap-2">
+            <span class="text-[8px] font-mono text-white/30 bg-white/5 px-2 py-0.5 rounded border border-white/10 tracking-widest">v9.0.4-PRO</span>
+            <div class="flex gap-2">
+                <button onclick="togglePrivacy()" class="w-8 h-8 bg-slate-900 rounded-full flex items-center justify-center text-sm border border-white/10">
+                    <span id="ojo-icon">👁️</span>
+                </button>
+            </div>
         </div>
     </header>
 
     <main class="max-w-md mx-auto p-4">
         
-        <div id="statsComp" class="hidden bg-bbva-card p-4 rounded-2xl mb-4 text-center border-l-4 border-cyan-400 animate-up">
-            <p id="compTexto" class="text-[10px] font-black uppercase tracking-widest text-white/80"></p>
-        </div>
-
         <section id="tab-cuenta" class="tab-content animate-up">
-            <div id="cardMain" class="p-10 rounded-[2.5rem] text-center mb-6 bbva-gradient border border-white/10 shadow-[0_20px_60px_rgba(0,68,129,0.4)]">
-                <p class="text-[11px] uppercase font-black tracking-[0.2em] mb-2 text-cyan-300">Patrimonio Neto</p>
+            <div id="cardMain" class="p-10 rounded-[2.5rem] text-center mb-6 bbva-gradient border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+                <p class="text-[10px] uppercase font-black tracking-[0.2em] mb-2 text-cyan-300 opacity-80">Saldo Consolidado</p>
                 <h2 id="valReal" class="text-6xl font-900 tracking-tighter">0.00€</h2>
             </div>
             
-            <div class="grid grid-cols-2 gap-4 mb-8">
-                <div class="bg-bbva-card p-5 rounded-[2rem] text-center">
-                    <p class="text-[9px] font-black uppercase text-cyan-500/60 mb-1">Cierre Mes</p>
-                    <p id="valEstimado" class="text-xl font-900 text-white">0.00€</p>
-                </div>
-                <div class="bg-bbva-card p-5 rounded-[2rem] text-center">
-                    <p class="text-[9px] font-black uppercase text-cyan-500/60 mb-1">En Tránsito</p>
-                    <p id="valPendiente" class="text-xl font-900 text-white">0.00€</p>
-                </div>
+            <div class="bg-bbva-card p-6 rounded-[2.5rem] mb-6">
+                <div class="h-60 mb-6"><canvas id="chartGastos"></canvas></div>
+                <div id="legendBox" class="grid grid-cols-2 gap-3"></div>
             </div>
 
-            <div class="bg-bbva-card p-6 rounded-[2.5rem] mb-20">
-                <p class="text-[9px] font-black uppercase tracking-widest text-center text-cyan-500/60 mb-6">Distribución de Gastos</p>
-                <div class="h-64 mb-6"><canvas id="chartGastos"></canvas></div>
-                <div id="legendBox" class="grid grid-cols-2 gap-3"></div>
+            <div class="bg-zinc-900/50 p-4 rounded-2xl border border-zinc-800 border-dashed">
+                <p class="text-[8px] font-black text-zinc-500 uppercase mb-2">💻 Estado del Sistema (Debug)</p>
+                <div id="debugLog" class="debug-text space-y-1">
+                    <p>> Inicializando protocolos...</p>
+                    <p>> Base de Datos: <span class="text-emerald-400">Online</span></p>
+                    <p>> Latencia API: <span id="debug-ping">--ms</span></p>
+                    <p>> Registros cargados: <span id="debug-count">0</span></p>
+                </div>
             </div>
         </section>
 
         <section id="tab-mes" class="tab-content hidden animate-up">
             <div class="bg-bbva-card p-4 rounded-2xl mb-6 flex justify-between items-center">
                 <input type="month" id="filtroMes" class="font-black bg-transparent outline-none text-white invert opacity-80" onchange="renderApp()">
-                <button onclick="exportarCSV()" class="bg-cyan-500 text-white text-[10px] font-black px-5 py-2 rounded-xl uppercase tracking-widest shadow-lg shadow-cyan-500/20">Exportar</button>
+                <button onclick="exportarCSV()" class="bg-cyan-500 text-white text-[10px] font-black px-5 py-2 rounded-xl uppercase tracking-widest shadow-lg shadow-cyan-500/30">Exportar CSV</button>
             </div>
-            <div id="resumenMes" class="grid grid-cols-2 gap-3 mb-6"></div>
             <div id="listaMes" class="space-y-4"></div>
         </section>
 
         <section id="tab-add" class="tab-content hidden animate-up">
             <div class="bg-bbva-card p-8 rounded-[2.5rem]">
-                <h2 id="formTitle" class="text-center font-black uppercase text-[10px] text-cyan-500 mb-6 tracking-[0.3em]">Operación Bancaria</h2>
+                <h2 class="text-center font-black uppercase text-[10px] text-cyan-500 mb-6 tracking-[0.4em]">Nueva Orden de Pago</h2>
                 <form id="mainForm" class="space-y-4">
                     <input type="hidden" id="in-id">
                     <input type="text" id="in-concepto" placeholder="Concepto" class="w-full p-4 bg-black/40 border border-white/10 rounded-2xl font-bold text-white outline-none focus:border-cyan-500 transition-all" required>
                     <input type="number" id="in-importe" step="0.01" placeholder="0.00" class="w-full p-4 bg-black/40 border border-white/10 rounded-2xl font-900 text-4xl text-white outline-none" required>
                     <select id="in-categoria" class="w-full p-4 bg-black/40 border border-white/10 rounded-2xl font-bold text-white outline-none">
-                        <optgroup label="INGRESOS"><option value="Sueldo">💰 Sueldo</option><option value="Otros Ingresos">💵 Otros</option></optgroup>
-                        <optgroup label="GASTOS"><option value="El Corte Inglés">🏬 El Corte Inglés</option><option value="Cuenta BBVA">🏦 BBVA</option><option value="Tarjeta BBVA">🟦 Tarjeta BBVA</option><option value="Tarjeta Explora">🧭 Explora</option><option value="Imagine">🟣 Imagine</option><option value="PayPal">💳 PayPal</option><option value="Amazon">📦 Amazon</option><option value="Gasolina">⛽ Gasolina</option></optgroup>
+                        <option value="Sueldo">💰 Sueldo</option>
+                        <option value="Amazon">📦 Amazon</option>
+                        <option value="Tarjeta BBVA">🟦 Tarjeta BBVA</option>
+                        <option value="Gasolina">⛽ Gasolina</option>
+                        <option value="El Corte Inglés">🏬 El Corte Inglés</option>
+                        <option value="Otros Ingresos">💵 Otros</option>
                     </select>
                     <input type="date" id="in-fecha" class="w-full p-4 bg-black/40 border border-white/10 rounded-2xl font-bold text-white outline-none" required>
-                    <button type="submit" id="btnSubmit" class="w-full bg-cyan-600 text-white font-900 p-5 rounded-2xl shadow-xl active:scale-95 transition-all uppercase tracking-widest text-sm">Confirmar Orden</button>
+                    <button type="submit" class="w-full bg-cyan-600 text-white font-900 p-5 rounded-2xl shadow-xl active:scale-95 transition-all uppercase tracking-widest text-sm">Ejecutar Orden</button>
                 </form>
             </div>
         </section>
     </main>
 
-    <nav class="fixed bottom-0 left-0 right-0 bg-black/95 backdrop-blur-xl border-t border-white/10 flex justify-around p-3 pb-8 z-50">
+    <nav class="fixed bottom-0 left-0 right-0 bg-black/95 backdrop-blur-2xl border-t border-white/5 flex justify-around p-3 pb-8 z-50">
         <button onclick="switchTab('tab-cuenta', this)" class="nav-btn flex flex-col items-center gap-1 active-tab">
-            <span class="text-2xl">🏦</span><span class="text-[8px] font-black uppercase tracking-widest">Global</span>
+            <span class="text-2xl">🏦</span><span class="text-[7px] font-black uppercase tracking-widest">Global</span>
         </button>
         <button onclick="switchTab('tab-mes', this)" class="nav-btn flex flex-col items-center gap-1 text-slate-600">
-            <span class="text-2xl">📑</span><span class="text-[8px] font-black uppercase tracking-widest">Extracto</span>
+            <span class="text-2xl">📋</span><span class="text-[7px] font-black uppercase tracking-widest">Extracto</span>
         </button>
         <button onclick="switchTab('tab-add', this)" class="nav-btn flex flex-col items-center gap-1 text-slate-600">
-            <span class="text-2xl">➕</span><span class="text-[8px] font-black uppercase tracking-widest">Operar</span>
+            <span class="text-2xl">➕</span><span class="text-[7px] font-black uppercase tracking-widest">Operar</span>
         </button>
     </nav>
 
     <script>
         const API_URL = 'https://mis-gastos-app.onrender.com/api/gastos';
-        // PALETA DE ALTO CONTRASTE PARA EL DONUT
-        const COLORS = ['#004481', '#00a8e1', '#8b5cf6', '#10b981', '#f59e0b', '#fb7185', '#d946ef', '#4ade80'];
+        const COLORS = ['#004481', '#00a8e1', '#8b5cf6', '#10b981', '#f59e0b', '#fb7185', '#d946ef', '#ff0055'];
         let appData = [], mainChart = null, pinEntrada = "", privacyMode = false;
 
-        // PIN logic
+        // PIN
         const pinGuardado = localStorage.getItem('user_pin');
-        function teclado(num) { if (pinEntrada.length < 4) { pinEntrada += num; updateDots(); if (pinEntrada.length === 4) setTimeout(checkPin, 200); } }
-        function updateDots() { const dots = document.getElementById('pin-dots').children; for (let i=0; i<4; i++) dots[i].className = i < pinEntrada.length ? "w-4 h-4 rounded-full bg-cyan-400" : "w-4 h-4 rounded-full border-2 border-white/20"; }
+        function teclado(n) { if (pinEntrada.length < 4) { pinEntrada += n; updateDots(); if (pinEntrada.length === 4) setTimeout(checkPin, 200); } }
+        function updateDots() { [...document.getElementById('pin-dots').children].forEach((d, i) => d.className = i < pinEntrada.length ? "w-3 h-3 rounded-full bg-cyan-400 shadow-[0_0_10px_rgba(0,168,225,0.8)]" : "w-3 h-3 rounded-full border border-white/30"); }
         function borrarPin() { pinEntrada = ""; updateDots(); }
-        function checkPin() { if (pinEntrada === pinGuardado || !pinGuardado) { if(!pinGuardado) localStorage.setItem('user_pin', pinEntrada); desbloquear(); } else { alert("PIN Erróneo"); borrarPin(); } }
+        function checkPin() { if (pinEntrada === pinGuardado || !pinGuardado) { if(!pinGuardado) localStorage.setItem('user_pin', pinEntrada); desbloquear(); } else { alert("Error de identificación"); borrarPin(); } }
         function desbloquear() { document.getElementById('pantalla-pin').classList.add('hidden'); renderApp(); }
 
+        // RENDER & DEBUG
         async function renderApp() {
+            const startPing = Date.now();
             try {
                 const res = await fetch(API_URL);
                 appData = await res.json();
-                const hoy = new Date().toISOString().split('T')[0], mesSel = document.getElementById('filtroMes').value;
-                const fPrev = new Date(mesSel + "-01"); fPrev.setMonth(fPrev.getMonth() - 1);
-                const mesPrev = fPrev.toISOString().slice(0, 7);
+                
+                // Debug Info
+                document.getElementById('debug-ping').innerText = (Date.now() - startPing) + "ms";
+                document.getElementById('debug-count').innerText = appData.length;
 
-                let real=0, plan=0, inM=0, outM=0, outPrev=0, cats={};
+                const hoy = new Date().toISOString().split('T')[0], mesSel = document.getElementById('filtroMes').value;
+                let real=0, cats={};
                 const lMes = document.getElementById('listaMes'); lMes.innerHTML='';
 
-                appData.sort((a,b) => new Date(a.fecha) - new Date(b.fecha)).forEach(g => {
-                    const val=parseFloat(g.importe), isIn=["Sueldo", "Otros Ingresos"].includes(g.categoria);
-                    if (g.fecha <= hoy) isIn ? real+=val : real-=val;
-                    else isIn ? plan+=val : plan-=val;
-
+                appData.sort((a,b) => new Date(b.fecha) - new Date(a.fecha)).forEach(g => {
+                    const val=parseFloat(g.importe), isI=["Sueldo", "Otros Ingresos"].includes(g.categoria);
+                    if (g.fecha <= hoy) isI ? real+=val : real-=val;
                     if (g.fecha.startsWith(mesSel)) {
-                        isIn ? inM+=val : (outM+=val, cats[g.categoria]=(cats[g.categoria]||0)+val);
-                        lMes.innerHTML += itemHTML(g, isIn);
+                        if(!isI) cats[g.categoria] = (cats[g.categoria]||0) + val;
+                        lMes.innerHTML += itemHTML(g, isI);
                     }
-                    if (g.fecha.startsWith(mesPrev) && !isIn) outPrev += val;
                 });
 
                 document.getElementById('valReal').innerText = mask(real.toFixed(2)+"€");
-                document.getElementById('valEstimado').innerText = mask((real+plan).toFixed(2)+"€");
-                document.getElementById('valPendiente').innerText = mask(plan.toFixed(2)+"€");
-                
-                if (outPrev > 0) {
-                    const diff = ((outM / outPrev) * 100 - 100).toFixed(1);
-                    const elComp = document.getElementById('statsComp');
-                    elComp.classList.toggle('hidden', false);
-                    elComp.innerHTML = `<p class="text-[10px] font-black uppercase tracking-widest text-slate-300">${diff < 0 ? '📉 Ahorro: '+Math.abs(diff)+'%' : '📈 Gasto: +'+diff+'%'} vs Mes Anterior</p>`;
-                }
-
-                document.getElementById('resumenMes').innerHTML = `
-                    <div class="bg-bbva-card p-4 rounded-2xl"><p class="text-[8px] text-cyan-500 font-black uppercase">Abonos</p><p class="text-cyan-400 font-900 text-lg">${mask(inM.toFixed(2)+"€")}</p></div>
-                    <div class="bg-bbva-card p-4 rounded-2xl"><p class="text-[8px] text-rose-400 font-black uppercase">Cargos</p><p class="text-rose-400 font-900 text-lg">${mask(outM.toFixed(2)+"€")}</p></div>
-                `;
                 drawChart(cats);
-            } catch (e) { console.error(e); }
+            } catch (e) { console.error("DEBUG ERROR:", e); }
         }
 
         function itemHTML(g, isI) {
-            return `<div class="bg-bbva-card p-5 rounded-2xl flex justify-between items-center animate-up">
+            return `<div class="bg-bbva-card p-5 rounded-2xl flex justify-between items-center border-l-2 ${isI?'border-cyan-400':'border-rose-500'}">
                 <div>
-                    <p class="font-black text-white text-sm mb-1">${g.concepto}</p>
+                    <p class="font-black text-white text-sm leading-none mb-1.5">${g.concepto}</p>
                     <p class="text-[9px] font-black uppercase tracking-tighter">
                         <span class="text-slate-500">${g.categoria}</span> 
                         <span class="mx-1 text-slate-700">•</span> 
-                        <span class="text-cyan-400">Día ${g.fecha.split('-')[2]}</span>
+                        <span class="text-cyan-400 font-bold">Día ${g.fecha.split('-')[2]}</span>
                     </p>
                 </div>
                 <div class="flex items-center gap-4">
                     <p class="font-900 text-lg ${isI?'text-cyan-400':'text-rose-400'}">${mask(parseFloat(g.importe).toFixed(2)+"€")}</p>
                     <div class="flex flex-col gap-2">
-                        <button onclick="editMode('${g._id}')" class="w-8 h-8 flex items-center justify-center bg-cyan-500/10 rounded-lg text-cyan-400 border border-cyan-500/20 active:scale-90 transition-all text-sm">✏️</button>
-                        <button onclick="deleteItem('${g._id}')" class="w-8 h-8 flex items-center justify-center bg-white/5 rounded-lg text-slate-500 border border-white/10 active:scale-90 transition-all text-xs">🗑️</button>
+                        <button onclick="editMode('${g._id}')" class="w-8 h-8 bg-cyan-500/10 rounded-lg text-cyan-400 border border-cyan-500/20 text-sm">✏️</button>
+                        <button onclick="deleteItem('${g._id}')" class="w-8 h-8 bg-white/5 rounded-lg text-slate-500 border border-white/5 text-[10px]">🗑️</button>
                     </div>
                 </div>
             </div>`;
@@ -210,20 +189,18 @@
         function drawChart(data) {
             const ctx = document.getElementById('chartGastos').getContext('2d');
             if (mainChart) mainChart.destroy();
-            const labels = Object.keys(data), values = Object.values(data);
+            const labels = Object.keys(data);
             if (labels.length === 0 || privacyMode) return;
-            
             mainChart = new Chart(ctx, { 
                 type: 'doughnut', 
-                data: { labels: labels, datasets: [{ data: values, backgroundColor: COLORS, borderWidth: 2, borderColor: '#072146' }] }, 
-                options: { plugins: { legend: { display: false } }, maintainAspectRatio: false, cutout: '82%' } 
+                data: { labels: labels, datasets: [{ data: Object.values(data), backgroundColor: COLORS, borderWidth: 3, borderColor: '#072146' }] }, 
+                options: { plugins: { legend: { display: false } }, maintainAspectRatio: false, cutout: '80%' } 
             });
-
             document.getElementById('legendBox').innerHTML = labels.map((l, i) => `
                 <div class="flex items-center gap-2 p-2 bg-white/5 rounded-xl border border-white/5">
                     <div class="w-2 h-2 rounded-full" style="background:${COLORS[i]}"></div>
                     <div class="flex flex-col">
-                        <span class="text-[7px] font-black text-slate-500 uppercase truncate w-24">${l}</span>
+                        <span class="text-[7px] font-black text-slate-500 uppercase">${l}</span>
                         <span class="text-[9px] font-900 text-white">${data[l].toFixed(0)}€</span>
                     </div>
                 </div>`).join('');
@@ -232,8 +209,6 @@
         function togglePrivacy() { privacyMode = !privacyMode; document.getElementById('ojo-icon').innerText = privacyMode ? "🙈" : "👁️"; renderApp(); }
         function mask(v) { return privacyMode ? "****€" : v; }
         function switchTab(id, el) { document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden')); document.querySelectorAll('.nav-btn').forEach(b => b.classList.replace('active-tab', 'text-slate-600')); el.classList.replace('text-slate-600', 'active-tab'); document.getElementById(id).classList.remove('hidden'); renderApp(); }
-        function exportarCSV() { let csv = "Fecha,Concepto,Importe,Categoria\n"; appData.forEach(g => { csv += `${g.fecha},${g.concepto},${g.importe},${g.categoria}\n`; }); const blob = new Blob([csv], { type: 'text/csv' }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `BBVA_Global.csv`; link.click(); }
-        async function deleteItem(id) { if(confirm("Anular transacción?")) { await fetch(`${API_URL}/${id}`, { method: 'DELETE' }); renderApp(); } }
         
         document.getElementById('mainForm').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -244,6 +219,9 @@
             document.getElementById('mainForm').reset();
             switchTab('tab-cuenta', document.querySelectorAll('.nav-btn')[0]);
         });
+
+        function exportarCSV() { let csv = "Fecha,Concepto,Importe,Categoria\n"; appData.forEach(g => csv += `${g.fecha},${g.concepto},${g.importe},${g.categoria}\n`); const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'})); link.download = "Extracto_BBVA.csv"; link.click(); }
+        async function deleteItem(id) { if(confirm("Anular transacción?")) { await fetch(`${API_URL}/${id}`, { method: 'DELETE' }); renderApp(); } }
 
         document.getElementById('filtroMes').value = new Date().toISOString().slice(0, 7);
         document.getElementById('in-fecha').valueAsDate = new Date();
