@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BBVA Master v11.3 - Restaurado</title>
+    <title>BBVA Master v11.3 - Diseño Blindado</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -30,7 +30,7 @@
         .btn-delete { color: #ff4d4d; padding: 8px; border-radius: 8px; background: rgba(255, 77, 77, 0.1); }
     </style>
 </head>
-<body class="pb-20">
+<body class="pb-24">
 
     <div id="pin-screen">
         <div class="text-center mb-10">
@@ -94,7 +94,7 @@
                 <div id="listaMes" class="space-y-2"></div>
             </section>
 
-            <section id="tab-add" class="tab-content hidden flex flex-col pt-1 -mb-6">
+            <section id="tab-add" class="tab-content hidden flex flex-col pt-1">
                 <div class="bg-bbva-card p-5 rounded-[2.5rem] border-t-4 border-[#00e5ff] w-full mt-0">
                     <form id="mainForm" class="space-y-3">
                         <input type="hidden" id="in-id">
@@ -132,7 +132,6 @@
         const API_URL = 'https://mis-gastos-app.onrender.com/api/gastos';
         let appData = [], currentPinInput = "", isPrivate = false, mainChart = null;
 
-        // Lógica PIN
         let savedPin = localStorage.getItem('bbva_user_pin');
         function pressPin(n) {
             if(currentPinInput.length < 4) {
@@ -223,7 +222,6 @@
             switchTab('tab-cuenta', document.querySelectorAll('.nav-btn')[0]);
         });
 
-        // Lógica para mostrar/ocultar configuración recurrente
         document.getElementById('in-es-recurrente').addEventListener('change', function() {
             document.getElementById('config-recurrente').classList.toggle('hidden', !this.checked);
         });
