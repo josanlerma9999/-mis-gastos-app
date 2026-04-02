@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BBVA Premium v15.9 - Future Last</title>
+    <title>BBVA Premium v16.2 - Pencil Fix</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
@@ -27,12 +27,13 @@
         #main-view { display: flex; width: 400%; height: 100%; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .tab-content { width: 25%; height: 100%; overflow-y: auto; padding: 1.2rem; -webkit-overflow-scrolling: touch; }
         
+        /* FIX: Botones con máxima prioridad táctil */
         .action-btn { 
-            background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); 
-            border-radius: 0.9rem; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
-            position: relative; z-index: 999;
+            background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); 
+            border-radius: 0.9rem; width: 46px; height: 46px; display: flex; align-items: center; justify-content: center;
+            position: relative; z-index: 9999 !important; pointer-events: auto !important;
         }
-        .future-badge { background: rgba(0, 229, 255, 0.1); color: var(--bbva-cyan); font-size: 8px; padding: 2px 6px; border-radius: 4px; font-weight: 900; margin-left: 5px; }
+        .action-btn:active { transform: scale(0.8); background: var(--bbva-cyan); }
     </style>
 </head>
 <body>
@@ -62,13 +63,13 @@
                         <h2 id="valReal" class="text-5xl font-black tracking-tighter">0.00€</h2>
                     </div>
                     <div class="grid grid-cols-2 gap-4 text-center">
-                        <div class="bg-bbva-card p-6"><p class="text-[10px] font-bold text-slate-500 uppercase">Cierre proyectado</p><p id="valProj" class="text-2xl font-black text-cyan-400 mt-1">0.00€</p></div>
-                        <div class="bg-bbva-card p-6"><p class="text-[10px] font-bold text-slate-500 uppercase">Pendiente pago</p><p id="valPend" class="text-2xl font-black text-rose-400 mt-1">0.00€</p></div>
+                        <div class="bg-bbva-card p-6"><p class="text-[10px] font-bold text-slate-500 uppercase">Cierre</p><p id="valProj" class="text-2xl font-black text-cyan-400">0.00€</p></div>
+                        <div class="bg-bbva-card p-6"><p class="text-[10px] font-bold text-slate-500 uppercase">Pendiente</p><p id="valPend" class="text-2xl font-black text-rose-400">0.00€</p></div>
                     </div>
                 </section>
 
                 <section class="tab-content space-y-4">
-                    <h3 class="text-xs font-black uppercase text-cyan-400 italic px-2 tracking-widest">Próximos movimientos</h3>
+                    <h3 class="text-xs font-black uppercase text-cyan-400 italic px-2 tracking-widest">Próximos</h3>
                     <div id="listaFuturo" class="space-y-4"></div>
                 </section>
 
@@ -79,15 +80,25 @@
 
                 <section class="tab-content">
                     <form id="mainForm" class="bg-bbva-card p-8 space-y-5">
+                        <h2 id="form-title" class="text-xs font-black uppercase text-cyan-400 tracking-widest mb-2">Nueva Operación</h2>
                         <input type="hidden" id="in-id">
                         <input type="text" id="in-concepto" placeholder="Concepto" class="bbva-input" required>
                         <input type="number" id="in-importe" step="0.01" placeholder="0.00" class="bbva-input text-4xl font-black text-center" required>
                         <select id="in-categoria" class="bbva-input font-bold" required>
-                            <optgroup label="INGRESOS"><option value="Sueldo">💰 Sueldo</option><option value="Otros Ingresos">💵 Otros Ingresos</option></optgroup>
-                            <optgroup label="GASTOS"><option value="Cuenta BBVA">🏦 Cuenta BBVA</option><option value="Tarjeta Aqua BBVA">🟦 Tarjeta Aqua BBVA</option><option value="Tarjeta Explora">✈️ Tarjeta Explora</option><option value="Imagine">📱 Imagine</option><option value="PayPal">💳 PayPal</option><option value="Amazon">📦 Amazon</option><option value="El Corte Inglés">🏬 El Corte Inglés</option><option value="Gasolina">⛽ Gasolina</option></optgroup>
+                            <option value="Sueldo">💰 Sueldo</option>
+                            <option value="Otros Ingresos">💵 Otros Ingresos</option>
+                            <option value="Cuenta BBVA">🏦 Cuenta BBVA</option>
+                            <option value="Tarjeta Aqua BBVA">🟦 Tarjeta Aqua BBVA</option>
+                            <option value="Tarjeta Explora">✈️ Tarjeta Explora</option>
+                            <option value="Imagine">📱 Imagine</option>
+                            <option value="PayPal">💳 PayPal</option>
+                            <option value="Amazon">📦 Amazon</option>
+                            <option value="Gasolina">⛽ Gasolina</option>
+                            <option value="Varios">🛍️ Varios</option>
                         </select>
                         <input type="date" id="in-fecha" class="bbva-input" required>
-                        <button type="submit" id="btn-submit" class="w-full bg-cyan-400 text-black font-black py-5 rounded-2xl uppercase shadow-lg shadow-cyan-400/20">Confirmar</button>
+                        <button type="submit" id="btn-submit" class="w-full bg-cyan-400 text-black font-black py-5 rounded-2xl uppercase">Confirmar</button>
+                        <button type="button" id="btn-cancel" class="w-full hidden text-slate-500 font-bold text-xs uppercase" onclick="resetForm()">Cancelar Edición</button>
                     </form>
                 </section>
             </div>
@@ -106,6 +117,7 @@
         let pin = "", isPrivate = false, currentTabIndex = 0, appData = [];
         const categIngresos = ["Sueldo", "Otros Ingresos"];
 
+        // PIN 1763
         [1,2,3,4,5,6,7,8,9,'C',0,'DEL'].forEach(v => {
             const b = document.createElement('button'); b.className = "num-btn"; b.innerText = v;
             b.onclick = () => {
@@ -126,39 +138,34 @@
         }
 
         async function renderApp() {
+            let saldoReal = 0, gastosFuturos = 0, ingresosFuturos = 0;
             const res = await fetch(API_URL); appData = await res.json();
             const hoy = new Date().toISOString().split('T')[0];
             const mesSel = document.getElementById('filtroMes').value;
-            
-            let saldoReal = 0, gastosFuturos = 0, ingresosFuturos = 0;
-            document.getElementById('listaPasado').innerHTML = '';
-            document.getElementById('listaFuturo').innerHTML = '';
+            document.getElementById('listaPasado').innerHTML = ''; document.getElementById('listaFuturo').innerHTML = '';
 
-            // ORDENACIÓN: Primero por fecha (desc) pero los futuros SIEMPRE al final
             appData.sort((a, b) => {
-                const aFuturo = a.fecha > hoy;
-                const bFuturo = b.fecha > hoy;
-                if (aFuturo && !bFuturo) return 1; // a va después
-                if (!aFuturo && bFuturo) return -1; // a va antes
-                return b.fecha.localeCompare(a.fecha); // mismo tipo, orden por fecha normal
+                const aF = a.fecha > hoy; const bF = b.fecha > hoy;
+                if (aF && !bF) return 1; if (!aF && bF) return -1;
+                return b.fecha.localeCompare(a.fecha);
             }).forEach(g => {
-                const val = parseFloat(g.importe);
+                const val = Math.abs(parseFloat(g.importe));
                 const esIngreso = categIngresos.includes(g.categoria);
                 const esPasado = g.fecha <= hoy;
                 const disp = isPrivate ? "****€" : val.toLocaleString('de-DE', {minimumFractionDigits: 2}) + "€";
 
-                if(esPasado) { esIngreso ? saldoReal += val : saldoReal -= val; }
-                else { esIngreso ? ingresosFuturos += val : gastosFuturos += val; }
+                if(esPasado) { if(esIngreso) saldoReal += val; else saldoReal -= val; }
+                else { if(esIngreso) ingresosFuturos += val; else gastosFuturos += val; }
 
                 if(g.fecha.startsWith(mesSel)) {
                     document.getElementById('listaPasado').insertAdjacentHTML('beforeend', `
                         <div class="bg-bbva-card p-5 flex justify-between items-center ${!esPasado ? 'opacity-40' : ''}">
                             <div class="flex-1">
-                                <p class="text-sm font-bold text-white">${g.concepto} ${!esPasado ? '<span class="future-badge">PRÓXIMO</span>' : ''}</p>
-                                <p class="text-[9px] text-slate-500 font-bold uppercase mt-1">${g.fecha} • ${g.categoria}</p>
+                                <p class="text-sm font-bold">${g.concepto}</p>
+                                <p class="text-[9px] text-slate-500 uppercase mt-1">${g.fecha} • ${g.categoria}</p>
                             </div>
                             <div class="flex items-center gap-3">
-                                <p class="text-lg font-black ${esIngreso ? 'text-cyan-400' : 'text-white'}">${disp}</p>
+                                <p class="text-lg font-black ${esIngreso ? 'text-cyan-400' : 'text-white'}">${esIngreso ? '+' : '-'}${disp}</p>
                                 <div class="flex gap-2">
                                     <button onclick="event.stopPropagation(); preEdit('${g._id}')" class="action-btn text-cyan-400">✏️</button>
                                     <button onclick="event.stopPropagation(); deleteGasto('${g._id}')" class="action-btn text-rose-500">🗑️</button>
@@ -166,47 +173,57 @@
                             </div>
                         </div>`);
                 }
-
                 if(!esPasado) {
-                    document.getElementById('listaFuturo').insertAdjacentHTML('beforeend', `
-                        <div class="bg-white/5 p-6 rounded-3xl border border-dashed border-cyan-400/30">
-                            <div class="flex justify-between items-start">
-                                <div><p class="font-black">${g.concepto}</p><p class="text-[10px] text-slate-500">${g.fecha}</p></div>
-                                <span class="text-xl font-black ${esIngreso ? 'text-cyan-400' : 'text-white'}">${disp}</span>
-                            </div>
-                        </div>`);
+                    document.getElementById('listaFuturo').insertAdjacentHTML('beforeend', `<div class="bg-white/5 p-6 rounded-3xl border border-dashed border-cyan-400/30"><div class="flex justify-between items-start"><div><p class="font-black">${g.concepto}</p><p class="text-[10px] text-slate-500">${g.fecha}</p></div><span class="text-xl font-black ${esIngreso ? 'text-cyan-400' : 'text-white'}">${esIngreso ? '+' : '-'}${disp}</span></div></div>`);
                 }
             });
-
             document.getElementById('valReal').innerText = isPrivate ? "****€" : saldoReal.toLocaleString('de-DE', {minimumFractionDigits: 2}) + "€";
             document.getElementById('valPend').innerText = isPrivate ? "****€" : "-" + gastosFuturos.toLocaleString('de-DE', {minimumFractionDigits: 2}) + "€";
             document.getElementById('valProj').innerText = isPrivate ? "****€" : (saldoReal - gastosFuturos + ingresosFuturos).toLocaleString('de-DE', {minimumFractionDigits: 2}) + "€";
         }
 
-        async function deleteGasto(id) {
-            if(confirm("¿Borrar definitivamente?")) { await fetch(`${API_URL}/${id}`, { method: 'DELETE' }); renderApp(); }
-        }
-
         function preEdit(id) {
             const g = appData.find(x => x._id === id); if(!g) return;
+            // Rellenar formulario
             document.getElementById('in-id').value = g._id;
             document.getElementById('in-concepto').value = g.concepto;
-            document.getElementById('in-importe').value = g.importe;
+            document.getElementById('in-importe').value = Math.abs(g.importe);
             document.getElementById('in-categoria').value = g.categoria;
             document.getElementById('in-fecha').value = g.fecha;
-            document.getElementById('btn-submit').innerText = "Actualizar Gasto";
+            
+            // UI Cambios
+            document.getElementById('form-title').innerText = "Editando Movimiento";
+            document.getElementById('btn-submit').innerText = "Guardar Cambios";
             document.getElementById('btn-submit').classList.replace('bg-cyan-400', 'bg-amber-500');
-            goToTab(3);
+            document.getElementById('btn-cancel').classList.remove('hidden');
+            
+            goToTab(3); // Ir a pestaña Operar
+        }
+
+        function resetForm() {
+            document.getElementById('mainForm').reset();
+            document.getElementById('in-id').value = "";
+            document.getElementById('form-title').innerText = "Nueva Operación";
+            document.getElementById('btn-submit').innerText = "Confirmar";
+            document.getElementById('btn-submit').classList.replace('bg-amber-500', 'bg-cyan-400');
+            document.getElementById('btn-cancel').classList.add('hidden');
+        }
+
+        async function deleteGasto(id) {
+            if(confirm("¿Eliminar definitivamente?")) { await fetch(`${API_URL}/${id}`, { method: 'DELETE' }); renderApp(); }
         }
 
         document.getElementById('mainForm').onsubmit = async (e) => {
             e.preventDefault();
             const id = document.getElementById('in-id').value;
-            const data = { concepto: document.getElementById('in-concepto').value, importe: parseFloat(document.getElementById('in-importe').value), categoria: document.getElementById('in-categoria').value, fecha: document.getElementById('in-fecha').value };
+            const data = { 
+                concepto: document.getElementById('in-concepto').value, 
+                importe: parseFloat(document.getElementById('in-importe').value), 
+                categoria: document.getElementById('in-categoria').value, 
+                fecha: document.getElementById('in-fecha').value 
+            };
             await fetch(id ? `${API_URL}/${id}` : API_URL, { method: id ? 'PUT' : 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
-            e.target.reset(); document.getElementById('in-id').value = ""; document.getElementById('btn-submit').innerText = "Confirmar";
-            document.getElementById('btn-submit').classList.replace('bg-amber-500', 'bg-cyan-400');
-            renderApp(); goToTab(0);
+            resetForm(); await renderApp(); goToTab(0);
         };
 
         function togglePrivacy() { isPrivate = !isPrivate; renderApp(); }
