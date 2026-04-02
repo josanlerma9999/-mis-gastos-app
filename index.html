@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BBVA Master v10.9</title>
+    <title>BBVA Master v10.9.1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -40,6 +40,9 @@
         .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
         input:checked + .slider { background-color: var(--bbva-cyan); }
         input:checked + .slider:before { transform: translateX(18px); }
+
+        /* AJUSTE PARA OPERAR (SUBIR EL RECUADRO) */
+        #tab-add { padding-top: 10px; align-items: flex-start; }
     </style>
 </head>
 <body class="pb-24">
@@ -66,7 +69,7 @@
         <header class="bg-black/90 p-4 sticky top-0 z-50 flex justify-between items-center border-b border-white/10">
             <div class="flex flex-col">
                 <h1 class="font-[900] text-xl italic text-white leading-none">BBVA</h1>
-                <span class="text-[9px] font-bold text-[#00e5ff] mt-1 uppercase tracking-wider">v10.9 Master</span>
+                <span class="text-[9px] font-bold text-[#00e5ff] mt-1 uppercase tracking-wider">v10.9.1 Top-Focus</span>
             </div>
             <button onclick="location.reload()" class="bg-white/5 p-2 rounded-full border border-white/10">🔒</button>
         </header>
@@ -74,7 +77,6 @@
         <main class="max-w-md mx-auto p-2">
             <section id="tab-cuenta" class="tab-content flex flex-col gap-2">
                 <div id="alert-payday"></div>
-
                 <div class="p-6 rounded-[2rem] text-center bbva-gradient border border-white/10 shadow-xl relative">
                     <div class="flex justify-center items-center gap-2 mb-1">
                         <p class="text-[9px] uppercase font-black tracking-widest text-cyan-300/40">Patrimonio Neto</p>
@@ -82,31 +84,22 @@
                     </div>
                     <h2 id="valReal" class="text-5xl font-[900] tracking-tighter text-white">0.00€</h2>
                 </div>
-
                 <div class="bg-bbva-card p-3 rounded-[2rem] flex flex-col items-center">
                     <div class="donut-container"><canvas id="chartGastos"></canvas></div>
                     <div id="legendBox" class="grid grid-cols-2 gap-2 w-full mt-2"></div>
-                </div>
-
-                <div class="bg-zinc-900/40 p-4 rounded-2xl border border-white/5 mt-2">
-                    <div class="grid grid-cols-3 gap-2 font-mono text-[9px] text-center">
-                        <div class="bg-black/40 p-2 rounded-lg border border-white/5"><p class="text-slate-500 mb-1">Ping</p><p id="debug-ping" class="text-white font-bold">--</p></div>
-                        <div class="bg-black/40 p-2 rounded-lg border border-white/5"><p class="text-slate-500 mb-1">Regs</p><p id="debug-count" class="text-white font-bold">--</p></div>
-                        <div class="bg-black/40 p-2 rounded-lg border border-white/5"><p class="text-slate-500 mb-1">Sync</p><p class="text-emerald-500 font-bold">OK</p></div>
-                    </div>
                 </div>
             </section>
 
             <section id="tab-mes" class="tab-content hidden space-y-2">
                 <div class="bg-bbva-card p-4 rounded-xl flex justify-between gap-3 items-center">
                     <input type="month" id="filtroMes" class="bg-transparent text-white font-black outline-none w-full" onchange="renderApp()">
-                    <button onclick="exportarCSV()" class="bg-gradient-to-r from-[#004481] to-[#00e5ff] text-white font-black text-[10px] px-5 py-3 rounded-xl uppercase shadow-lg">Exportar</button>
+                    <button onclick="exportarCSV()" class="bg-gradient-to-r from-[#004481] to-[#00e5ff] text-white font-black text-[10px] px-5 py-3 rounded-xl uppercase">Exportar</button>
                 </div>
                 <div id="listaMes" class="space-y-2"></div>
             </section>
 
-            <section id="tab-add" class="tab-content hidden h-[75vh] flex flex-col justify-center">
-                <div class="bg-bbva-card p-6 rounded-[2.5rem] border-t-4 border-[#00e5ff]">
+            <section id="tab-add" class="tab-content hidden flex flex-col pt-4">
+                <div class="bg-bbva-card p-6 rounded-[2.5rem] border-t-4 border-[#00e5ff] w-full">
                     <form id="mainForm" class="space-y-4">
                         <input type="text" id="in-concepto" placeholder="Concepto de la operación" class="w-full p-4 bg-black/40 border border-white/10 rounded-xl text-white outline-none" required>
                         <input type="number" id="in-importe" step="0.01" placeholder="0.00" class="w-full p-4 bg-black/40 border border-white/10 rounded-xl font-bold text-3xl text-white outline-none" required>
@@ -117,7 +110,7 @@
                         </div>
 
                         <div id="config-recurrente" class="hidden">
-                            <input type="number" id="in-dia-pago" min="1" max="31" placeholder="Día de cobro mensual (1-31)" class="w-full p-4 bg-cyan-900/20 border border-cyan-500/30 rounded-xl text-white outline-none">
+                            <input type="number" id="in-dia-pago" min="1" max="31" placeholder="Día de cobro (1-31)" class="w-full p-4 bg-cyan-900/20 border border-cyan-500/30 rounded-xl text-white outline-none">
                         </div>
 
                         <select id="in-categoria" class="w-full p-4 bg-black/40 border border-white/10 rounded-xl text-white outline-none">
@@ -153,10 +146,9 @@
     <script>
         const API_URL = 'https://mis-gastos-app.onrender.com/api/gastos';
         const COLORS = ['#004481', '#00e5ff', '#8b5cf6', '#10b981', '#f59e0b', '#fb7185', '#d946ef', '#4ade80'];
-        let appData = [], mainChart = null, currentPinInput = "", isPrivate = false, currentSaldo = 0;
+        let appData = [], mainChart = null, currentPinInput = "", isPrivate = false;
         let recurrentes = JSON.parse(localStorage.getItem('bbva_recurrentes') || '[]');
 
-        // Lógica PIN
         let savedPin = localStorage.getItem('bbva_user_pin');
         function pressPin(n) {
             if(currentPinInput.length < 4) {
@@ -174,7 +166,6 @@
         function clearPin() { currentPinInput = ""; pressPin(''); }
         function unlock() { document.getElementById('pin-screen').classList.add('hidden'); document.getElementById('app-content').classList.remove('hidden'); renderApp(); }
 
-        // Recurrente Toggle
         document.getElementById('in-es-recurrente').addEventListener('change', function() {
             document.getElementById('config-recurrente').classList.toggle('hidden', !this.checked);
         });
@@ -182,13 +173,9 @@
         function togglePrivacy() { isPrivate = !isPrivate; document.getElementById('toggle-visibility').innerText = isPrivate ? '🙈' : '👁️'; renderApp(); }
 
         async function renderApp() {
-            const start = Date.now();
             try {
                 const res = await fetch(API_URL);
                 appData = await res.json();
-                document.getElementById('debug-ping').innerText = (Date.now() - start) + "ms";
-                document.getElementById('debug-count').innerText = appData.length;
-
                 const hoy = new Date();
                 const hoyStr = hoy.toISOString().split('T')[0];
                 const mesSel = document.getElementById('filtroMes').value;
@@ -199,7 +186,6 @@
                     const val = parseFloat(g.importe);
                     const esIngreso = (g.categoria === "Sueldo" || g.categoria === "Otros Ingresos");
                     if (g.fecha <= hoyStr) esIngreso ? real += val : real -= val;
-                    
                     if (g.fecha.startsWith(mesSel)) {
                         if(!esIngreso) cats[g.categoria] = (cats[g.categoria]||0) + val;
                         const disp = isPrivate ? "****€" : (esIngreso?'+':'') + val.toFixed(2) + '€';
@@ -209,7 +195,6 @@
                     }
                 });
 
-                // Lógica de Recurrentes
                 const diaHoy = hoy.getDate();
                 document.getElementById('alert-payday').style.display = 'none';
                 recurrentes.forEach(r => {
@@ -233,16 +218,6 @@
             const labels = Object.keys(data), values = Object.values(data);
             mainChart = new Chart(ctx, { type: 'doughnut', data: { labels: labels, datasets: [{ data: values, backgroundColor: COLORS, borderWidth: 2, borderColor: '#072146' }] }, options: { plugins: { legend: { display: false } }, maintainAspectRatio: false, cutout: '80%' } });
             document.getElementById('legendBox').innerHTML = labels.map((l, i) => `<div class="flex items-center justify-between p-2 bg-white/5 rounded-xl border border-white/5"><div class="flex items-center gap-2 truncate"><div class="w-1.5 h-1.5 rounded-full" style="background:${COLORS[i]}"></div><span class="text-[7px] font-bold text-slate-400 uppercase truncate">${l}</span></div><span class="text-[8px] font-black text-white ml-2">${isPrivate ? "***€" : values[i].toFixed(0) + "€"}</span></div>`).join('');
-        }
-
-        function exportarCSV() {
-            const mes = document.getElementById('filtroMes').value;
-            const filtrados = appData.filter(g => g.fecha.startsWith(mes));
-            let csv = "\uFEFFFecha,Concepto,Categoria,Importe\n";
-            filtrados.forEach(g => csv += `${g.fecha},${g.concepto},${g.categoria},${g.importe}\n`);
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a'); a.href = url; a.download = `BBVA_Extracto_${mes}.csv`; a.click();
         }
 
         function switchTab(id, el) { 
