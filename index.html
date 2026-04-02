@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BBVA Premium v14.5</title>
+    <title>BBVA Premium v14.6 - Limpieza Total</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
         :root { --bbva-navy: #072146; --bbva-blue: #004481; --bbva-cyan: #00e5ff; }
@@ -14,11 +13,11 @@
         .bg-bbva-card { background: var(--bbva-navy); border: 1px solid rgba(255,255,255,0.05); border-radius: 2rem; }
         .bbva-gradient { background: linear-gradient(135deg, #072146 0%, #004481 100%); border-radius: 2.2rem; border: 1px solid rgba(0, 229, 255, 0.2); }
         
-        /* Barra de Consumo Estilo Captura */
+        /* Barra de Consumo */
         .progress-container { background: rgba(0,0,0,0.3); border-radius: 1rem; height: 10px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); }
         .progress-bar { background: var(--bbva-cyan); height: 100%; transition: width 1s ease; box-shadow: 0 0 15px var(--bbva-cyan); }
 
-        /* Estética de Gastos Futuros */
+        /* Gastos Futuros */
         .future-item { background: rgba(255,255,255,0.03); border: 1px dashed rgba(0, 229, 255, 0.3); border-radius: 1.8rem; }
         .days-badge { background: rgba(0, 229, 255, 0.1); color: var(--bbva-cyan); font-size: 10px; font-weight: 900; padding: 4px 12px; border-radius: 2rem; text-transform: uppercase; }
 
@@ -54,11 +53,11 @@
         <main class="p-4 max-w-md mx-auto space-y-6">
             
             <section id="tab-home" class="tab-content space-y-6">
-                <div class="p-8 bbva-gradient text-center shadow-2xl">
-                    <p class="text-[10px] font-black tracking-[0.3em] text-cyan-200/40 mb-1 uppercase">Saldo Disponible</p>
-                    <h2 id="valReal" class="text-5xl font-black tracking-tighter">0.00€</h2>
-                    <div class="mt-8 space-y-2 text-left">
-                        <div class="flex justify-between text-[10px] font-black uppercase text-cyan-300/70">
+                <div class="p-10 bbva-gradient text-center shadow-2xl">
+                    <p class="text-[11px] font-black tracking-[0.3em] text-cyan-200/40 mb-1 uppercase">Saldo Disponible</p>
+                    <h2 id="valReal" class="text-6xl font-black tracking-tighter">0.00€</h2>
+                    <div class="mt-10 space-y-2 text-left">
+                        <div class="flex justify-between text-[11px] font-black uppercase text-cyan-300/70">
                             <span>Gasto Mensual</span> <span id="pctText">0%</span>
                         </div>
                         <div class="progress-container"><div id="progBar" class="progress-bar" style="width: 0%"></div></div>
@@ -66,15 +65,17 @@
                 </div>
 
                 <div class="grid grid-cols-2 gap-4 text-center">
-                    <div class="bg-bbva-card p-4"><p class="text-[9px] font-bold text-slate-500 uppercase">Cierre Mes</p><p id="valProj" class="text-xl font-black text-cyan-400">0.00€</p></div>
-                    <div class="bg-bbva-card p-4"><p class="text-[9px] font-bold text-slate-500 uppercase">A Pagar</p><p id="valPend" class="text-xl font-black text-rose-400">0.00€</p></div>
+                    <div class="bg-bbva-card p-6 flex flex-col justify-center items-center">
+                        <p class="text-[10px] font-bold text-slate-500 uppercase">Cierre Estimado</p>
+                        <p id="valProj" class="text-3xl font-black text-cyan-400 mt-1">0.00€</p>
+                    </div>
+                    <div class="bg-bbva-card p-6 flex flex-col justify-center items-center">
+                        <p class="text-[10px] font-bold text-slate-500 uppercase">Total a Pagar</p>
+                        <p id="valPend" class="text-3xl font-black text-rose-400 mt-1">0.00€</p>
+                    </div>
                 </div>
 
-                <div class="bg-bbva-card p-6">
-                    <canvas id="chartGastos" class="max-h-[160px]"></canvas>
-                    <div id="legendBox" class="grid grid-cols-2 gap-2 mt-4"></div>
-                </div>
-            </section>
+                </section>
 
             <section id="tab-futuro" class="tab-content hidden space-y-4">
                 <div class="flex items-center px-2">
@@ -125,7 +126,7 @@
 
     <script>
         const API_URL = 'https://mis-gastos-app.onrender.com/api/gastos';
-        let appData = [], pin = "", isPrivate = false, chart = null;
+        let appData = [], pin = "", isPrivate = false; // chart variable eliminada
 
         // PIN PAD
         [1,2,3,4,5,6,7,8,9,'C',0,'DEL'].forEach(v => {
@@ -142,7 +143,7 @@
             const res = await fetch(API_URL); appData = await res.json();
             const hoy = new Date().toISOString().split('T')[0];
             const mesSel = document.getElementById('filtroMes').value;
-            let real = 0, proj = 0, pend = 0, ingTotal = 0, gasTotal = 0, cats = {};
+            let real = 0, proj = 0, pend = 0, ingTotal = 0, gasTotal = 0;
             
             document.getElementById('listaPasado').innerHTML = '';
             document.getElementById('listaFuturo').innerHTML = '';
@@ -153,7 +154,7 @@
 
                 if(esPasado) {
                     esIng ? real += val : real -= val;
-                    if(!esIng) { gasTotal += val; cats[g.categoria] = (cats[g.categoria]||0) + val; } else ingTotal += val;
+                    if(!esIng) { gasTotal += val; } else ingTotal += val;
                 } else { if(!esIng) pend += val; }
                 esIng ? proj += val : proj -= val;
 
@@ -190,15 +191,10 @@
             const pct = (gasTotal / ingTotal) * 100 || 0;
             document.getElementById('progBar').style.width = Math.min(pct, 100) + "%";
             document.getElementById('pctText').innerText = Math.round(pct) + "%";
-            updateChart(cats);
+            // updateChart llamada eliminada
         }
 
-        function updateChart(data) {
-            const ctx = document.getElementById('chartGastos').getContext('2d');
-            if (chart) chart.destroy();
-            chart = new Chart(ctx, { type: 'doughnut', data: { labels: Object.keys(data), datasets: [{ data: Object.values(data), backgroundColor: ['#004481','#00e5ff','#2dcccd','#072146','#10b981'], borderWidth: 0 }] }, options: { plugins: { legend: false }, cutout: '85%' } });
-            document.getElementById('legendBox').innerHTML = Object.keys(data).map(l => `<div class="bg-white/5 p-2 rounded-lg text-center"><p class="text-[8px] font-bold text-slate-500 uppercase">${l}</p><p class="text-[10px] font-black">${isPrivate ? "***" : data[l].toFixed(0) + '€'}</p></div>`).join('');
-        }
+        // updateChart function eliminada
 
         function switchTab(id, el) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
