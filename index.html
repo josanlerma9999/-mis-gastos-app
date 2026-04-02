@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BBVA v12.1 - No Scroll Mode</title>
+    <title>BBVA v12.2 - Saldo Real Priority</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
         :root { --bbva-navy: #072146; --bbva-blue: #004481; --bbva-cyan: #00e5ff; }
-        body { font-family: 'Inter', sans-serif; background-color: #000; color: #fff; margin:0; overflow-x: hidden; }
+        body { font-family: 'Inter', sans-serif; background-color: #000; color: #fff; margin:0; overflow: hidden; }
         
         .bg-bbva-card { background-color: var(--bbva-navy); border: 1px solid rgba(0, 229, 255, 0.1); border-radius: 2.5rem; }
         .bbva-gradient { background: linear-gradient(135deg, #072146 0%, #004481 100%); border-radius: 2.5rem; }
@@ -18,18 +18,14 @@
         .active-tab { color: var(--bbva-cyan); border-top: 3px solid var(--bbva-cyan); }
         .hidden { display: none !important; }
         
-        #pin-screen { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .pin-dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--bbva-cyan); margin: 0 8px; }
-        .pin-dot.filled { background: var(--bbva-cyan); box-shadow: 0 0 8px var(--bbva-cyan); }
+        #pin-dots .pin-dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--bbva-cyan); margin: 0 8px; }
+        #pin-dots .pin-dot.filled { background: var(--bbva-cyan); box-shadow: 0 0 8px var(--bbva-cyan); }
         .num-btn { width: 65px; height: 65px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1); font-size: 1.3rem; font-weight: 700; display: flex; align-items: center; justify-content: center; }
-
-        /* Ajuste para evitar scroll en el home */
-        .tab-content { max-height: calc(100vh - 160px); }
     </style>
 </head>
 <body class="pb-24">
 
-    <div id="pin-screen">
+    <div id="pin-screen" class="fixed inset-0 bg-black z-[9999] flex flex-col items-center justify-center">
         <div class="text-center mb-6"><h1 class="text-3xl font-[900] italic text-[#00e5ff] tracking-tighter">BBVA</h1></div>
         <div class="flex mb-12" id="pin-dots"><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div></div>
         <div class="grid grid-cols-3 gap-5">
@@ -41,73 +37,67 @@
     </div>
 
     <div id="app-content" class="hidden">
-        <header class="p-3 sticky top-0 z-50 flex justify-between items-center bg-black/90 backdrop-blur-md">
-            <h1 class="font-[900] text-xl italic text-white leading-none">BBVA <span class="text-[9px] text-[#00e5ff] not-italic ml-1">v12.1</span></h1>
+        <header class="p-3 flex justify-between items-center bg-black/90">
+            <h1 class="font-[900] text-xl italic text-white">BBVA <span class="text-[9px] text-[#00e5ff] not-italic ml-1">v12.2</span></h1>
             <div class="flex gap-2">
-                <button onclick="togglePrivacy()" id="privacy-icon" class="w-8 h-8 flex items-center justify-center bg-white/5 rounded-full border border-white/10">👁️</button>
-                <button onclick="location.reload()" class="w-8 h-8 flex items-center justify-center bg-white/5 rounded-full border border-white/10">🔒</button>
+                <button onclick="togglePrivacy()" id="privacy-icon" class="w-8 h-8 flex items-center justify-center bg-white/5 rounded-full border border-white/10 text-xs">👁️</button>
+                <button onclick="location.reload()" class="w-8 h-8 flex items-center justify-center bg-white/5 rounded-full border border-white/10 text-xs">🔒</button>
             </div>
         </header>
 
         <main class="max-w-md mx-auto px-4 pt-1">
             
             <section id="tab-cuenta" class="tab-content flex flex-col gap-2">
-                <div class="py-3 px-6 bg-bbva-card text-center">
-                    <p class="text-[8px] uppercase font-black tracking-[0.2em] text-slate-400">Saldo Hoy</p>
-                    <h2 id="valReal" class="text-2xl font-[900] text-white">0.00€</h2>
+                <div class="py-6 px-6 bbva-gradient shadow-2xl text-center border border-white/10">
+                    <p class="text-[10px] uppercase font-black tracking-[0.2em] text-cyan-200/80 mb-1">Saldo Disponible Hoy</p>
+                    <h2 id="valReal" class="text-5xl font-[900] tracking-tighter text-white">0.00€</h2>
                 </div>
 
-                <div class="py-5 px-6 bbva-gradient shadow-xl text-center">
-                    <p class="text-[9px] uppercase font-black tracking-[0.2em] text-cyan-200/70">Previsión Final Mes</p>
-                    <h2 id="valProyectado" class="text-4xl font-[900] tracking-tighter text-white">0.00€</h2>
+                <div class="py-3 px-6 bg-bbva-card text-center border border-white/5">
+                    <p class="text-[8px] uppercase font-black tracking-[0.15em] text-slate-400">Previsión Final de Mes</p>
+                    <h2 id="valProyectado" class="text-xl font-bold text-cyan-400">0.00€</h2>
                 </div>
 
                 <div class="bg-bbva-card p-4">
-                    <p class="text-[9px] font-black uppercase text-cyan-400 tracking-widest mb-3">Distribución de Gastos</p>
-                    <div class="h-[180px] w-full"><canvas id="chartGastos"></canvas></div>
+                    <p class="text-[9px] font-black uppercase text-slate-500 tracking-widest mb-3">Distribución por categoría</p>
+                    <div class="h-[170px] w-full"><canvas id="chartGastos"></canvas></div>
                 </div>
             </section>
 
-            <section id="tab-pendientes" class="tab-content hidden space-y-3 overflow-y-auto">
-                <h3 class="text-[10px] font-black uppercase text-amber-400 tracking-widest px-2 italic">Próximos cobros</h3>
+            <section id="tab-pendientes" class="tab-content hidden space-y-3 overflow-y-auto h-[70vh]">
                 <div id="listaPendientes" class="space-y-2"></div>
             </section>
 
-            <section id="tab-mes" class="tab-content hidden space-y-2 overflow-y-auto">
-                <div class="bg-bbva-card p-3 mb-1">
-                    <input type="month" id="filtroMes" class="bg-transparent text-white font-bold outline-none text-xs w-full" onchange="renderApp()">
-                </div>
-                <div id="listaMes" class="space-y-2 pb-10"></div>
+            <section id="tab-mes" class="tab-content hidden space-y-2 overflow-y-auto h-[70vh]">
+                <div class="bg-bbva-card p-3 mb-1"><input type="month" id="filtroMes" class="bg-transparent text-white font-bold outline-none text-xs w-full" onchange="renderApp()"></div>
+                <div id="listaMes" class="space-y-2 pb-20"></div>
             </section>
 
-            <section id="tab-add" class="tab-content hidden overflow-y-auto">
+            <section id="tab-add" class="tab-content hidden overflow-y-auto h-[70vh]">
                 <div class="bg-bbva-card p-5 mb-4">
                     <form id="mainForm" class="space-y-3">
                         <input type="text" id="in-concepto" placeholder="Concepto" class="bbva-input text-sm" required>
                         <input type="number" id="in-importe" step="0.01" placeholder="Importe" class="bbva-input text-2xl font-black" required>
-                        <div class="flex justify-between items-center bg-white/5 p-3 rounded-xl">
-                            <span class="text-[10px] font-bold text-white uppercase">Recurrente</span>
-                            <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" id="in-recurrente" class="sr-only peer">
-                                <div class="w-9 h-5 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-cyan-500"></div>
-                            </label>
-                        </div>
                         <select id="in-categoria" class="bbva-input text-sm">
+                            <option value="Sueldo">💰 Sueldo</option>
                             <option value="Cuenta BBVA">🏦 Cuenta BBVA</option>
                             <option value="Tarjeta Aqua BBVA">🟦 Tarjeta Aqua BBVA</option>
                             <option value="Tarjeta Explora">✈️ Tarjeta Explora</option>
                             <option value="Gasolina">⛽ Gasolina</option>
                             <option value="Amazon">📦 Amazon</option>
-                            <option value="Sueldo">💰 Sueldo</option>
                         </select>
                         <input type="date" id="in-fecha" class="bbva-input text-sm">
-                        <button type="submit" class="w-full bg-cyan-400 text-slate-900 font-900 py-4 rounded-xl uppercase text-[10px] tracking-widest mt-2">Confirmar</button>
+                        <div class="flex items-center gap-3 bg-white/5 p-3 rounded-xl">
+                            <span class="text-[10px] font-black uppercase text-white">Recurrente</span>
+                            <input type="checkbox" id="in-recurrente" class="w-5 h-5">
+                        </div>
+                        <button type="submit" class="w-full bg-cyan-400 text-slate-900 font-900 py-4 rounded-xl uppercase text-[10px] tracking-widest mt-2">Confirmar Pago</button>
                     </form>
                 </div>
             </section>
         </main>
 
-        <nav class="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-md border-t border-white/5 flex justify-around p-3 pb-6 z-50">
+        <nav class="fixed bottom-0 left-0 right-0 bg-black/95 backdrop-blur-md border-t border-white/5 flex justify-around p-3 pb-6 z-50">
             <button onclick="switchTab('tab-cuenta', this)" class="nav-btn flex flex-col items-center gap-1 active-tab"><span class="text-lg">🏦</span><span class="text-[7px] font-black uppercase">Global</span></button>
             <button onclick="switchTab('tab-pendientes', this)" class="nav-btn flex flex-col items-center gap-1 text-slate-500"><span class="text-lg">⏳</span><span class="text-[7px] font-black uppercase">Pendiente</span></button>
             <button onclick="switchTab('tab-mes', this)" class="nav-btn flex flex-col items-center gap-1 text-slate-500"><span class="text-lg">📋</span><span class="text-[7px] font-black uppercase">Extracto</span></button>
@@ -123,10 +113,7 @@
             if(currentPinInput.length < 4) {
                 currentPinInput += n;
                 document.querySelectorAll('.pin-dot').forEach((d, i) => i < currentPinInput.length ? d.classList.add('filled') : d.classList.remove('filled'));
-                if(currentPinInput.length === 4) {
-                    if(currentPinInput === "1234") unlock();
-                    else clearPin();
-                }
+                if(currentPinInput.length === 4) { if(currentPinInput === "1234") unlock(); else clearPin(); }
             }
         }
         function clearPin() { currentPinInput = ""; document.querySelectorAll('.pin-dot').forEach(d => d.classList.remove('filled')); }
@@ -166,7 +153,7 @@
                     }
                     if (!esPasado) {
                         const disp = isPrivate ? "****" : val.toFixed(2) + '€';
-                        document.getElementById('listaPendientes').innerHTML += `<div class="bg-bbva-card p-3 flex justify-between items-center border-l-4 border-amber-400"><div class="text-[10px] font-bold text-white">${g.concepto}<br><span class="text-amber-400 text-[8px] uppercase">${g.fecha}</span></div><div class="font-black text-white text-sm">${disp}</div></div>`;
+                        document.getElementById('listaPendientes').innerHTML += `<div class="bg-bbva-card p-3 flex justify-between items-center border-l-4 border-amber-400"><div class="text-[10px] font-bold text-white">${g.concepto}<br><span class="text-amber-400 text-[8px] uppercase font-black">${g.fecha}</span></div><div class="font-black text-white text-sm">${disp}</div></div>`;
                     }
                 });
 
@@ -181,10 +168,7 @@
             if (mainChart) mainChart.destroy();
             mainChart = new Chart(ctx, {
                 type: 'bar',
-                data: {
-                    labels: Object.keys(data),
-                    datasets: [{ data: Object.values(data), backgroundColor: '#00e5ff', borderRadius: 4 }]
-                },
+                data: { labels: Object.keys(data), datasets: [{ data: Object.values(data), backgroundColor: '#00e5ff', borderRadius: 4 }] },
                 options: {
                     responsive: true, maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
