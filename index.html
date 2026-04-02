@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BBVA Master v10.4</title>
+    <title>BBVA Total Privacy v10.5</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -21,13 +21,13 @@
         .pin-dot.filled { background: var(--bbva-cyan); box-shadow: 0 0 10px var(--bbva-cyan); }
         .num-btn { width: 70px; height: 70px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1); font-size: 1.5rem; font-weight: 700; display: flex; align-items: center; justify-content: center; }
 
-        /* Ajustes de Escala Precision */
+        /* Ajustes de Escala Precision v10.5 */
         #tab-cuenta { display: flex; flex-direction: column; gap: 6px; }
         .donut-container { height: 180px; position: relative; margin: -5px 0; }
         .btn-export { background: linear-gradient(90deg, #004481 0%, #00e5ff 100%); border: 1px solid rgba(255,255,255,0.2); }
         
         /* Ojo Privacidad */
-        #toggle-visibility { font-size: 1.2rem; cursor: pointer; transition: opacity 0.2s; }
+        #toggle-visibility { font-size: 1.2rem; cursor: pointer; transition: opacity 0.2s; user-select: none; }
         #toggle-visibility:active { opacity: 0.5; }
     </style>
 </head>
@@ -61,7 +61,7 @@
         <header class="bg-black/90 p-4 sticky top-0 z-50 flex justify-between items-center border-b border-white/10">
             <div class="flex flex-col">
                 <h1 class="font-[900] text-xl italic text-white leading-none">BBVA</h1>
-                <span class="text-[9px] font-mono font-bold text-[#00e5ff] mt-1 uppercase tracking-wider">v10.4 Privacy</span>
+                <span class="text-[9px] font-mono font-bold text-[#00e5ff] mt-1 uppercase tracking-wider">v10.5 Total Privacy</span>
             </div>
             <button onclick="location.reload()" class="bg-white/5 p-2 rounded-full border border-white/10">🔒</button>
         </header>
