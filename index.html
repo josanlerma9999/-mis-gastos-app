@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BBVA Master v11.3 - Final Setup</title>
+    <title>BBVA Master v11.3 - Final Build</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -11,10 +11,13 @@
         :root { --bbva-navy: #072146; --bbva-blue: #004481; --bbva-cyan: #00e5ff; }
         body { font-family: 'Inter', sans-serif; background-color: #000; color: #fff; margin:0; }
         
+        /* BORDES SEGÚN CAPTURAS */
         .bg-bbva-card { background-color: var(--bbva-navy); border: 1px solid rgba(0, 229, 255, 0.15); border-radius: 2.5rem; }
         .bbva-gradient { background: linear-gradient(135deg, #072146 0%, #004481 100%); border-radius: 2.5rem; }
-        .bbva-input { background-color: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 1.25rem; padding: 1.1rem; width: 100%; color: white; outline: none; }
         
+        .bbva-input { background-color: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 1.25rem; padding: 1.1rem; width: 100%; color: white; outline: none; }
+        .bbva-input:focus { border-color: var(--bbva-cyan); }
+
         .active-tab { color: var(--bbva-cyan); border-top: 3px solid var(--bbva-cyan); }
         .hidden { display: none !important; }
         
@@ -27,7 +30,6 @@
         .slider-wrapper::-webkit-scrollbar { display: none; }
         .card-slide { min-width: 100%; scroll-snap-align: start; }
 
-        .debug-panel { font-family: 'JetBrains Mono', monospace; background: #111; border-top: 1px solid #222; }
         .btn-action { width: 42px; height: 42px; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); }
     </style>
 </head>
@@ -84,26 +86,17 @@
                     <div class="h-[220px] w-full flex justify-center items-center"><canvas id="chartGastos"></canvas></div>
                     <div id="legendBox" class="grid grid-cols-2 gap-3 w-full mt-6"></div>
                 </div>
-
-                <div class="debug-panel p-8 rounded-[2.5rem] mt-8 mb-10 opacity-40">
-                    <h3 class="text-[9px] font-black uppercase text-cyan-400 mb-4 tracking-widest">System Monitor</h3>
-                    <div class="space-y-2 text-[10px] font-mono">
-                        <div class="flex justify-between border-b border-white/5 pb-1"><span>STATUS:</span><span class="text-emerald-400">ONLINE</span></div>
-                        <div class="flex justify-between border-b border-white/5 pb-1"><span>RECORDS:</span><span id="debug-count">--</span></div>
-                        <div class="flex justify-between border-b border-white/5 pb-1"><span>LATENCY:</span><span id="debug-ping">--ms</span></div>
-                    </div>
-                </div>
             </section>
 
             <section id="tab-mes" class="tab-content hidden space-y-3">
-                <div class="bg-bbva-card p-4 flex justify-between items-center mb-2">
+                <div class="bg-bbva-card p-4 flex justify-between items-center mb-2 text-sm">
                     <input type="month" id="filtroMes" class="bg-transparent text-white font-bold outline-none" onchange="renderApp()">
                 </div>
                 <div id="listaMes" class="space-y-3"></div>
             </section>
 
             <section id="tab-add" class="tab-content hidden flex flex-col pt-1">
-                <div class="bg-bbva-card p-6 border-t-4 border-cyan-400 shadow-xl">
+                <div class="bg-bbva-card p-6 shadow-xl">
                     <form id="mainForm" class="space-y-4">
                         <input type="hidden" id="in-id">
                         <input type="text" id="in-concepto" placeholder="Concepto" class="bbva-input" required>
@@ -158,35 +151,27 @@
         }
 
         async function renderApp() {
-            const start = Date.now();
             try {
                 const res = await fetch(API_URL);
                 appData = await res.json();
-                document.getElementById('debug-ping').innerText = (Date.now() - start) + "ms";
-                document.getElementById('debug-count').innerText = appData.length;
-
                 const hoy = new Date();
                 const hoyStr = hoy.toISOString().split('T')[0];
                 const mesActualStr = hoy.toISOString().slice(0, 7);
                 const mesSel = document.getElementById('filtroMes').value;
-                
                 let real = 0, prevision = 0, cats = {};
                 const lMes = document.getElementById('listaMes'); lMes.innerHTML = '';
 
                 appData.forEach(g => {
                     const val = parseFloat(g.importe);
                     const esIngreso = (g.categoria === "Sueldo" || g.categoria === "Otros Ingresos");
-                    
                     if (g.fecha <= hoyStr) esIngreso ? real += val : real -= val;
                     if (g.fecha.startsWith(mesActualStr)) esIngreso ? prevision += val : prevision -= val;
-
                     if (g.fecha.startsWith(mesSel)) {
                         if(!esIngreso) cats[g.categoria] = (cats[g.categoria]||0) + val;
                         const disp = isPrivate ? "****€" : val.toFixed(2) + '€';
                         lMes.innerHTML += `<div class="bg-bbva-card p-5 flex justify-between items-center border-l-4 ${esIngreso?'border-cyan-400':'border-rose-500'}"><div><p class="font-bold text-white text-base">${g.concepto}</p><p class="text-[10px] text-slate-500 font-bold uppercase">${g.categoria}</p></div><div class="flex items-center gap-4"><p class="font-black text-lg ${esIngreso?'text-cyan-400':'text-rose-400'}">${disp}</p><div class="flex gap-1"><button onclick="preEdit('${g._id}')" class="btn-action text-cyan-400 text-xs">✏️</button><button onclick="deleteGasto('${g._id}')" class="btn-action text-rose-500 text-xs">🗑️</button></div></div></div>`;
                     }
                 });
-
                 document.getElementById('valReal').innerText = isPrivate ? "****€" : real.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
                 document.getElementById('valPrevision').innerText = isPrivate ? "****€" : prevision.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
                 drawChart(cats);
@@ -225,9 +210,7 @@
             const id = document.getElementById('in-id').value;
             const data = { concepto: document.getElementById('in-concepto').value, importe: parseFloat(document.getElementById('in-importe').value), categoria: document.getElementById('in-categoria').value, fecha: document.getElementById('in-fecha').value };
             await fetch(id ? `${API_URL}/${id}` : API_URL, { method: id ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-            document.getElementById('mainForm').reset();
-            document.getElementById('in-id').value = "";
-            renderApp();
+            document.getElementById('mainForm').reset(); document.getElementById('in-id').value = ""; renderApp();
             switchTab('tab-cuenta', document.querySelectorAll('.nav-btn')[0]);
         });
 
