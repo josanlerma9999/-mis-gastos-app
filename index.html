@@ -2,237 +2,379 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestor Financiero v7.2</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mi Cuenta Real v8.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        .active-tab { color: #10b981; border-top: 3px solid #10b981; font-weight: 900; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        .active-tab { color: #10b981; border-top: 4px solid #10b981; }
         .hidden { display: none; }
-        .font-black { font-weight: 900; }
-        @keyframes pulse-red { 0%, 100% { background-color: #ef4444; } 50% { background-color: #b91c1c; } }
-        .animate-alert { animation: pulse-red 1s infinite; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fade { animation: fadeIn 0.3s ease-out; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-up { animation: slideUp 0.4s ease-out; }
     </style>
 </head>
-<body class="bg-slate-50 font-sans pb-24 text-slate-900">
+<body class="bg-slate-50 pb-28">
 
-    <nav class="bg-slate-900 text-white p-4 shadow-md sticky top-0 z-50 flex justify-between items-center">
-        <h1 class="text-lg font-black tracking-tighter italic">Mi Cuenta Real</h1>
-        <span class="bg-emerald-500 px-2 py-1 rounded text-[10px] font-black uppercase tracking-tighter">v7.2 🔔</span>
-    </nav>
+    <header class="bg-slate-900 text-white p-5 sticky top-0 z-50 flex justify-between items-center shadow-lg">
+        <div class="flex items-center gap-2">
+            <div class="w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></div>
+            <h1 class="font-900 text-xl tracking-tighter italic">MI CUENTA REAL</h1>
+        </div>
+        <span class="text-[10px] font-bold bg-slate-800 px-3 py-1 rounded-full border border-slate-700">v8.0 CLEAN</span>
+    </header>
 
     <main class="max-w-md mx-auto p-4">
-        <div id="avisoHoy" class="hidden animate-alert text-white p-3 rounded-xl mb-4 text-center text-xs font-black uppercase tracking-widest shadow-lg">
-            ⚠️ ¡Atención! Tienes pagos para HOY
+        
+        <div id="alertHoy" class="hidden bg-rose-600 text-white p-4 rounded-2xl mb-4 text-center shadow-xl animate-bounce">
+            <p class="text-[10px] font-black uppercase tracking-widest">⚠️ Tienes pagos pendientes para hoy</p>
         </div>
 
-        <section id="vista-total" class="seccion-tab">
-            <div id="tarjetaBalance" class="bg-emerald-500 text-white p-6 rounded-[2rem] shadow-xl mb-4 text-center transition-all">
-                <p class="text-[10px] uppercase tracking-widest opacity-90 mb-1 font-black">Dinero Actual</p>
-                <p id="totalRealCuenta" class="text-4xl font-black italic">0.00€</p>
+        <section id="tab-cuenta" class="tab-content animate-up">
+            <div id="cardMain" class="p-8 rounded-[2.5rem] text-center shadow-2xl mb-6 transition-colors duration-500">
+                <p class="text-[11px] uppercase font-black tracking-[0.2em] mb-2 opacity-80">Dinero Disponible</p>
+                <h2 id="valReal" class="text-5xl font-900 tracking-tighter">0.00€</h2>
             </div>
-            <div class="bg-slate-800 text-white p-5 rounded-[2rem] shadow-lg mb-6 flex justify-between items-center px-8 border-b-4 border-indigo-500">
-                <div class="text-center">
-                    <p class="text-[9px] uppercase tracking-widest opacity-70 font-black text-indigo-300">Final Mes</p>
-                    <p id="totalEstimado" class="text-xl font-black">0.00€</p>
+
+            <div class="grid grid-cols-2 gap-4 mb-8">
+                <div class="bg-slate-800 text-white p-5 rounded-[2rem] text-center border-b-4 border-indigo-500">
+                    <p class="text-[9px] font-black uppercase text-indigo-300 mb-1">Final de Mes</p>
+                    <p id="valEstimado" class="text-xl font-900">0.00€</p>
                 </div>
-                <div class="h-8 w-[1px] bg-slate-700"></div>
-                <div class="text-center">
-                    <p class="text-[9px] uppercase tracking-widest opacity-70 font-black text-emerald-300">En Plan</p>
-                    <p id="totalPendiente" class="text-xl font-black text-emerald-400">0.00€</p>
+                <div class="bg-slate-800 text-white p-5 rounded-[2rem] text-center border-b-4 border-emerald-500">
+                    <p class="text-[9px] font-black uppercase text-emerald-300 mb-1">En Previsión</p>
+                    <p id="valPendiente" class="text-xl font-900">0.00€</p>
                 </div>
             </div>
-            <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 mb-6">
-                <div class="relative h-48 mb-6"><canvas id="graficoGastos"></canvas></div>
-                <div id="leyendaPersonalizada" class="grid grid-cols-2 gap-2 mt-4"></div>
+
+            <div class="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100">
+                <p class="text-[10px] font-black uppercase text-slate-400 text-center mb-6 tracking-widest">Distribución Gastos Mes</p>
+                <div class="h-56 mb-6">
+                    <canvas id="chartGastos"></canvas>
+                </div>
+                <div id="legendBox" class="grid grid-cols-2 gap-2"></div>
             </div>
         </section>
 
-        <section id="vista-prevision" class="seccion-tab hidden">
-            <button onclick="revisarNotificaciones()" class="w-full bg-indigo-600 text-white font-black p-3 rounded-xl mb-4 text-[10px] uppercase shadow-md">
-                🔔 Revisar alertas de hoy
-            </button>
-            <ul id="listaPrevision" class="space-y-3 pt-2"></ul>
+        <section id="tab-plan" class="tab-content hidden animate-up">
+            <div class="flex justify-between items-center mb-4 px-2">
+                <h3 class="font-black uppercase text-xs text-slate-400 tracking-widest text-emerald-600">Calendario de Pagos</h3>
+                <button onclick="checkTodayAlert()" class="text-[10px] font-black bg-indigo-100 text-indigo-600 px-3 py-1 rounded-lg">🔔 NOTIFICAR</button>
+            </div>
+            <div id="listaPlan" class="space-y-3"></div>
         </section>
 
-        <section id="vista-mes" class="seccion-tab hidden">
-            <div class="bg-white p-4 rounded-2xl shadow-sm mb-4 text-center border border-slate-100">
-                <input type="month" id="mesFiltro" class="font-black outline-none border-none bg-transparent" onchange="cargarDatos()">
+        <section id="tab-mes" class="tab-content hidden animate-up">
+            <div class="bg-white p-4 rounded-2xl mb-4 shadow-sm border border-slate-100 flex justify-center">
+                <input type="month" id="filtroMes" class="font-black bg-transparent outline-none text-slate-700" onchange="renderApp()">
             </div>
-            <div class="grid grid-cols-2 gap-3 mb-6 font-black uppercase text-[10px]">
-                <div class="bg-emerald-50 p-4 rounded-2xl text-center text-emerald-700 border border-emerald-100">
-                    <p>Ingresos</p><p id="ingresosMes" class="text-lg font-black">0.00€</p>
-                </div>
-                <div class="bg-rose-50 p-4 rounded-2xl text-center text-rose-700 border border-rose-100">
-                    <p>Gastos</p><p id="gastosMes" class="text-lg font-black">0.00€</p>
-                </div>
-            </div>
-            <ul id="listaGastos" class="space-y-2"></ul>
+            <div id="resumenMes" class="grid grid-cols-2 gap-3 mb-4"></div>
+            <div id="listaMes" class="space-y-2"></div>
         </section>
 
-        <section id="vista-add" class="seccion-tab hidden">
-            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
-                <h2 id="tituloForm" class="text-center font-black uppercase text-[10px] mb-4 text-slate-400 tracking-widest">Añadir Movimiento</h2>
-                <form id="gastoForm" class="space-y-4">
-                    <input type="hidden" id="edit_id" value="">
-                    <input type="text" id="concepto" placeholder="Concepto" class="w-full p-4 bg-slate-50 rounded-xl outline-none font-bold" required>
-                    <input type="number" id="importe" step="0.01" placeholder="0.00" class="w-full p-4 bg-slate-50 rounded-xl outline-none font-black text-2xl" required>
-                    <select id="categoria" class="w-full p-4 bg-slate-50 rounded-xl outline-none font-bold">
-                        <option value="Sueldo">💰 Sueldo</option>
-                        <option value="Otros Ingresos">💵 Otros Ingresos</option>
-                        <option value="El Corte Inglés">🏬 El Corte Inglés</option>
-                        <option value="Cuenta BBVA">🏦 Cuenta BBVA</option>
-                        <option value="Tarjeta BBVA">🟦 Tarjeta BBVA</option>
-                        <option value="Tarjeta Explora">🧭 Tarjeta Explora</option>
-                        <option value="Imagine">🟣 Imagine</option>
-                        <option value="PayPal">💳 PayPal</option>
-                        <option value="Amazon">📦 Amazon</option>
-                        <option value="Gasolina">⛽ Gasolina</option>
-                    </select>
-                    <input type="date" id="fecha" class="w-full p-4 bg-slate-50 rounded-xl outline-none font-bold" required>
-                    <button type="submit" id="btnGuardar" class="w-full bg-slate-900 text-white font-black p-5 rounded-2xl shadow-xl">GUARDAR</button>
-                    <button type="button" id="btnCancelarEdicion" onclick="cancelarEdicion()" class="hidden w-full text-rose-500 font-black p-2 text-[10px] uppercase">Cancelar Edición</button>
+        <section id="tab-add" class="tab-content hidden animate-up">
+            <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
+                <h2 id="formTitle" class="text-center font-black uppercase text-[10px] text-slate-400 mb-6 tracking-widest">Nuevo Movimiento</h2>
+                <form id="mainForm" class="space-y-4">
+                    <input type="hidden" id="in-id">
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-black text-slate-400 ml-2 uppercase">Concepto</label>
+                        <input type="text" id="in-concepto" placeholder="Ej: Compra Mercadona" class="w-full p-4 bg-slate-50 rounded-2xl font-bold outline-none border-2 border-transparent focus:border-emerald-500 transition-all" required>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-black text-slate-400 ml-2 uppercase">Importe</label>
+                        <input type="number" id="in-importe" step="0.01" placeholder="0.00" class="w-full p-4 bg-slate-50 rounded-2xl font-900 text-3xl outline-none border-2 border-transparent focus:border-emerald-500 transition-all" required>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-black text-slate-400 ml-2 uppercase">Categoría</label>
+                        <select id="in-categoria" class="w-full p-4 bg-slate-50 rounded-2xl font-bold outline-none appearance-none border-2 border-transparent focus:border-emerald-500 transition-all">
+                            <optgroup label="INGRESOS">
+                                <option value="Sueldo">💰 Sueldo</option>
+                                <option value="Otros Ingresos">💵 Otros Ingresos</option>
+                            </optgroup>
+                            <optgroup label="GASTOS">
+                                <option value="El Corte Inglés">🏬 El Corte Inglés</option>
+                                <option value="Cuenta BBVA">🏦 Cuenta BBVA</option>
+                                <option value="Tarjeta BBVA">🟦 Tarjeta BBVA</option>
+                                <option value="Tarjeta Explora">🧭 Tarjeta Explora</option>
+                                <option value="Imagine">🟣 Imagine</option>
+                                <option value="PayPal">💳 PayPal</option>
+                                <option value="Amazon">📦 Amazon</option>
+                                <option value="Gasolina">⛽ Gasolina</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-black text-slate-400 ml-2 uppercase">Fecha</label>
+                        <input type="date" id="in-fecha" class="w-full p-4 bg-slate-50 rounded-2xl font-bold outline-none border-2 border-transparent focus:border-emerald-500 transition-all" required>
+                    </div>
+                    
+                    <div class="pt-4 space-y-3">
+                        <button type="submit" id="btnSubmit" class="w-full bg-slate-900 text-white font-900 p-5 rounded-2xl shadow-xl active:scale-95 transition-all">GUARDAR</button>
+                        <button type="button" id="btnCancel" onclick="resetForm()" class="hidden w-full text-rose-500 font-black text-[10px] uppercase py-2">Cancelar Edición</button>
+                    </div>
                 </form>
             </div>
         </section>
     </main>
 
-    <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 flex justify-around p-2 pb-6 shadow-2xl z-50">
-        <button onclick="cambiarTab('vista-total', this)" class="tab-btn flex flex-col items-center p-2 active-tab">
-            <span class="text-2xl">💰</span><span class="text-[9px] uppercase font-black">Cuenta</span>
+    <nav class="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-slate-100 flex justify-around p-3 pb-8 z-50">
+        <button onclick="switchTab('tab-cuenta', this)" class="nav-btn flex flex-col items-center gap-1 active-tab">
+            <span class="text-2xl">💰</span><span class="text-[9px] font-black uppercase">Cuenta</span>
         </button>
-        <button onclick="cambiarTab('vista-prevision', this)" class="tab-btn flex flex-col items-center p-2 text-slate-400">
-            <span class="text-2xl">🗓️</span><span class="text-[9px] uppercase font-black">Plan</span>
+        <button onclick="switchTab('tab-plan', this)" class="nav-btn flex flex-col items-center gap-1 text-slate-400">
+            <span class="text-2xl">🗓️</span><span class="text-[9px] font-black uppercase">Plan</span>
         </button>
-        <button onclick="cambiarTab('vista-mes', this)" class="tab-btn flex flex-col items-center p-2 text-slate-400">
-            <span class="text-2xl">📊</span><span class="text-[9px] uppercase font-black">Mes</span>
+        <button onclick="switchTab('tab-mes', this)" class="nav-btn flex flex-col items-center gap-1 text-slate-400">
+            <span class="text-2xl">📊</span><span class="text-[9px] font-black uppercase">Mes</span>
         </button>
-        <button onclick="cambiarTab('vista-add', this)" class="tab-btn flex flex-col items-center p-2 text-slate-400">
-            <span class="text-2xl">➕</span><span class="text-[9px] uppercase font-black">Add</span>
+        <button onclick="switchTab('tab-add', this)" class="nav-btn flex flex-col items-center gap-1 text-slate-400">
+            <span class="text-2xl">➕</span><span class="text-[9px] font-black uppercase">Nuevo</span>
         </button>
-    </div>
+    </nav>
 
     <script>
-        const API_URL = 'https://mis-gastos-app.onrender.com/api/gastos'; 
-        let miGrafico = null;
-        let gastosCache = [];
-        const COLORES = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316', '#3b82f6', '#0f172a'];
+        // CONFIGURACIÓN CENTRALIZADA
+        const API_URL = 'https://mis-gastos-app.onrender.com/api/gastos';
+        const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316', '#3b82f6', '#0f172a'];
+        let appData = [];
+        let mainChart = null;
 
-        document.getElementById('mesFiltro').value = new Date().toISOString().slice(0, 7);
-        document.getElementById('fecha').valueAsDate = new Date();
+        // INICIALIZACIÓN
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('filtroMes').value = new Date().toISOString().slice(0, 7);
+            document.getElementById('in-fecha').valueAsDate = new Date();
+            renderApp();
+        });
 
-        function cambiarTab(id, el) {
-            document.querySelectorAll('.seccion-tab').forEach(s => s.classList.add('hidden'));
-            document.querySelectorAll('.tab-btn').forEach(b => { b.classList.remove('active-tab'); b.classList.add('text-slate-400'); });
+        // NAVEGACIÓN
+        function switchTab(id, el) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active-tab', 'text-slate-400'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.add('text-slate-400'));
+            
             document.getElementById(id).classList.remove('hidden');
-            el.classList.add('active-tab'); el.classList.remove('text-slate-400');
-            if (id !== 'vista-add') cargarDatos();
+            el.classList.add('active-tab');
+            el.classList.remove('text-slate-400');
+            
+            if(id !== 'tab-add') renderApp();
         }
 
-        async function cargarDatos() {
+        // MOTOR PRINCIPAL
+        async function renderApp() {
             try {
-                const res = await fetch(API_URL);
-                gastosCache = await res.json();
-                const hoyStr = new Date().toISOString().split('T')[0];
-                const mesSel = document.getElementById('mesFiltro').value;
+                const response = await fetch(API_URL);
+                appData = await response.json();
+                
+                const now = new Date();
+                now.setHours(0,0,0,0);
+                const todayStr = now.toISOString().split('T')[0];
+                const selectedMonth = document.getElementById('filtroMes').value;
 
-                let balAct = 0, balPrev = 0, inMes = 0, gasMes = 0, resCats = {}, hayPagoHoy = false;
-                const listaM = document.getElementById('listaGastos'), listaP = document.getElementById('listaPrevision');
-                listaM.innerHTML = ''; listaP.innerHTML = '';
+                let balReal = 0, balPlan = 0, inMes = 0, outMes = 0;
+                let catStats = {};
+                let hasPaymentToday = false;
 
-                gastosCache.sort((a,b) => new Date(a.fecha) - new Date(b.fecha)).forEach(g => {
-                    const monto = parseFloat(g.importe), esIn = ["Sueldo", "Otros Ingresos"].includes(g.categoria);
-                    const botones = `<div class="flex gap-3"><button onclick="prepararEdicion('${g._id}')" class="text-blue-500">✏️</button><button onclick="eliminarGasto('${g._id}')" class="text-slate-300">🗑️</button></div>`;
+                const listPlan = document.getElementById('listaPlan');
+                const listMes = document.getElementById('listaMes');
+                listPlan.innerHTML = ''; listMes.innerHTML = '';
 
-                    if (g.fecha === hoyStr && !esIn) hayPagoHoy = true;
+                appData.sort((a,b) => new Date(a.fecha) - new Date(b.fecha)).forEach(item => {
+                    const val = parseFloat(item.importe);
+                    const isIncome = ["Sueldo", "Otros Ingresos"].includes(item.categoria);
+                    const itemDate = item.fecha;
 
-                    if (g.fecha <= hoyStr) { if (esIn) balAct += monto; else balAct -= monto; } 
-                    else {
-                        if (esIn) balPrev += monto; else balPrev -= monto;
-                        listaP.innerHTML += `<li class="bg-white p-4 rounded-2xl border-l-4 border-amber-400 shadow-sm flex justify-between items-center mb-2 animate-fade">
-                            <div><p class="font-black text-sm text-slate-800">${g.concepto}</p><p class="text-[9px] text-amber-600 font-black uppercase">${g.fecha}</p></div>
-                            <div class="flex items-center gap-3 font-black"><p class="${esIn?'text-emerald-500':'text-rose-500'}">${monto.toFixed(2)}€</p>${botones}</div>
-                        </li>`;
+                    // Lógica de Balances
+                    if (itemDate <= todayStr) {
+                        isIncome ? balReal += val : balReal -= val;
+                    } else {
+                        isIncome ? balPlan += val : balPlan -= val;
+                        // Render Lista Plan (Futuro)
+                        listPlan.innerHTML += createItemHTML(item, isIncome, true);
                     }
-                    if (g.fecha.startsWith(mesSel)) {
-                        if (esIn) inMes += monto; else { gasMes += monto; resCats[g.categoria] = (resCats[g.categoria] || 0) + monto; }
-                        listaM.innerHTML += `<li class="bg-white p-3 rounded-xl border border-slate-100 flex justify-between items-center animate-fade">
-                            <div><p class="font-bold text-xs text-slate-700 font-black">${g.concepto}</p><p class="text-[8px] text-slate-400 font-black uppercase">${g.categoria}</p></div>
-                            <div class="flex items-center gap-3 font-black"><p class="text-xs ${esIn?'text-emerald-500':'text-rose-500'}">${monto.toFixed(2)}€</p>${botones}</div>
-                        </li>`;
+
+                    // Aviso hoy
+                    if (itemDate === todayStr && !isIncome) hasPaymentToday = true;
+
+                    // Lógica Mes Seleccionado
+                    if (itemDate.startsWith(selectedMonth)) {
+                        if (isIncome) inMes += val;
+                        else {
+                            outMes += val;
+                            catStats[item.categoria] = (catStats[item.categoria] || 0) + val;
+                        }
+                        listMes.innerHTML += createItemHTML(item, isIncome, false);
                     }
                 });
-                
-                document.getElementById('avisoHoy').classList.toggle('hidden', !hayPagoHoy);
-                document.getElementById('totalRealCuenta').innerText = balAct.toFixed(2) + '€';
-                document.getElementById('totalEstimado').innerText = (balAct + balPrev).toFixed(2) + '€';
-                document.getElementById('totalPendiente').innerText = (balPrev >= 0 ? '+' : '') + balPrev.toFixed(2) + '€';
-                document.getElementById('ingresosMes').innerText = inMes.toFixed(2) + '€';
-                document.getElementById('gastosMes').innerText = gasMes.toFixed(2) + '€';
-                
-                const ctx = document.getElementById('graficoGastos').getContext('2d');
-                if (miGrafico) miGrafico.destroy();
-                const divLeyenda = document.getElementById('leyendaPersonalizada'); divLeyenda.innerHTML = '';
-                const cats = Object.keys(resCats);
-                if (cats.length > 0) {
-                    miGrafico = new Chart(ctx, { type: 'doughnut', data: { labels: cats, datasets: [{ data: Object.values(resCats), backgroundColor: COLORES, borderWidth: 0 }] }, options: { plugins: { legend: { display: false } }, maintainAspectRatio: false, cutout: '75%' } });
-                    cats.forEach((cat, i) => {
-                        const porc = ((resCats[cat] / gasMes) * 100).toFixed(0);
-                        divLeyenda.innerHTML += `<div class="flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-100"><div class="w-2 h-2 rounded-full" style="background:${COLORES[i]}"></div><div class="flex flex-col leading-tight"><span class="text-[8px] font-black uppercase text-slate-400">${cat}</span><span class="text-[10px] font-black text-slate-700">${resCats[cat].toFixed(1)}€ (${porc}%)</span></div></div>`;
-                    });
-                }
-                document.getElementById('tarjetaBalance').className = balAct < 0 ? 'bg-rose-500 text-white p-6 rounded-[2rem] shadow-xl mb-4 text-center' : 'bg-emerald-500 text-white p-6 rounded-[2rem] shadow-xl mb-4 text-center';
-            } catch (e) { console.error(e); }
-        }
 
-        function revisarNotificaciones() {
-            const hoyStr = new Date().toISOString().split('T')[0];
-            const pagosHoy = gastosCache.filter(g => g.fecha === hoyStr && !["Sueldo", "Otros Ingresos"].includes(g.categoria));
-            if (pagosHoy.length > 0) {
-                alert(`🔔 ALERTA: Tienes ${pagosHoy.length} pago(s) para hoy:\n` + pagosHoy.map(p => `- ${p.concepto}: ${p.importe}€`).join('\n'));
-            } else {
-                alert("✅ Todo al día. No hay pagos programados para hoy.");
+                // Actualizar Interfaz
+                updateUI(balReal, balPlan, inMes, outMes, catStats, hasPaymentToday);
+
+            } catch (err) {
+                console.error("Error de renderizado:", err);
             }
         }
 
-        function prepararEdicion(id) {
-            const g = gastosCache.find(i => i._id === id); if (!g) return;
-            document.getElementById('edit_id').value = g._id;
-            document.getElementById('concepto').value = g.concepto;
-            document.getElementById('importe').value = g.importe;
-            document.getElementById('categoria').value = g.categoria;
-            document.getElementById('fecha').value = g.fecha;
-            document.getElementById('btnGuardar').innerText = "GUARDAR CAMBIOS";
-            document.getElementById('btnGuardar').classList.replace('bg-slate-900', 'bg-orange-500');
-            document.getElementById('btnCancelarEdicion').classList.remove('hidden');
-            document.getElementById('tituloForm').innerText = "Modo Edición";
-            cambiarTab('vista-add', document.querySelectorAll('.tab-btn')[3]);
+        function createItemHTML(g, isIncome, showDate) {
+            return `
+                <div class="bg-white p-4 rounded-2xl border border-slate-100 flex justify-between items-center shadow-sm animate-up">
+                    <div>
+                        <p class="font-black text-slate-800 text-sm leading-tight">${g.concepto}</p>
+                        <p class="text-[9px] font-black uppercase text-slate-400 mt-1">
+                            ${showDate ? g.fecha : g.categoria}
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <p class="font-900 ${isIncome ? 'text-emerald-500' : 'text-rose-500'}">
+                            ${isIncome ? '+' : '-'}${parseFloat(g.importe).toFixed(2)}€
+                        </p>
+                        <div class="flex gap-2">
+                            <button onclick="editMode('${g._id}')" class="p-2 bg-slate-50 rounded-lg">✏️</button>
+                            <button onclick="deleteItem('${g._id}')" class="p-2 bg-slate-50 rounded-lg text-slate-300">🗑️</button>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
 
-        function cancelarEdicion() {
-            document.getElementById('edit_id').value = ""; document.getElementById('gastoForm').reset();
-            document.getElementById('btnGuardar').innerText = "GUARDAR";
-            document.getElementById('btnGuardar').className = "w-full bg-slate-900 text-white font-black p-5 rounded-2xl shadow-xl";
-            document.getElementById('btnCancelarEdicion').classList.add('hidden');
-            document.getElementById('tituloForm').innerText = "Añadir Movimiento";
-            document.getElementById('fecha').valueAsDate = new Date();
+        function updateUI(real, plan, inM, outM, cats, alert) {
+            document.getElementById('valReal').innerText = `${real.toFixed(2)}€`;
+            document.getElementById('valEstimado').innerText = `${(real + plan).toFixed(2)}€`;
+            document.getElementById('valPendiente').innerText = `${plan >= 0 ? '+' : ''}${plan.toFixed(2)}€`;
+            
+            const card = document.getElementById('cardMain');
+            card.className = real >= 0 ? 'p-8 rounded-[2.5rem] text-center shadow-2xl mb-6 bg-emerald-500 text-white' : 'p-8 rounded-[2.5rem] text-center shadow-2xl mb-6 bg-rose-500 text-white';
+
+            document.getElementById('resumenMes').innerHTML = `
+                <div class="bg-emerald-50 p-4 rounded-2xl border border-emerald-100 text-center">
+                    <p class="text-[9px] font-black text-emerald-600 uppercase">Ingresos</p>
+                    <p class="text-lg font-900 text-emerald-700">${inM.toFixed(2)}€</p>
+                </div>
+                <div class="bg-rose-50 p-4 rounded-2xl border border-rose-100 text-center">
+                    <p class="text-[9px] font-black text-rose-600 uppercase">Gastos</p>
+                    <p class="text-lg font-900 text-rose-700">${outM.toFixed(2)}€</p>
+                </div>
+            `;
+
+            document.getElementById('alertHoy').classList.toggle('hidden', !alert);
+            drawChart(cats, outM);
         }
 
-        document.getElementById('gastoForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const idViejo = document.getElementById('edit_id').value;
-            const data = { concepto: document.getElementById('concepto').value, importe: parseFloat(document.getElementById('importe').value), categoria: document.getElementById('categoria').value, fecha: document.getElementById('fecha').value };
+        function drawChart(data, total) {
+            const ctx = document.getElementById('chartGastos').getContext('2d');
+            const legend = document.getElementById('legendBox');
+            legend.innerHTML = '';
+            if (mainChart) mainChart.destroy();
+
+            const labels = Object.keys(data);
+            const values = Object.values(data);
+
+            if (labels.length === 0) {
+                legend.innerHTML = '<p class="col-span-2 text-center text-xs font-black text-slate-300 py-4 italic">Sin gastos este mes</p>';
+                return;
+            }
+
+            mainChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{ data: values, backgroundColor: COLORS, borderWidth: 0, hoverOffset: 10 }]
+                },
+                options: {
+                    plugins: { legend: { display: false } },
+                    maintainAspectRatio: false,
+                    cutout: '80%'
+                }
+            });
+
+            labels.forEach((label, i) => {
+                const perc = ((data[label] / total) * 100).toFixed(0);
+                legend.innerHTML += `
+                    <div class="flex items-center gap-2 p-2 bg-slate-50 rounded-xl border border-slate-100">
+                        <div class="w-2 h-2 rounded-full" style="background:${COLORS[i]}"></div>
+                        <div class="flex flex-col">
+                            <span class="text-[8px] font-black text-slate-400 uppercase leading-none">${label}</span>
+                            <span class="text-[10px] font-900 text-slate-700">${data[label].toFixed(1)}€ (${perc}%)</span>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // ACCIONES (CRUD)
+        async function deleteItem(id) {
+            if (!confirm("¿Eliminar este movimiento?")) return;
             try {
-                if (idViejo) { await fetch(`${API_URL}/${idViejo}`, { method: 'DELETE' }); }
-                const res = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-                if (res.ok) { cancelarEdicion(); await cargarDatos(); cambiarTab('vista-total', document.querySelectorAll('.tab-btn')[0]); }
+                await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+                renderApp();
             } catch (err) { console.error(err); }
+        }
+
+        function editMode(id) {
+            const g = appData.find(x => x._id === id);
+            if (!g) return;
+            
+            document.getElementById('in-id').value = g._id;
+            document.getElementById('in-concepto').value = g.concepto;
+            document.getElementById('in-importe').value = g.importe;
+            document.getElementById('in-categoria').value = g.categoria;
+            document.getElementById('in-fecha').value = g.fecha;
+            
+            document.getElementById('formTitle').innerText = "Editando Movimiento";
+            document.getElementById('btnSubmit').innerText = "ACTUALIZAR DATOS";
+            document.getElementById('btnSubmit').classList.replace('bg-slate-900', 'bg-orange-500');
+            document.getElementById('btnCancel').classList.remove('hidden');
+            
+            switchTab('tab-add', document.querySelectorAll('.nav-btn')[3]);
+        }
+
+        function resetForm() {
+            document.getElementById('mainForm').reset();
+            document.getElementById('in-id').value = "";
+            document.getElementById('formTitle').innerText = "Nuevo Movimiento";
+            document.getElementById('btnSubmit').innerText = "GUARDAR";
+            document.getElementById('btnSubmit').className = "w-full bg-slate-900 text-white font-900 p-5 rounded-2xl shadow-xl active:scale-95 transition-all";
+            document.getElementById('btnCancel').classList.add('hidden');
+            document.getElementById('in-fecha').valueAsDate = new Date();
+        }
+
+        document.getElementById('mainForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const idViejo = document.getElementById('in-id').value;
+            const data = {
+                concepto: document.getElementById('in-concepto').value,
+                importe: parseFloat(document.getElementById('in-importe').value),
+                categoria: document.getElementById('in-categoria').value,
+                fecha: document.getElementById('in-fecha').value
+            };
+
+            try {
+                // Si es edición, borramos el anterior primero para asegurar éxito
+                if (idViejo) await fetch(`${API_URL}/${idViejo}`, { method: 'DELETE' });
+                
+                const res = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (res.ok) {
+                    resetForm();
+                    switchTab('tab-cuenta', document.querySelectorAll('.nav-btn')[0]);
+                }
+            } catch (err) { alert("Error al conectar con el servidor"); }
         });
 
-        async function eliminarGasto(id) { if (confirm("¿Eliminar?")) { await fetch(`${API_URL}/${id}`, { method: 'DELETE' }); await cargarDatos(); } }
-        cargarDatos();
+        function checkTodayAlert() {
+            const now = new Date().toISOString().split('T')[0];
+            const hoy = appData.filter(g => g.fecha === now && !["Sueldo", "Otros Ingresos"].includes(g.categoria));
+            if(hoy.length > 0) {
+                alert(`⚠️ RECORDATORIO:\n\nTienes ${hoy.length} pagos para hoy:\n${hoy.map(h => `- ${h.concepto}: ${h.importe}€`).join('\n')}`);
+            } else {
+                alert("✅ Genial, no tienes pagos pendientes para hoy.");
+            }
+        }
     </script>
 </body>
 </html>
