@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BBVA v11.3 - Base de Trabajo</title>
+    <title>BBVA v11.3 - Base Estable</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -125,7 +125,7 @@
                         document.getElementById('pin-screen').classList.add('hidden');
                         document.getElementById('app-content').classList.remove('hidden');
                         render();
-                    } else { alert("Error"); pinIn = ""; dots.forEach(d => d.classList.remove('filled')); }
+                    } else { pinIn = ""; dots.forEach(d => d.classList.remove('filled')); }
                 }
             }
         }
@@ -136,16 +136,15 @@
                 const res = await fetch(API); store = await res.json();
                 let t = 0, cs = {};
                 const list = document.getElementById('listaItems'); list.innerHTML = '';
-                
                 store.forEach(g => {
                     const v = parseFloat(g.importe); const isS = g.categoria === "Sueldo";
                     t += isS ? v : -v; if(!isS) cs[g.categoria] = (cs[g.categoria]||0) + v;
                     list.innerHTML += `<div class="bg-bbva-card p-5 flex justify-between items-center border-l-8 ${isS?'border-cyan-400':'border-rose-500'} rounded-xl shadow-lg">
                         <div><p class="font-[900] text-white text-lg">${g.concepto}</p><p class="text-[10px] text-slate-500 uppercase font-black">${g.fecha}</p></div>
-                        <div class="flex items-center gap-4"><p class="font-[900] text-xl ${isS?'text-cyan-400':'text-rose-400'}">${isP?'****':v.toFixed(2)}€</p>
+                        <div class="flex items-center gap-4"><p class="font-[900] text-xl ${isS?'text-cyan-400':'text-rose-400'}">${isP?'****':v.toFixed(2)+'€'}</p>
                         <button onclick="preEdit('${g._id}')" class="text-xl">✏️</button></div></div>`;
                 });
-                document.getElementById('saldo').innerText = isP ? "****€" : t.toLocaleString('de-DE') + "€";
+                document.getElementById('saldo').innerText = isP ? "****€" : t.toFixed(2) + "€";
                 draw(cs);
             } catch (e) {}
         }
@@ -155,7 +154,7 @@
             if(myChart) myChart.destroy();
             const labels = Object.keys(d);
             myChart = new Chart(ctx, { type:'doughnut', data:{ labels:labels, datasets:[{data:Object.values(d), backgroundColor:['#00e5ff','#004481','#8b5cf6','#10b981','#f59e0b'], borderWidth:0}]}, options:{plugins:{legend:{display:false}}, maintainAspectRatio:false, cutout:'85%'}});
-            document.getElementById('legends').innerHTML = labels.map((l, i) => `<div class="bg-white/5 p-3 rounded-xl flex justify-between items-center border border-white/5 truncate"><div class="flex items-center gap-2 truncate"><div class="w-3 h-3 rounded-full" style="background:${['#00e5ff','#004481','#8b5cf6','#10b981','#f59e0b'][i]}"></div><span class="text-[9px] font-black uppercase text-slate-400 truncate w-16">${l}</span></div><span class="text-[10px] font-black text-white">${isP?'***':d[l].toFixed(0)}€</span></div>`).join('');
+            document.getElementById('legends').innerHTML = labels.map((l, i) => `<div class="bg-white/5 p-3 rounded-xl flex justify-between items-center border border-white/5 truncate"><div class="flex items-center gap-2 truncate"><div class="w-3 h-3 rounded-full" style="background:${['#00e5ff','#004481','#8b5cf6','#10b981','#f59e0b'][i]}"></div><span class="text-[9px] font-black uppercase text-slate-400 truncate w-16">${l}</span></div><span class="text-[10px] font-black text-white">${isP?'***':d[l].toFixed(0)+'€'}</span></div>`).join('');
         }
 
         function tab(id, el) {
@@ -183,7 +182,6 @@
             const body = { concepto: document.getElementById('c').value, importe: parseFloat(document.getElementById('i').value), categoria: document.getElementById('cat').value, fecha: document.getElementById('d').value };
             await fetch(id ? `${API}/${id}` : API, { method: id ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
             document.getElementById('gForm').reset();
-            document.getElementById('in-id').value = "";
             tab('tab-cuenta', document.querySelectorAll('.nav-btn')[0]); render();
         });
         document.getElementById('d').valueAsDate = new Date();
