@@ -3,138 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BBVA Suite v9.2</title>
+    <title>BBVA Suite v9.3</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=JetBrains+Mono&display=swap');
-        :root { --bbva-navy: #072146; --bbva-blue: #004481; --bbva-cyan: #00a8e1; }
-        body { font-family: 'Inter', sans-serif; background-color: #000000; color: #ffffff; -webkit-tap-highlight-color: transparent; }
-        .active-tab { color: var(--bbva-cyan); border-top: 4px solid var(--bbva-cyan); }
+        :root { --bbva-navy: #072146; --bbva-blue: #004481; --bbva-cyan: #00e5ff; }
+        body { font-family: 'Inter', sans-serif; background-color: #000000; color: #ffffff; -webkit-tap-highlight-color: transparent; margin: 0; }
         .hidden { display: none !important; }
-        .font-900 { font-weight: 900; }
-        .bg-bbva-card { background-color: var(--bbva-navy); border: 1px solid rgba(0, 168, 225, 0.15); }
+        .bg-bbva-card { background-color: var(--bbva-navy); border: 1px solid rgba(0, 229, 255, 0.1); }
         .bbva-gradient { background: linear-gradient(135deg, #072146 0%, #004481 100%); }
-        /* Clase forzada para la fecha */
-        .fecha-celeste { color: #00a8e1 !important; font-weight: 800 !important; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-up { animation: slideUp 0.4s ease-out; }
+        .active-tab { color: var(--bbva-cyan); border-top: 3px solid var(--bbva-cyan); }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-up { animation: slideUp 0.3s ease-out; }
     </style>
 </head>
-<body class="pb-32">
+<body class="pb-28">
 
-    <div id="pantalla-pin" class="fixed inset-0 bg-[#072146] z-[100] flex flex-col items-center justify-center p-6 text-white text-center">
-        <div class="mb-8 text-center">
-            <h2 class="font-900 text-4xl tracking-tighter italic mb-1">BBVA</h2>
-            <p class="text-[7px] uppercase tracking-[0.4em] text-[#00a8e1]">Acceso Privado</p>
-        </div>
-        <div class="flex gap-4 mb-12" id="pin-dots">
-            <div class="w-3 h-3 rounded-full border border-white/30"></div>
-            <div class="w-3 h-3 rounded-full border border-white/30"></div>
-            <div class="w-3 h-3 rounded-full border border-white/30"></div>
-            <div class="w-3 h-3 rounded-full border border-white/30"></div>
-        </div>
-        <div class="grid grid-cols-3 gap-8 max-w-[280px]">
-            <script>
-                for(let i=1; i<=9; i++) document.write(`<button onclick="teclado(${i})" class="w-14 h-14 bg-white/5 rounded-full font-black text-xl active:bg-cyan-500 transition-all">${i}</button>`);
-            </script>
-            <div></div>
-            <button onclick="teclado(0)" class="w-14 h-14 bg-white/5 rounded-full font-black text-xl">0</button>
-            <button onclick="borrarPin()" class="w-14 h-14 text-rose-500 font-black text-[9px] uppercase">Borrar</button>
-        </div>
-    </div>
-
-    <header class="bg-black/95 backdrop-blur-xl text-white p-4 sticky top-0 z-50 flex justify-between items-center border-b border-white/5">
+    <header class="bg-black/90 backdrop-blur-md p-4 sticky top-0 z-50 flex justify-between items-center border-b border-white/5">
         <div class="flex flex-col">
-            <h1 class="font-900 text-xl tracking-tighter italic leading-none">BBVA</h1>
-            <span class="text-[7px] uppercase tracking-widest text-[#00a8e1] font-black">Private Banking</span>
+            <h1 class="font-[900] text-xl tracking-tighter italic leading-none text-white">BBVA</h1>
+            <span class="text-[7px] uppercase tracking-widest text-[#00e5ff] font-bold">Private Banking</span>
         </div>
         <div class="flex items-center gap-3">
-            <span class="text-[8px] font-mono text-[#00a8e1] bg-cyan-500/10 px-2 py-1 rounded border border-cyan-500/30 font-bold">v9.2-PRO</span>
-            <button onclick="togglePrivacy()" class="w-8 h-8 bg-slate-900 rounded-full flex items-center justify-center text-sm border border-white/10">
-                <span id="ojo-icon">👁️</span>
-            </button>
+            <span class="text-[8px] font-mono text-[#00e5ff] border border-[#00e5ff]/30 px-2 py-0.5 rounded">v9.3-PRO</span>
+            <button onclick="togglePrivacy()" class="text-lg opacity-70">👁️</button>
         </div>
     </header>
 
-    <main class="max-w-md mx-auto p-4">
+    <main class="max-w-md mx-auto p-3">
         
         <section id="tab-cuenta" class="tab-content animate-up">
-            <div id="cardMain" class="p-6 rounded-[2rem] text-center mb-4 bbva-gradient border border-white/10 shadow-lg">
-                <p class="text-[9px] uppercase font-black tracking-[0.2em] mb-1 text-cyan-300 opacity-70">Saldo Consolidado</p>
-                <h2 id="valReal" class="text-5xl font-900 tracking-tighter">0.00€</h2>
+            <div class="p-5 rounded-[1.5rem] text-center mb-3 bbva-gradient border border-white/10">
+                <p class="text-[8px] uppercase font-black tracking-widest mb-1 text-cyan-300/60">Saldo Disponible</p>
+                <h2 id="valReal" class="text-4xl font-[900] tracking-tighter text-white">0.00€</h2>
             </div>
             
-            <div class="bg-bbva-card p-5 rounded-[2rem] mb-4">
-                <div class="h-56 mb-4"><canvas id="chartGastos"></canvas></div>
+            <div class="bg-bbva-card p-4 rounded-[1.5rem] mb-3">
+                <div class="h-48 mb-4"><canvas id="chartGastos"></canvas></div>
                 <div id="legendBox" class="grid grid-cols-2 gap-2"></div>
             </div>
 
-            <div class="bg-zinc-900/40 p-3 rounded-xl border border-zinc-800 border-dashed">
-                <div id="debugLog" class="font-mono text-[7px] flex justify-around uppercase opacity-60">
-                    <p>Ping: <span id="debug-ping" class="text-[#00a8e1]">--ms</span></p>
-                    <p>Data: <span id="debug-count" class="text-[#00a8e1]">0</span></p>
-                    <p>Status: <span class="text-emerald-500">Ok</span></p>
-                </div>
+            <div class="bg-zinc-900/30 p-2 rounded-lg border border-white/5 flex justify-around text-[7px] font-mono opacity-40 uppercase">
+                <p>Ping: <span id="debug-ping" class="text-[#00e5ff]">--</span></p>
+                <p>Status: <span class="text-emerald-500">Live</span></p>
+                <p>DB: <span id="debug-count" class="text-[#00e5ff]">0</span></p>
             </div>
         </section>
 
         <section id="tab-mes" class="tab-content hidden animate-up">
-            <div class="bg-bbva-card p-3 rounded-xl mb-4 flex justify-between items-center">
-                <input type="month" id="filtroMes" class="font-black bg-transparent outline-none text-white invert opacity-80 text-sm" onchange="renderApp()">
-                <button onclick="exportarCSV()" class="bg-cyan-500 text-white text-[9px] font-black px-4 py-2 rounded-lg uppercase">CSV</button>
+            <div class="bg-bbva-card p-2 rounded-xl mb-4 flex justify-between items-center px-4">
+                <input type="month" id="filtroMes" class="bg-transparent text-white font-bold text-xs outline-none invert opacity-80" onchange="renderApp()">
+                <button onclick="exportarCSV()" class="text-[#00e5ff] text-[10px] font-black uppercase tracking-widest">Exportar</button>
             </div>
-            <div id="listaMes" class="space-y-3"></div>
+            <div id="listaMes" class="space-y-2"></div>
         </section>
 
         <section id="tab-add" class="tab-content hidden animate-up">
-            <div class="bg-bbva-card p-6 rounded-[2rem]">
-                <h2 class="text-center font-black uppercase text-[10px] text-cyan-500 mb-4 tracking-[0.4em]">Nueva Operación</h2>
+            <div class="bg-bbva-card p-6 rounded-[1.5rem]">
+                <h2 class="text-center font-black uppercase text-[10px] text-[#00e5ff] mb-4">Nueva Operación</h2>
                 <form id="mainForm" class="space-y-3">
-                    <input type="hidden" id="in-id">
-                    <input type="text" id="in-concepto" placeholder="Concepto" class="w-full p-3 bg-black/40 border border-white/10 rounded-xl font-bold text-white outline-none focus:border-cyan-500 text-sm">
-                    <input type="number" id="in-importe" step="0.01" placeholder="0.00" class="w-full p-3 bg-black/40 border border-white/10 rounded-xl font-900 text-3xl text-white outline-none">
-                    <select id="in-categoria" class="w-full p-3 bg-black/40 border border-white/10 rounded-xl font-bold text-white text-sm outline-none">
+                    <input type="text" id="in-concepto" placeholder="Concepto" class="w-full p-3 bg-black/40 border border-white/10 rounded-xl text-white text-sm outline-none focus:border-[#00e5ff]">
+                    <input type="number" id="in-importe" step="0.01" placeholder="0.00" class="w-full p-3 bg-black/40 border border-white/10 rounded-xl font-[900] text-3xl text-white outline-none">
+                    <select id="in-categoria" class="w-full p-3 bg-black/40 border border-white/10 rounded-xl text-white text-sm outline-none">
                         <option value="Sueldo">💰 Sueldo</option>
+                        <option value="Otros Ingresos">💵 Otros Ingresos</option>
                         <option value="Amazon">📦 Amazon</option>
                         <option value="Tarjeta BBVA">🟦 Tarjeta BBVA</option>
                         <option value="Tarjeta Explora">🧭 Tarjeta Explora</option>
-                        <option value="El Corte Inglés">🏬 El Corte Inglés</option>
-                        <option value="Gasolina">⛽ Gasolina</option>
-                        <option value="PayPal">💳 PayPal</option>
                         <option value="Imagine">🟣 Imagine</option>
-                        <option value="Supermercado">🛒 Supermercado</option>
-                        <option value="Otros Ingresos">💵 Otros</option>
+                        <option value="PayPal">💳 PayPal</option>
+                        <option value="Gasolina">⛽ Gasolina</option>
+                        <option value="El Corte Inglés">🏬 El Corte Inglés</option>
+                        <option value="Cuenta BBVA">🏦 Cuenta BBVA</option>
                     </select>
-                    <input type="date" id="in-fecha" class="w-full p-3 bg-black/40 border border-white/10 rounded-xl font-bold text-white text-sm outline-none">
-                    <button type="submit" class="w-full bg-cyan-600 text-white font-900 p-4 rounded-xl shadow-lg uppercase tracking-widest text-xs">Confirmar</button>
+                    <input type="date" id="in-fecha" class="w-full p-3 bg-black/40 border border-white/10 rounded-xl text-white text-sm outline-none">
+                    <button type="submit" class="w-full bg-[#00e5ff] text-navy-900 font-[900] p-4 rounded-xl text-xs uppercase tracking-widest text-[#072146]">Confirmar Orden</button>
                 </form>
             </div>
         </section>
     </main>
 
-    <nav class="fixed bottom-0 left-0 right-0 bg-black/95 backdrop-blur-2xl border-t border-white/5 flex justify-around p-3 pb-8 z-50">
+    <nav class="fixed bottom-0 left-0 right-0 bg-black/95 border-t border-white/10 flex justify-around p-3 pb-6 z-50">
         <button onclick="switchTab('tab-cuenta', this)" class="nav-btn flex flex-col items-center gap-1 active-tab">
-            <span class="text-xl">🏦</span><span class="text-[7px] font-black uppercase tracking-widest">Global</span>
+            <span class="text-xl">🏦</span><span class="text-[7px] font-black uppercase">Global</span>
         </button>
-        <button onclick="switchTab('tab-mes', this)" class="nav-btn flex flex-col items-center gap-1 text-slate-600">
-            <span class="text-xl">📋</span><span class="text-[7px] font-black uppercase tracking-widest">Extracto</span>
+        <button onclick="switchTab('tab-mes', this)" class="nav-btn flex flex-col items-center gap-1 text-slate-500">
+            <span class="text-xl">📋</span><span class="text-[7px] font-black uppercase">Extracto</span>
         </button>
-        <button onclick="switchTab('tab-add', this)" class="nav-btn flex flex-col items-center gap-1 text-slate-600">
-            <span class="text-xl">➕</span><span class="text-[7px] font-black uppercase tracking-widest">Operar</span>
+        <button onclick="switchTab('tab-add', this)" class="nav-btn flex flex-col items-center gap-1 text-slate-500">
+            <span class="text-xl">➕</span><span class="text-[7px] font-black uppercase">Operar</span>
         </button>
     </nav>
 
     <script>
         const API_URL = 'https://mis-gastos-app.onrender.com/api/gastos';
-        const COLORS = ['#004481', '#00a8e1', '#8b5cf6', '#10b981', '#f59e0b', '#fb7185', '#d946ef', '#4ade80'];
-        let appData = [], mainChart = null, pinEntrada = "", privacyMode = false;
-
-        const pinGuardado = localStorage.getItem('user_pin');
-        function teclado(n) { if (pinEntrada.length < 4) { pinEntrada += n; updateDots(); if (pinEntrada.length === 4) setTimeout(checkPin, 200); } }
-        function updateDots() { [...document.getElementById('pin-dots').children].forEach((d, i) => d.className = i < pinEntrada.length ? "w-3 h-3 rounded-full bg-cyan-400 shadow-md" : "w-3 h-3 rounded-full border border-white/30"); }
-        function borrarPin() { pinEntrada = ""; updateDots(); }
-        function checkPin() { if (pinEntrada === pinGuardado || !pinGuardado) { if(!pinGuardado) localStorage.setItem('user_pin', pinEntrada); document.getElementById('pantalla-pin').classList.add('hidden'); renderApp(); } else { alert("Error"); borrarPin(); } }
+        const COLORS = ['#004481', '#00e5ff', '#8b5cf6', '#10b981', '#f59e0b', '#fb7185', '#d946ef', '#4ade80'];
+        let appData = [], mainChart = null, privacyMode = false;
 
         async function renderApp() {
             const start = Date.now();
@@ -149,7 +114,7 @@
                 const lMes = document.getElementById('listaMes'); lMes.innerHTML='';
 
                 appData.sort((a,b) => new Date(b.fecha) - new Date(a.fecha)).forEach(g => {
-                    const val=parseFloat(g.importe), isI=["Sueldo", "Otros Ingresos"].includes(g.categoria);
+                    const val = parseFloat(g.importe), isI = ["Sueldo", "Otros Ingresos"].includes(g.categoria);
                     if (g.fecha <= hoy) isI ? real+=val : real-=val;
                     if (g.fecha.startsWith(mesSel)) {
                         if(!isI) cats[g.categoria] = (cats[g.categoria]||0) + val;
@@ -161,20 +126,23 @@
             } catch (e) { console.error(e); }
         }
 
-        // FECHA CELESTE FORZADA CON CLASE CSS
+        // FUNCIÓN DE ITEM CON FECHA CELESTE FORZADA POR STYLE INLINE
         function itemHTML(g, isI) {
-            return `<div class="bg-bbva-card p-4 rounded-xl flex justify-between items-center border-l-2 ${isI?'border-cyan-400':'border-rose-500'} animate-up">
+            return `<div class="bg-bbva-card p-4 rounded-xl flex justify-between items-center border-l-2 ${isI?'border-[#00e5ff]':'border-rose-500'} animate-up">
                 <div>
                     <p class="font-black text-white text-[13px] leading-tight mb-1">${g.concepto}</p>
                     <p class="text-[9px] font-black uppercase tracking-tighter">
-                        <span class="text-slate-500">${g.categoria}</span> 
-                        <span class="mx-1 text-slate-700">•</span> 
-                        <span class="fecha-celeste">Día ${g.fecha.split('-')[2]}</span>
+                        <span style="color: #64748b;">${g.categoria}</span> 
+                        <span style="color: #334155; margin: 0 4px;">•</span> 
+                        <span style="color: #00e5ff !important; font-weight: 800;">Día ${g.fecha.split('-')[2]}</span>
                     </p>
                 </div>
                 <div class="flex items-center gap-3">
-                    <p class="font-900 text-base ${isI?'text-cyan-400':'text-rose-400'}">${mask(parseFloat(g.importe).toFixed(2)+"€")}</p>
-                    <button onclick="deleteItem('${g._id}')" class="text-slate-600 text-xs opacity-40">🗑️</button>
+                    <p class="font-[900] text-base ${isI?'text-[#00e5ff]':'text-rose-400'}">${mask(parseFloat(g.importe).toFixed(2)+"€")}</p>
+                    <div class="flex gap-2">
+                        <button onclick="editMode('${g._id}')" class="text-xs opacity-50">✏️</button>
+                        <button onclick="deleteItem('${g._id}')" class="text-xs opacity-30">🗑️</button>
+                    </div>
                 </div>
             </div>`;
         }
@@ -196,9 +164,15 @@
                 </div>`).join('');
         }
 
-        function togglePrivacy() { privacyMode = !privacyMode; document.getElementById('ojo-icon').innerText = privacyMode ? "🙈" : "👁️"; renderApp(); }
+        function togglePrivacy() { privacyMode = !privacyMode; renderApp(); }
         function mask(v) { return privacyMode ? "****€" : v; }
-        function switchTab(id, el) { document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden')); document.querySelectorAll('.nav-btn').forEach(b => b.classList.replace('active-tab', 'text-slate-600')); el.classList.replace('text-slate-600', 'active-tab'); document.getElementById(id).classList.remove('hidden'); renderApp(); }
+        function switchTab(id, el) { 
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden')); 
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.replace('active-tab', 'text-slate-500')); 
+            el.classList.replace('text-slate-500', 'active-tab'); 
+            document.getElementById(id).classList.remove('hidden'); 
+            renderApp(); 
+        }
         
         document.getElementById('mainForm').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -209,8 +183,10 @@
         });
 
         async function deleteItem(id) { if(confirm("¿Borrar?")) { await fetch(`${API_URL}/${id}`, { method: 'DELETE' }); renderApp(); } }
+        
         document.getElementById('filtroMes').value = new Date().toISOString().slice(0, 7);
         document.getElementById('in-fecha').valueAsDate = new Date();
+        renderApp();
     </script>
 </body>
 </html>
