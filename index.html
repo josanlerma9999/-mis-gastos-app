@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BBVA Suite v9.1</title>
+    <title>BBVA Suite v9.2</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -15,7 +15,8 @@
         .font-900 { font-weight: 900; }
         .bg-bbva-card { background-color: var(--bbva-navy); border: 1px solid rgba(0, 168, 225, 0.15); }
         .bbva-gradient { background: linear-gradient(135deg, #072146 0%, #004481 100%); }
-        .text-bbva-cyan { color: var(--bbva-cyan); }
+        /* Clase forzada para la fecha */
+        .fecha-celeste { color: #00a8e1 !important; font-weight: 800 !important; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-up { animation: slideUp 0.4s ease-out; }
     </style>
@@ -25,7 +26,7 @@
     <div id="pantalla-pin" class="fixed inset-0 bg-[#072146] z-[100] flex flex-col items-center justify-center p-6 text-white text-center">
         <div class="mb-8 text-center">
             <h2 class="font-900 text-4xl tracking-tighter italic mb-1">BBVA</h2>
-            <p class="text-[7px] uppercase tracking-[0.4em] text-bbva-cyan">Acceso Biométrico</p>
+            <p class="text-[7px] uppercase tracking-[0.4em] text-[#00a8e1]">Acceso Privado</p>
         </div>
         <div class="flex gap-4 mb-12" id="pin-dots">
             <div class="w-3 h-3 rounded-full border border-white/30"></div>
@@ -43,13 +44,13 @@
         </div>
     </div>
 
-    <header class="bg-black/95 backdrop-blur-xl text-white p-5 sticky top-0 z-50 flex justify-between items-start border-b border-white/5">
+    <header class="bg-black/95 backdrop-blur-xl text-white p-4 sticky top-0 z-50 flex justify-between items-center border-b border-white/5">
         <div class="flex flex-col">
-            <h1 class="font-900 text-2xl tracking-tighter italic leading-none">BBVA</h1>
-            <span class="text-[7px] uppercase tracking-widest text-bbva-cyan font-black">Private Banking</span>
+            <h1 class="font-900 text-xl tracking-tighter italic leading-none">BBVA</h1>
+            <span class="text-[7px] uppercase tracking-widest text-[#00a8e1] font-black">Private Banking</span>
         </div>
-        <div class="flex flex-col items-end gap-2">
-            <span class="text-[8px] font-mono text-bbva-cyan bg-cyan-500/10 px-2 py-1 rounded border border-cyan-500/30 tracking-widest font-bold">v9.1-PRO</span>
+        <div class="flex items-center gap-3">
+            <span class="text-[8px] font-mono text-[#00a8e1] bg-cyan-500/10 px-2 py-1 rounded border border-cyan-500/30 font-bold">v9.2-PRO</span>
             <button onclick="togglePrivacy()" class="w-8 h-8 bg-slate-900 rounded-full flex items-center justify-center text-sm border border-white/10">
                 <span id="ojo-icon">👁️</span>
             </button>
@@ -59,63 +60,54 @@
     <main class="max-w-md mx-auto p-4">
         
         <section id="tab-cuenta" class="tab-content animate-up">
-            <div id="cardMain" class="p-10 rounded-[2.5rem] text-center mb-6 bbva-gradient border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
-                <p class="text-[10px] uppercase font-black tracking-[0.2em] mb-2 text-cyan-300 opacity-80">Saldo Consolidado</p>
-                <h2 id="valReal" class="text-6xl font-900 tracking-tighter">0.00€</h2>
+            <div id="cardMain" class="p-6 rounded-[2rem] text-center mb-4 bbva-gradient border border-white/10 shadow-lg">
+                <p class="text-[9px] uppercase font-black tracking-[0.2em] mb-1 text-cyan-300 opacity-70">Saldo Consolidado</p>
+                <h2 id="valReal" class="text-5xl font-900 tracking-tighter">0.00€</h2>
             </div>
             
-            <div class="bg-bbva-card p-6 rounded-[2.5rem] mb-6">
-                <p class="text-[9px] font-black uppercase text-center text-cyan-500/60 mb-4">Análisis de Gastos</p>
-                <div class="h-60 mb-6"><canvas id="chartGastos"></canvas></div>
-                <div id="legendBox" class="grid grid-cols-2 gap-3"></div>
+            <div class="bg-bbva-card p-5 rounded-[2rem] mb-4">
+                <div class="h-56 mb-4"><canvas id="chartGastos"></canvas></div>
+                <div id="legendBox" class="grid grid-cols-2 gap-2"></div>
             </div>
 
-            <div class="bg-zinc-900/50 p-4 rounded-2xl border border-zinc-800 border-dashed">
-                <div id="debugLog" class="font-mono text-[8px] space-y-1">
-                    <p class="text-zinc-500">> STATUS: <span class="text-emerald-400">EN LÍNEA</span></p>
-                    <p class="text-zinc-500">> LATENCIA: <span id="debug-ping" class="text-bbva-cyan">--ms</span></p>
-                    <p class="text-zinc-500">> REGISTROS: <span id="debug-count" class="text-bbva-cyan">0</span></p>
+            <div class="bg-zinc-900/40 p-3 rounded-xl border border-zinc-800 border-dashed">
+                <div id="debugLog" class="font-mono text-[7px] flex justify-around uppercase opacity-60">
+                    <p>Ping: <span id="debug-ping" class="text-[#00a8e1]">--ms</span></p>
+                    <p>Data: <span id="debug-count" class="text-[#00a8e1]">0</span></p>
+                    <p>Status: <span class="text-emerald-500">Ok</span></p>
                 </div>
             </div>
         </section>
 
         <section id="tab-mes" class="tab-content hidden animate-up">
-            <div class="bg-bbva-card p-4 rounded-2xl mb-6 flex justify-between items-center">
-                <input type="month" id="filtroMes" class="font-black bg-transparent outline-none text-white invert opacity-80" onchange="renderApp()">
-                <button onclick="exportarCSV()" class="bg-cyan-500 text-white text-[10px] font-black px-5 py-2 rounded-xl uppercase tracking-widest shadow-lg shadow-cyan-500/30">Exportar</button>
+            <div class="bg-bbva-card p-3 rounded-xl mb-4 flex justify-between items-center">
+                <input type="month" id="filtroMes" class="font-black bg-transparent outline-none text-white invert opacity-80 text-sm" onchange="renderApp()">
+                <button onclick="exportarCSV()" class="bg-cyan-500 text-white text-[9px] font-black px-4 py-2 rounded-lg uppercase">CSV</button>
             </div>
-            <div id="listaMes" class="space-y-4"></div>
+            <div id="listaMes" class="space-y-3"></div>
         </section>
 
         <section id="tab-add" class="tab-content hidden animate-up">
-            <div class="bg-bbva-card p-8 rounded-[2.5rem]">
-                <h2 class="text-center font-black uppercase text-[10px] text-cyan-500 mb-6 tracking-[0.4em]">Nueva Operación</h2>
-                <form id="mainForm" class="space-y-4">
+            <div class="bg-bbva-card p-6 rounded-[2rem]">
+                <h2 class="text-center font-black uppercase text-[10px] text-cyan-500 mb-4 tracking-[0.4em]">Nueva Operación</h2>
+                <form id="mainForm" class="space-y-3">
                     <input type="hidden" id="in-id">
-                    <input type="text" id="in-concepto" placeholder="Concepto" class="w-full p-4 bg-black/40 border border-white/10 rounded-2xl font-bold text-white outline-none focus:border-cyan-500" required>
-                    <input type="number" id="in-importe" step="0.01" placeholder="0.00" class="w-full p-4 bg-black/40 border border-white/10 rounded-2xl font-900 text-4xl text-white outline-none" required>
-                    
-                    <select id="in-categoria" class="w-full p-4 bg-black/40 border border-white/10 rounded-2xl font-bold text-white outline-none">
-                        <optgroup label="INGRESOS">
-                            <option value="Sueldo">💰 Sueldo</option>
-                            <option value="Otros Ingresos">💵 Otros Ingresos</option>
-                        </optgroup>
-                        <optgroup label="GASTOS">
-                            <option value="El Corte Inglés">🏬 El Corte Inglés</option>
-                            <option value="Cuenta BBVA">🏦 Cuenta BBVA</option>
-                            <option value="Tarjeta BBVA">🟦 Tarjeta BBVA</option>
-                            <option value="Tarjeta Explora">🧭 Tarjeta Explora</option>
-                            <option value="Imagine">🟣 Imagine</option>
-                            <option value="PayPal">💳 PayPal</option>
-                            <option value="Amazon">📦 Amazon</option>
-                            <option value="Gasolina">⛽ Gasolina</option>
-                            <option value="Supermercado">🛒 Supermercado</option>
-                            <option value="Varios">🌀 Varios</option>
-                        </optgroup>
+                    <input type="text" id="in-concepto" placeholder="Concepto" class="w-full p-3 bg-black/40 border border-white/10 rounded-xl font-bold text-white outline-none focus:border-cyan-500 text-sm">
+                    <input type="number" id="in-importe" step="0.01" placeholder="0.00" class="w-full p-3 bg-black/40 border border-white/10 rounded-xl font-900 text-3xl text-white outline-none">
+                    <select id="in-categoria" class="w-full p-3 bg-black/40 border border-white/10 rounded-xl font-bold text-white text-sm outline-none">
+                        <option value="Sueldo">💰 Sueldo</option>
+                        <option value="Amazon">📦 Amazon</option>
+                        <option value="Tarjeta BBVA">🟦 Tarjeta BBVA</option>
+                        <option value="Tarjeta Explora">🧭 Tarjeta Explora</option>
+                        <option value="El Corte Inglés">🏬 El Corte Inglés</option>
+                        <option value="Gasolina">⛽ Gasolina</option>
+                        <option value="PayPal">💳 PayPal</option>
+                        <option value="Imagine">🟣 Imagine</option>
+                        <option value="Supermercado">🛒 Supermercado</option>
+                        <option value="Otros Ingresos">💵 Otros</option>
                     </select>
-
-                    <input type="date" id="in-fecha" class="w-full p-4 bg-black/40 border border-white/10 rounded-2xl font-bold text-white outline-none" required>
-                    <button type="submit" class="w-full bg-cyan-600 text-white font-900 p-5 rounded-2xl shadow-xl active:scale-95 transition-all uppercase tracking-widest text-sm">Confirmar Orden</button>
+                    <input type="date" id="in-fecha" class="w-full p-3 bg-black/40 border border-white/10 rounded-xl font-bold text-white text-sm outline-none">
+                    <button type="submit" class="w-full bg-cyan-600 text-white font-900 p-4 rounded-xl shadow-lg uppercase tracking-widest text-xs">Confirmar</button>
                 </form>
             </div>
         </section>
@@ -123,13 +115,13 @@
 
     <nav class="fixed bottom-0 left-0 right-0 bg-black/95 backdrop-blur-2xl border-t border-white/5 flex justify-around p-3 pb-8 z-50">
         <button onclick="switchTab('tab-cuenta', this)" class="nav-btn flex flex-col items-center gap-1 active-tab">
-            <span class="text-2xl">🏦</span><span class="text-[7px] font-black uppercase tracking-widest">Global</span>
+            <span class="text-xl">🏦</span><span class="text-[7px] font-black uppercase tracking-widest">Global</span>
         </button>
         <button onclick="switchTab('tab-mes', this)" class="nav-btn flex flex-col items-center gap-1 text-slate-600">
-            <span class="text-2xl">📋</span><span class="text-[7px] font-black uppercase tracking-widest">Extracto</span>
+            <span class="text-xl">📋</span><span class="text-[7px] font-black uppercase tracking-widest">Extracto</span>
         </button>
         <button onclick="switchTab('tab-add', this)" class="nav-btn flex flex-col items-center gap-1 text-slate-600">
-            <span class="text-2xl">➕</span><span class="text-[7px] font-black uppercase tracking-widest">Operar</span>
+            <span class="text-xl">➕</span><span class="text-[7px] font-black uppercase tracking-widest">Operar</span>
         </button>
     </nav>
 
@@ -140,10 +132,9 @@
 
         const pinGuardado = localStorage.getItem('user_pin');
         function teclado(n) { if (pinEntrada.length < 4) { pinEntrada += n; updateDots(); if (pinEntrada.length === 4) setTimeout(checkPin, 200); } }
-        function updateDots() { [...document.getElementById('pin-dots').children].forEach((d, i) => d.className = i < pinEntrada.length ? "w-3 h-3 rounded-full bg-cyan-400 shadow-[0_0_10px_rgba(0,168,225,0.8)]" : "w-3 h-3 rounded-full border border-white/30"); }
+        function updateDots() { [...document.getElementById('pin-dots').children].forEach((d, i) => d.className = i < pinEntrada.length ? "w-3 h-3 rounded-full bg-cyan-400 shadow-md" : "w-3 h-3 rounded-full border border-white/30"); }
         function borrarPin() { pinEntrada = ""; updateDots(); }
-        function checkPin() { if (pinEntrada === pinGuardado || !pinGuardado) { if(!pinGuardado) localStorage.setItem('user_pin', pinEntrada); desbloquear(); } else { alert("Error de acceso"); borrarPin(); } }
-        function desbloquear() { document.getElementById('pantalla-pin').classList.add('hidden'); renderApp(); }
+        function checkPin() { if (pinEntrada === pinGuardado || !pinGuardado) { if(!pinGuardado) localStorage.setItem('user_pin', pinEntrada); document.getElementById('pantalla-pin').classList.add('hidden'); renderApp(); } else { alert("Error"); borrarPin(); } }
 
         async function renderApp() {
             const start = Date.now();
@@ -170,23 +161,20 @@
             } catch (e) { console.error(e); }
         }
 
-        // FECHA EN CELESTE DENTRO DEL EXTRACTO
+        // FECHA CELESTE FORZADA CON CLASE CSS
         function itemHTML(g, isI) {
-            return `<div class="bg-bbva-card p-5 rounded-2xl flex justify-between items-center border-l-2 ${isI?'border-cyan-400':'border-rose-500'} animate-up">
+            return `<div class="bg-bbva-card p-4 rounded-xl flex justify-between items-center border-l-2 ${isI?'border-cyan-400':'border-rose-500'} animate-up">
                 <div>
-                    <p class="font-black text-white text-sm leading-none mb-1.5">${g.concepto}</p>
+                    <p class="font-black text-white text-[13px] leading-tight mb-1">${g.concepto}</p>
                     <p class="text-[9px] font-black uppercase tracking-tighter">
                         <span class="text-slate-500">${g.categoria}</span> 
                         <span class="mx-1 text-slate-700">•</span> 
-                        <span class="text-bbva-cyan font-bold">Día ${g.fecha.split('-')[2]}</span>
+                        <span class="fecha-celeste">Día ${g.fecha.split('-')[2]}</span>
                     </p>
                 </div>
-                <div class="flex items-center gap-4">
-                    <p class="font-900 text-lg ${isI?'text-cyan-400':'text-rose-400'}">${mask(parseFloat(g.importe).toFixed(2)+"€")}</p>
-                    <div class="flex flex-col gap-2">
-                        <button onclick="editMode('${g._id}')" class="w-8 h-8 bg-cyan-500/10 rounded-lg text-cyan-400 border border-cyan-500/20 text-sm">✏️</button>
-                        <button onclick="deleteItem('${g._id}')" class="w-8 h-8 bg-white/5 rounded-lg text-slate-500 border border-white/5 text-[10px]">🗑️</button>
-                    </div>
+                <div class="flex items-center gap-3">
+                    <p class="font-900 text-base ${isI?'text-cyan-400':'text-rose-400'}">${mask(parseFloat(g.importe).toFixed(2)+"€")}</p>
+                    <button onclick="deleteItem('${g._id}')" class="text-slate-600 text-xs opacity-40">🗑️</button>
                 </div>
             </div>`;
         }
@@ -198,16 +186,13 @@
             if (labels.length === 0 || privacyMode) return;
             mainChart = new Chart(ctx, { 
                 type: 'doughnut', 
-                data: { labels: labels, datasets: [{ data: Object.values(data), backgroundColor: COLORS, borderWidth: 3, borderColor: '#072146' }] }, 
+                data: { labels: labels, datasets: [{ data: Object.values(data), backgroundColor: COLORS, borderWidth: 2, borderColor: '#072146' }] }, 
                 options: { plugins: { legend: { display: false } }, maintainAspectRatio: false, cutout: '80%' } 
             });
             document.getElementById('legendBox').innerHTML = labels.map((l, i) => `
-                <div class="flex items-center gap-2 p-2 bg-white/5 rounded-xl border border-white/5">
-                    <div class="w-2 h-2 rounded-full" style="background:${COLORS[i]}"></div>
-                    <div class="flex flex-col">
-                        <span class="text-[7px] font-black text-slate-500 uppercase">${l}</span>
-                        <span class="text-[9px] font-900 text-white">${data[l].toFixed(0)}€</span>
-                    </div>
+                <div class="flex items-center gap-2 p-1.5 bg-white/5 rounded-lg border border-white/5">
+                    <div class="w-1.5 h-1.5 rounded-full" style="background:${COLORS[i]}"></div>
+                    <span class="text-[7px] font-black text-slate-400 uppercase truncate w-16">${l}</span>
                 </div>`).join('');
         }
 
@@ -218,16 +203,12 @@
         document.getElementById('mainForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const data = { concepto: document.getElementById('in-concepto').value, importe: parseFloat(document.getElementById('in-importe').value), categoria: document.getElementById('in-categoria').value, fecha: document.getElementById('in-fecha').value };
-            const idV = document.getElementById('in-id').value;
-            if (idV) await fetch(`${API_URL}/${idV}`, { method: 'DELETE' });
             await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
             document.getElementById('mainForm').reset();
             switchTab('tab-cuenta', document.querySelectorAll('.nav-btn')[0]);
         });
 
-        function exportarCSV() { let csv = "Fecha,Concepto,Importe,Categoria\n"; appData.forEach(g => csv += `${g.fecha},${g.concepto},${g.importe},${g.categoria}\n`); const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'})); link.download = "Extracto_Financiero.csv"; link.click(); }
-        async function deleteItem(id) { if(confirm("¿Anular transacción?")) { await fetch(`${API_URL}/${id}`, { method: 'DELETE' }); renderApp(); } }
-
+        async function deleteItem(id) { if(confirm("¿Borrar?")) { await fetch(`${API_URL}/${id}`, { method: 'DELETE' }); renderApp(); } }
         document.getElementById('filtroMes').value = new Date().toISOString().slice(0, 7);
         document.getElementById('in-fecha').valueAsDate = new Date();
     </script>
