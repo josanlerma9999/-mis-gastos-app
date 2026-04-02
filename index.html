@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BBVA Master v10.6</title>
+    <title>BBVA Master v10.6.1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -12,37 +12,64 @@
         
         body { font-family: 'Inter', sans-serif; background-color: #000; color: #fff; margin:0; height: 100vh; overflow: hidden; }
 
-        /* Contenedor Principal: OCUPA TODO EL ANCHO como en tus fotos */
-        .main-container { height: calc(100vh - 85px); overflow-y: auto; padding: 0; -webkit-overflow-scrolling: touch; }
+        /* PANTALLA PIN - NÚMEROS MÁS GRANDES Y EFECTOS */
+        #pin-screen { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .pin-dot { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--bbva-cyan); margin: 0 12px; transition: all 0.2s; }
+        .pin-dot.filled { background: var(--bbva-cyan); box-shadow: 0 0 15px var(--bbva-cyan); }
         
-        /* Secciones con Scroll independiente */
-        .tab-content { width: 100%; padding: 0 0 100px 0; }
+        .num-btn { 
+            width: 85px; height: 85px; 
+            border-radius: 50%; 
+            border: 1px solid rgba(255,255,255,0.1); 
+            font-size: 2rem; 
+            font-weight: 900; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            background: rgba(255,255,255,0.05);
+            transition: all 0.1s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .num-btn:active { 
+            background: var(--bbva-cyan); 
+            color: #000; 
+            transform: scale(0.9);
+            box-shadow: 0 0 20px var(--bbva-cyan);
+        }
 
-        /* Tarjetas Estilo Foto: Sin márgenes laterales, esquinas redondeadas solo abajo si es necesario */
+        /* CONTENEDOR PRINCIPAL CON SCROLL REAL */
+        .main-container { height: calc(100vh - 85px); overflow-y: auto; padding: 0; -webkit-overflow-scrolling: touch; }
+        .tab-content { width: 100%; padding-bottom: 120px; }
+
+        /* ESTILO COMPACTO DE TUS FOTOS */
         .bg-bbva-card { background-color: var(--bbva-navy); border: 1px solid rgba(0, 229, 255, 0.1); width: 100%; }
         .bbva-gradient { background: linear-gradient(135deg, #072146 0%, #004481 100%); width: 100%; }
 
-        /* PIN SCREEN */
-        #pin-screen { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .pin-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--bbva-cyan); margin: 0 10px; }
-        .pin-dot.filled { background: var(--bbva-cyan); box-shadow: 0 0 10px var(--bbva-cyan); }
-        .num-btn { width: 75px; height: 75px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1); font-size: 1.5rem; font-weight: 700; display: flex; align-items: center; justify-content: center; }
-
-        /* Navegación Inferior */
         nav { height: 85px; background: #000; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-around; align-items: center; padding-bottom: 20px; }
-        .active-tab { color: var(--bbva-cyan); border-top: 3px solid var(--bbva-cyan); padding-top: 5px; }
+        .active-tab { color: var(--bbva-cyan); border-top: 3px solid var(--bbva-cyan); }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
     <div id="pin-screen">
-        <div class="text-center mb-10 italic font-[900] text-[#00e5ff] text-4xl tracking-tighter">BBVA</div>
-        <div class="flex mb-16" id="pin-dots"><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div></div>
-        <div class="grid grid-cols-3 gap-6">
-            <button onclick="pressPin('1')" class="num-btn">1</button><button onclick="pressPin('2')" class="num-btn">2</button><button onclick="pressPin('3')" class="num-btn">3</button>
-            <button onclick="pressPin('4')" class="num-btn">4</button><button onclick="pressPin('5')" class="num-btn">5</button><button onclick="pressPin('6')" class="num-btn">6</button>
-            <button onclick="pressPin('7')" class="num-btn">7</button><button onclick="pressPin('8')" class="num-btn">8</button><button onclick="pressPin('9')" class="num-btn">9</button>
-            <button onclick="resetPin()" class="text-[10px] opacity-30 font-bold uppercase">Reset</button><button onclick="pressPin('0')" class="num-btn">0</button><button onclick="delPin()" class="text-[10px] opacity-30 font-bold uppercase">Borrar</button>
+        <div class="text-center mb-12 italic font-[900] text-[#00e5ff] text-4xl tracking-tighter">BBVA</div>
+        <div class="flex mb-16">
+            <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
+        </div>
+        <div class="grid grid-cols-3 gap-8">
+            <button onclick="teclear('1')" class="num-btn">1</button>
+            <button onclick="teclear('2')" class="num-btn">2</button>
+            <button onclick="teclear('3')" class="num-btn">3</button>
+            <button onclick="teclear('4')" class="num-btn">4</button>
+            <button onclick="teclear('5')" class="num-btn">5</button>
+            <button onclick="teclear('6')" class="num-btn">6</button>
+            <button onclick="teclear('7')" class="num-btn">7</button>
+            <button onclick="teclear('8')" class="num-btn">8</button>
+            <button onclick="teclear('9')" class="num-btn">9</button>
+            <button onclick="borrarTodo()" class="text-[10px] opacity-40 font-bold uppercase">Borrar</button>
+            <button onclick="teclear('0')" class="num-btn">0</button>
+            <button onclick="location.reload()" class="text-[10px] opacity-40 font-bold uppercase">Salir</button>
         </div>
     </div>
 
@@ -50,25 +77,24 @@
         <header class="p-4 flex justify-between items-center bg-black sticky top-0 z-50">
             <div class="flex flex-col">
                 <h1 class="font-[900] text-2xl italic leading-none tracking-tighter">BBVA</h1>
-                <span class="text-[10px] text-cyan-400 font-black uppercase tracking-widest mt-1">v10.6 MASTER</span>
+                <span class="text-[10px] text-cyan-400 font-black uppercase tracking-widest mt-1">v10.6.1 MASTER</span>
             </div>
-            <div class="flex gap-4">
+            <div class="flex gap-5">
                 <button onclick="togglePrivacy()" id="eye-icon" class="text-2xl">👁️</button>
                 <button onclick="location.reload()" class="opacity-20 text-2xl">🔒</button>
             </div>
         </header>
 
         <main class="main-container">
-            <section id="tab-cuenta" class="tab-content space-y-2">
-                <div class="p-10 text-center bbva-gradient border-b border-white/10 rounded-b-[2.5rem]">
-                    <p class="text-[12px] uppercase tracking-[0.3em] text-white/40 mb-3 font-bold">PATRIMONIO GLOBAL</p>
+            <section id="tab-cuenta" class="tab-content space-y-3">
+                <div class="p-12 text-center bbva-gradient rounded-b-[3rem] shadow-2xl">
+                    <p class="text-[12px] uppercase tracking-[0.3em] text-white/40 mb-3 font-bold">Patrimonio Global</p>
                     <h2 id="valReal" class="text-6xl font-[900] tracking-tighter italic">****€</h2>
                 </div>
-                <div class="bg-bbva-card p-6 rounded-[2.5rem] mt-2">
+                <div class="bg-bbva-card p-6 rounded-[2.5rem]">
                     <div style="height:250px;"><canvas id="chartGastos"></canvas></div>
                     <div id="legendBox" class="grid grid-cols-2 gap-3 mt-8"></div>
                 </div>
-                <button class="w-full py-10 text-[10px] text-zinc-700 uppercase font-black tracking-widest">LIMPIAR CACHÉ DE ALERTAS</button>
             </section>
 
             <section id="tab-mes" class="tab-content hidden p-4 space-y-4">
@@ -80,24 +106,24 @@
                     <form id="mainForm" class="space-y-6">
                         <input type="hidden" id="in-id">
                         <div>
-                            <label class="text-[11px] font-[900] text-cyan-400 uppercase ml-1">CONCEPTO</label>
-                            <input type="text" id="in-concepto" placeholder="Ej: Supermercado" class="w-full p-5 bg-black/40 border border-white/10 rounded-2xl text-white outline-none text-xl">
+                            <label class="text-[11px] font-[900] text-cyan-400 uppercase">Concepto</label>
+                            <input type="text" id="in-concepto" class="w-full p-5 bg-black/40 border border-white/10 rounded-2xl text-white outline-none text-xl">
                         </div>
                         <input type="number" id="in-importe" step="0.01" placeholder="0.00" class="w-full p-6 bg-black/40 border border-white/10 rounded-[2rem] font-[900] text-6xl text-white text-center outline-none">
                         
                         <div class="flex justify-between items-center bg-white/5 p-5 rounded-2xl border border-white/10">
-                            <span class="text-[11px] font-black uppercase text-slate-400 italic">¿PAGO RECURRENTE?</span>
-                            <input type="checkbox" id="in-es-recurrente" class="w-8 h-8 accent-cyan-400 rounded">
+                            <span class="text-[11px] font-black uppercase text-slate-400 italic">¿Pago Recurrente?</span>
+                            <input type="checkbox" id="in-es-recurrente" class="w-8 h-8 accent-cyan-400">
                         </div>
 
                         <select id="in-categoria" class="w-full p-5 bg-black/40 border border-white/10 rounded-2xl text-xl font-bold">
                             <option value="Sueldo">💰 Sueldo</option>
                             <option value="Tarjeta BBVA">🟦 Tarjeta BBVA</option>
                             <option value="Amazon">📦 Amazon</option>
-                            <option value="PayPal">💳 PayPal</option>
+                            <option value="Gasolina">⛽ Gasolina</option>
                         </select>
                         <input type="date" id="in-fecha" class="w-full p-5 bg-black/40 border border-white/10 rounded-2xl text-xl font-bold text-center">
-                        <button type="submit" id="btn-submit" class="w-full bg-cyan-400 text-[#072146] font-[900] py-6 rounded-[2rem] uppercase text-xl shadow-2xl tracking-widest mt-4">CONFIRMAR</button>
+                        <button type="submit" id="btn-submit" class="w-full bg-cyan-400 text-[#072146] font-[900] py-6 rounded-[2rem] uppercase text-xl shadow-2xl mt-4">Confirmar</button>
                     </form>
                 </div>
             </section>
@@ -118,28 +144,30 @@
 
     <script>
         const API_URL = 'https://mis-gastos-app.onrender.com/api/gastos';
-        const COLORS = ['#00e5ff', '#004481', '#8b5cf6', '#10b981', '#f59e0b', '#fb7185', '#6366f1'];
-        let appData = [], currentPin = "", isPrivate = true, mainChart = null;
+        let appData = [], code = "", isPrivate = true, mainChart = null;
 
-        function pressPin(n) {
-            if(currentPin.length < 4) {
-                currentPin += n;
-                updateDots();
-                if(currentPin.length === 4) {
-                    if(currentPin === "1234") {
+        // LÓGICA PIN REFORZADA
+        function teclear(n) {
+            if(code.length < 4) {
+                code += n;
+                const dots = document.querySelectorAll('.pin-dot');
+                dots[code.length-1].classList.add('filled');
+                
+                if(code.length === 4) {
+                    if(code === "1234") { // TU PIN AQUÍ
                         document.getElementById('pin-screen').classList.add('hidden');
                         document.getElementById('app-content').classList.remove('hidden');
                         renderApp();
-                    } else { alert("PIN Incorrecto"); resetPin(); }
+                    } else {
+                        setTimeout(() => { alert("PIN Incorrecto"); borrarTodo(); }, 100);
+                    }
                 }
             }
         }
-        function updateDots() {
-            const dots = document.querySelectorAll('.pin-dot');
-            dots.forEach((d, i) => i < currentPin.length ? d.classList.add('filled') : d.classList.remove('filled'));
+        function borrarTodo() {
+            code = "";
+            document.querySelectorAll('.pin-dot').forEach(d => d.classList.remove('filled'));
         }
-        function resetPin() { currentPin = ""; updateDots(); }
-        function delPin() { currentPin = currentPin.slice(0, -1); updateDots(); }
 
         function togglePrivacy() { isPrivate = !isPrivate; document.getElementById('eye-icon').innerText = isPrivate ? '👁️' : '🙈'; renderApp(); }
 
@@ -148,7 +176,8 @@
                 const res = await fetch(API_URL);
                 appData = await res.json();
                 let total = 0, cats = {};
-                const list = document.getElementById('listaMes'); list.innerHTML = '';
+                const list = document.getElementById('listaMes'); 
+                list.innerHTML = '';
 
                 appData.forEach(g => {
                     const v = parseFloat(g.importe);
@@ -157,11 +186,11 @@
                     if(!isI) cats[g.categoria] = (cats[g.categoria]||0) + v;
                     
                     list.innerHTML += `
-                        <div class="bg-bbva-card p-6 flex justify-between items-center border-l-8 ${isI?'border-cyan-400':'border-rose-500'} rounded-2xl shadow-lg">
+                        <div class="bg-bbva-card p-6 flex justify-between items-center border-l-[10px] ${isI?'border-cyan-400':'border-rose-500'} rounded-2xl mb-3">
                             <div><p class="font-[900] text-white text-xl">${g.concepto}</p><p class="text-xs text-slate-500 font-black uppercase mt-1">${g.fecha}</p></div>
                             <div class="flex items-center gap-4">
                                 <p class="font-[900] text-2xl ${isI?'text-cyan-400':'text-rose-400'}">${isPrivate?'****':v.toFixed(2)}€</p>
-                                <button onclick="preEdit('${g._id}')" class="text-xl">✏️</button>
+                                <button onclick="preEdit('${g._id}')" class="text-2xl">✏️</button>
                             </div>
                         </div>`;
                 });
@@ -174,10 +203,14 @@
             const ctx = document.getElementById('chartGastos').getContext('2d');
             if (mainChart) mainChart.destroy();
             const labels = Object.keys(data);
-            mainChart = new Chart(ctx, { type: 'doughnut', data: { labels: labels, datasets: [{ data: Object.values(data), backgroundColor: COLORS, borderWidth: 0 }] }, options: { plugins: { legend: { display: false } }, maintainAspectRatio: false, cutout: '82%' } });
+            mainChart = new Chart(ctx, { 
+                type: 'doughnut', 
+                data: { labels: labels, datasets: [{ data: Object.values(data), backgroundColor: ['#00e5ff', '#004481', '#8b5cf6', '#10b981', '#f59e0b'], borderWidth: 0 }] }, 
+                options: { plugins: { legend: { display: false } }, maintainAspectRatio: false, cutout: '80%' } 
+            });
             document.getElementById('legendBox').innerHTML = labels.map((l, i) => `
                 <div class="bg-white/5 p-4 rounded-2xl flex justify-between items-center border border-white/5">
-                    <div class="flex items-center gap-3"><div class="w-4 h-4 rounded-full" style="background:${COLORS[i]}"></div><span class="text-[11px] font-black uppercase text-slate-400 truncate w-24">${l}</span></div>
+                    <div class="flex items-center gap-3"><div class="w-4 h-4 rounded-full" style="background:${['#00e5ff', '#004481', '#8b5cf6', '#10b981', '#f59e0b'][i]}"></div><span class="text-[11px] font-black uppercase text-slate-400 truncate w-24">${l}</span></div>
                     <span class="text-sm font-black text-white">${isPrivate?'***':data[l].toFixed(0)}€</span>
                 </div>`).join('');
         }
@@ -198,7 +231,6 @@
             switchTab('tab-cuenta', document.querySelectorAll('.nav-btn')[0]);
             renderApp();
         });
-
         document.getElementById('in-fecha').valueAsDate = new Date();
     </script>
 </body>
