@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BBVA Premium v14.8 - Full Categories</title>
+    <title>BBVA Premium v14.9 - Edit & Delete</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
@@ -23,6 +23,9 @@
         .active-tab { color: var(--bbva-cyan) !important; border-top: 3px solid var(--bbva-cyan); }
         
         .num-btn { width: 72px; height: 72px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1); font-size: 1.5rem; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+
+        /* Estilo Botones de Acción (Lápiz/Papelera) como la captura */
+        .action-btn { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 0.8rem; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; }
     </style>
 </head>
 <body class="pb-32">
@@ -50,7 +53,7 @@
                     <h2 id="valReal" class="text-6xl font-black tracking-tighter">0.00€</h2>
                     <div class="mt-10 space-y-2 text-left">
                         <div class="flex justify-between text-[11px] font-black uppercase text-cyan-300/70">
-                            <span>Consumo del mes</span> <span id="pctText">0%</span>
+                            <span>Gasto del mes</span> <span id="pctText">0%</span>
                         </div>
                         <div class="progress-container"><div id="progBar" class="progress-bar" style="width: 0%"></div></div>
                     </div>
@@ -78,9 +81,11 @@
                 <div id="listaPasado" class="space-y-3"></div>
             </section>
 
-            <section id="tab-add" class="tab-content hidden">
+            <section id="tab-add" class="tab-content hidden relative">
+                <button id="cancel-edit" onclick="resetForm(); switchTab('tab-home', document.querySelectorAll('.nav-btn')[0]);" class="hidden absolute top-0 right-0 text-[10px] font-black uppercase opacity-50 px-4 py-2">Cancelar</button>
+                
                 <form id="mainForm" class="bg-bbva-card p-8 space-y-5">
-                    <input type="text" id="in-concepto" placeholder="Concepto" class="bbva-input" required>
+                    <input type="hidden" id="in-id"> <input type="text" id="in-concepto" placeholder="Concepto" class="bbva-input" required>
                     <input type="number" id="in-importe" step="0.01" placeholder="0.00" class="bbva-input text-4xl font-black text-center" required>
                     
                     <select id="in-categoria" class="bbva-input font-bold appearance-none">
@@ -101,7 +106,7 @@
                     </select>
 
                     <input type="date" id="in-fecha" class="bbva-input">
-                    <button type="submit" class="w-full bg-cyan-400 text-black font-black py-5 rounded-2xl uppercase text-[11px] shadow-lg">Confirmar</button>
+                    <button type="submit" id="btn-submit" class="w-full bg-cyan-400 text-black font-black py-5 rounded-2xl uppercase text-[11px] shadow-lg">Confirmar</button>
                 </form>
             </section>
         </main>
@@ -140,6 +145,7 @@
 
         async function renderApp() {
             const res = await fetch(API_URL); const data = await res.json();
+            appData = data; // Guardar datos globalmente para edición
             const hoy = new Date().toISOString().split('T')[0];
             const mesSel = document.getElementById('filtroMes').value;
 
@@ -167,8 +173,17 @@
                 if(g.fecha.startsWith(mesSel)) {
                     document.getElementById('listaPasado').insertAdjacentHTML('afterbegin', `
                         <div class="bg-bbva-card p-5 flex justify-between items-center ${!esPasado ? 'opacity-30' : ''}">
-                            <div><p class="text-sm font-bold text-white">${g.concepto}</p><p class="text-[9px] text-slate-500 font-black uppercase">${g.fecha} • ${g.categoria}</p></div>
-                            <p class="text-lg font-black ${esIngreso ? 'text-cyan-400' : 'text-white'}">${disp}</p>
+                            <div class="flex-1">
+                                <p class="text-sm font-bold text-white leading-tight">${g.concepto}</p>
+                                <p class="text-[9px] text-slate-500 font-bold uppercase mt-1 tracking-tight">${g.fecha} • ${g.categoria}</p>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <p class="text-lg font-black ${esIngreso ? 'text-cyan-400' : 'text-white'}">${disp}</p>
+                                <div class="flex gap-1.5 ml-2">
+                                    <button onclick="preEdit('${g._id}')" class="action-btn text-cyan-400">✏️</button>
+                                    <button onclick="deleteGasto('${g._id}')" class="action-btn text-rose-500/50">🗑️</button>
+                                </div>
+                            </div>
                         </div>`);
                 }
 
@@ -197,22 +212,76 @@
             document.getElementById('pctText').innerText = Math.round(pct) + "%";
         }
 
+        // LÓGICA DE BORRADO REAL
+        async function deleteGasto(id) {
+            if(confirm("¿Seguro que quieres borrar este registro de forma permanente?")) {
+                await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+                renderApp(); // Recargar datos
+            }
+        }
+
+        // LÓGICA DE PRE-EDICIÓN (Cargar formulario)
+        function preEdit(id) {
+            const g = appData.find(x => x._id === id);
+            if(!g) return;
+            
+            // Llenar campos
+            document.getElementById('in-id').value = g._id;
+            document.getElementById('in-concepto').value = g.concepto;
+            document.getElementById('in-importe').value = g.importe;
+            document.getElementById('in-categoria').value = g.categoria;
+            document.getElementById('in-fecha').value = g.fecha;
+            
+            // Cambiar aspecto del formulario
+            document.getElementById('btn-submit').innerText = "Actualizar Registro";
+            document.getElementById('btn-submit').classList.replace('bg-cyan-400', 'bg-amber-400');
+            document.getElementById('cancel-edit').classList.remove('hidden');
+            
+            // Ir a la pestaña de operar
+            switchTab('tab-add', document.querySelectorAll('.nav-btn')[3]);
+        }
+
+        // Limpiar formulario al cancelar o guardar
+        function resetForm() {
+            document.getElementById('mainForm').reset();
+            document.getElementById('in-id').value = "";
+            document.getElementById('btn-submit').innerText = "Confirmar";
+            document.getElementById('btn-submit').classList.replace('bg-amber-400', 'bg-cyan-400');
+            document.getElementById('cancel-edit').classList.add('hidden');
+            document.getElementById('in-fecha').valueAsDate = new Date();
+        }
+
         function switchTab(id, el) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.replace('active-tab', 'text-slate-500'));
             el.classList.replace('text-slate-500', 'active-tab'); document.getElementById(id).classList.remove('hidden');
+            // Si salimos de 'Operar' sin guardar, resetear el form por seguridad
+            if(id !== 'tab-add') resetForm();
         }
 
         document.getElementById('mainForm').onsubmit = async (e) => {
             e.preventDefault();
+            const id = document.getElementById('in-id').value;
             const data = { 
                 concepto: document.getElementById('in-concepto').value, 
                 importe: parseFloat(document.getElementById('in-importe').value), 
                 categoria: document.getElementById('in-categoria').value, 
                 fecha: document.getElementById('in-fecha').value 
             };
-            await fetch(API_URL, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
-            e.target.reset(); renderApp(); switchTab('tab-home', document.querySelectorAll('.nav-btn')[0]);
+            
+            // Lógica PUT (editar) o POST (crear)
+            const method = id ? 'PUT' : 'POST';
+            const url = id ? `${API_URL}/${id}` : API_URL;
+
+            await fetch(url, { 
+                method: method, 
+                headers: {'Content-Type':'application/json'}, 
+                body: JSON.stringify(data) 
+            });
+            
+            resetForm(); // Limpiar
+            renderApp(); // Recargar
+            switchTab('tab-home', document.querySelectorAll('.nav-btn')[0]); // Volver al inicio
         };
 
         function togglePrivacy() { isPrivate = !isPrivate; renderApp(); }
