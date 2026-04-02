@@ -3,39 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BBVA Master v11.5 - Recurrencia</title>
+    <title>BBVA Master v11.6 - Automatización</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
         :root { --bbva-navy: #072146; --bbva-blue: #004481; --bbva-cyan: #00e5ff; }
-        body { font-family: 'Inter', sans-serif; background-color: #000; color: #fff; margin:0; overflow-x: hidden; }
+        body { font-family: 'Inter', sans-serif; background-color: #000; color: #fff; margin:0; }
         
         .bg-bbva-card { background-color: var(--bbva-navy); border: 1px solid rgba(0, 229, 255, 0.15); border-radius: 2.5rem; }
         .bbva-gradient { background: linear-gradient(135deg, #072146 0%, #004481 100%); border-radius: 2.5rem; }
-        
         .bbva-input { background-color: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 1.25rem; padding: 0.85rem 1.1rem; width: 100%; color: white; outline: none; }
+        
         .active-tab { color: var(--bbva-cyan); border-top: 3px solid var(--bbva-cyan); }
         .hidden { display: none !important; }
         
-        /* PIN SCREEN */
         #pin-screen { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .pin-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--bbva-cyan); margin: 0 10px; }
         .pin-dot.filled { background: var(--bbva-cyan); box-shadow: 0 0 10px var(--bbva-cyan); }
         .num-btn { width: 70px; height: 70px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1); font-size: 1.5rem; font-weight: 700; display: flex; align-items: center; justify-content: center; }
 
-        .btn-action { width: 44px; height: 44px; border-radius: 0.8rem; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); }
+        .btn-action { width: 40px; height: 40px; border-radius: 0.8rem; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); }
         
-        /* Checkbox Recurrente Estilizado */
-        .toggle-rect { width: 50px; height: 26px; background: rgba(255,255,255,0.1); border-radius: 20px; position: relative; transition: 0.3s; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); }
-        .toggle-rect::after { content: ''; position: absolute; width: 20px; height: 20px; background: white; border-radius: 50%; top: 2px; left: 2px; transition: 0.3s; }
+        .toggle-rect { width: 44px; height: 22px; background: rgba(255,255,255,0.1); border-radius: 20px; position: relative; transition: 0.3s; cursor: pointer; }
+        .toggle-rect::after { content: ''; position: absolute; width: 18px; height: 18px; background: white; border-radius: 50%; top: 2px; left: 2px; transition: 0.3s; }
         input:checked + .toggle-rect { background: var(--bbva-cyan); }
-        input:checked + .toggle-rect::after { left: 26px; background: var(--bbva-navy); }
+        input:checked + .toggle-rect::after { left: 24px; background: var(--bbva-navy); }
 
         #tab-add { padding-bottom: 140px; }
     </style>
 </head>
-<body class="pb-24">
+<body class="pb-28">
 
     <div id="pin-screen">
         <div class="text-center mb-8"><h1 class="text-4xl font-[900] italic text-[#00e5ff] tracking-tighter">BBVA</h1></div>
@@ -52,7 +50,7 @@
         <header class="p-4 sticky top-0 z-50 flex justify-between items-center bg-black/95 backdrop-blur-sm border-b border-white/5">
             <div class="flex flex-col">
                 <h1 class="font-[900] text-2xl italic text-white leading-none">BBVA</h1>
-                <span class="text-[10px] font-bold text-[#00e5ff] mt-1 tracking-widest uppercase">v11.5</span>
+                <span class="text-[10px] font-bold text-[#00e5ff] mt-1 tracking-widest uppercase">v11.6 Automatizada</span>
             </div>
             <div class="flex gap-2">
                 <button onclick="togglePrivacy()" id="privacy-icon" class="w-10 h-10 flex items-center justify-center bg-white/5 rounded-full border border-white/10 text-lg">👁️</button>
@@ -61,15 +59,21 @@
         </header>
 
         <main class="max-w-md mx-auto p-4">
+            
             <section id="tab-cuenta" class="tab-content flex flex-col gap-4">
                 <div class="p-8 bbva-gradient shadow-2xl border border-white/10 text-center">
-                    <p class="text-[10px] uppercase font-black tracking-widest text-cyan-300/60 mb-2">Patrimonio Neto Actual</p>
+                    <p class="text-[10px] uppercase font-black tracking-widest text-cyan-300/60 mb-2">Saldo Real (A fecha de hoy)</p>
                     <h2 id="valReal" class="text-4xl font-[900] tracking-tighter text-white">0.00€</h2>
                 </div>
-                <div class="bg-bbva-card p-6 flex flex-col items-center">
-                    <div class="h-[200px] w-full flex justify-center items-center"><canvas id="chartGastos"></canvas></div>
-                    <div id="legendBox" class="grid grid-cols-2 gap-3 w-full mt-6"></div>
+                <div class="bg-bbva-card p-6">
+                    <div class="h-[200px] w-full flex justify-center"><canvas id="chartGastos"></canvas></div>
+                    <div id="legendBox" class="grid grid-cols-2 gap-3 mt-6"></div>
                 </div>
+            </section>
+
+            <section id="tab-pendientes" class="tab-content hidden space-y-4">
+                <h3 class="text-xs font-black uppercase text-cyan-400 tracking-widest px-2">Próximos cobros</h3>
+                <div id="listaPendientes" class="space-y-3"></div>
             </section>
 
             <section id="tab-mes" class="tab-content hidden space-y-3">
@@ -87,10 +91,7 @@
                         <input type="number" id="in-importe" step="0.01" placeholder="0.00" class="bbva-input text-3xl font-black" required>
                         
                         <div class="flex justify-between items-center bg-white/5 p-4 rounded-2xl border border-white/5">
-                            <div>
-                                <p class="text-xs font-bold text-white">Gasto Recurrente</p>
-                                <p class="text-[9px] text-slate-500 uppercase font-black">Se repetirá cada mes</p>
-                            </div>
+                            <div><p class="text-xs font-bold text-white">Gasto Recurrente</p></div>
                             <label class="inline-flex items-center">
                                 <input type="checkbox" id="in-recurrente" class="hidden">
                                 <div class="toggle-rect"></div>
@@ -102,7 +103,7 @@
                                 <option value="Sueldo">💰 Sueldo</option>
                                 <option value="Otros Ingresos">💵 Otros Ingresos</option>
                             </optgroup>
-                            <optgroup label="GASTOS / CUENTAS">
+                            <optgroup label="GASTOS">
                                 <option value="Cuenta BBVA">🏦 Cuenta BBVA</option>
                                 <option value="Tarjeta Aqua BBVA">🟦 Tarjeta Aqua BBVA</option>
                                 <option value="Tarjeta Explora">✈️ Tarjeta Explora</option>
@@ -113,12 +114,8 @@
                                 <option value="Gasolina">⛽ Gasolina</option>
                             </optgroup>
                         </select>
-
                         <input type="date" id="in-fecha" class="bbva-input">
-                        
-                        <button type="submit" id="btn-submit" class="w-full bg-cyan-400 text-slate-900 font-[900] py-4 rounded-2xl uppercase text-[11px] tracking-widest active:scale-95 transition-all mt-4 shadow-lg shadow-cyan-400/20">
-                            Confirmar Operación
-                        </button>
+                        <button type="submit" id="btn-submit" class="w-full bg-cyan-400 text-slate-900 font-[900] py-4 rounded-2xl uppercase text-[11px] tracking-widest mt-4 shadow-lg shadow-cyan-400/20">Confirmar</button>
                     </form>
                 </div>
             </section>
@@ -126,6 +123,7 @@
 
         <nav class="fixed bottom-0 left-0 right-0 bg-black/95 backdrop-blur-md border-t border-white/10 flex justify-around p-4 pb-8 z-50">
             <button onclick="switchTab('tab-cuenta', this)" class="nav-btn flex flex-col items-center gap-1 active-tab"><span class="text-xl">🏦</span><span class="text-[8px] font-black uppercase">Global</span></button>
+            <button onclick="switchTab('tab-pendientes', this)" class="nav-btn flex flex-col items-center gap-1 text-slate-500"><span class="text-xl">⏳</span><span class="text-[8px] font-black uppercase">Pendiente</span></button>
             <button onclick="switchTab('tab-mes', this)" class="nav-btn flex flex-col items-center gap-1 text-slate-500"><span class="text-xl">📋</span><span class="text-[8px] font-black uppercase">Extracto</span></button>
             <button onclick="switchTab('tab-add', this)" class="nav-btn flex flex-col items-center gap-1 text-slate-500"><span class="text-xl">➕</span><span class="text-[8px] font-black uppercase">Operar</span></button>
         </nav>
@@ -157,24 +155,35 @@
                 appData = await res.json();
                 const hoyStr = new Date().toISOString().split('T')[0];
                 const mesSel = document.getElementById('filtroMes').value;
+                
                 let real = 0, cats = {};
                 const lMes = document.getElementById('listaMes'); lMes.innerHTML = '';
+                const lPend = document.getElementById('listaPendientes'); lPend.innerHTML = '';
 
                 appData.forEach(g => {
                     const val = parseFloat(g.importe);
                     const esIngreso = listaIngresos.includes(g.categoria);
-                    if (g.fecha <= hoyStr) esIngreso ? (real += val) : (real -= val);
+                    const esPasado = g.fecha <= hoyStr;
+
+                    // Lógica Automática: Si la fecha ya llegó o pasó, se suma/resta al saldo real
+                    if (esPasado) {
+                        esIngreso ? (real += val) : (real -= val);
+                    }
+
+                    // Lista para Pestaña Extracto (Todo el mes)
                     if (g.fecha.startsWith(mesSel)) {
-                        if(!esIngreso) cats[g.categoria] = (cats[g.categoria]||0) + val;
+                        if(!esIngreso && esPasado) cats[g.categoria] = (cats[g.categoria]||0) + val;
                         const disp = isPrivate ? "****€" : val.toFixed(2) + '€';
-                        lMes.innerHTML += `
-                            <div class="bg-bbva-card p-5 flex justify-between items-center border-l-4 ${esIngreso ? 'border-cyan-400' : 'border-rose-500'}">
-                                <div><p class="font-bold text-white">${g.concepto} ${g.recurrente ? '<span class="text-[8px] text-cyan-400 ml-1">🔄</span>' : ''}</p><p class="text-[10px] text-slate-500 font-black uppercase">${g.categoria}</p></div>
-                                <div class="flex items-center gap-3"><p class="font-black text-lg ${esIngreso ? 'text-cyan-400' : 'text-rose-400'}">${disp}</p>
-                                <div class="flex gap-2"><button onclick="preEdit('${g._id}')" class="btn-action text-cyan-400">✏️</button>
-                                <button onclick="deleteGasto('${g._id}')" class="btn-action text-rose-500">🗑️</button></div></div></div>`;
+                        lMes.innerHTML += `<div class="bg-bbva-card p-5 flex justify-between items-center border-l-4 ${esIngreso ? 'border-cyan-400' : 'border-rose-500'} ${!esPasado ? 'opacity-40 italic' : ''}"><div><p class="font-bold text-white">${g.concepto}</p><p class="text-[10px] text-slate-500 uppercase font-black">${g.categoria} ${!esPasado ? '(PENDIENTE)' : ''}</p></div><div class="flex items-center gap-3"><p class="font-black text-lg ${esIngreso ? 'text-cyan-400' : 'text-rose-400'}">${disp}</p><div class="flex gap-2"><button onclick="preEdit('${g._id}')" class="btn-action text-cyan-400 text-xs">✏️</button><button onclick="deleteGasto('${g._id}')" class="btn-action text-rose-500 text-xs">🗑️</button></div></div></div>`;
+                    }
+
+                    // Lista para Pestaña Pendientes (Solo futuros)
+                    if (!esPasado) {
+                        const disp = isPrivate ? "****€" : val.toFixed(2) + '€';
+                        lPend.innerHTML += `<div class="bg-bbva-card p-5 flex justify-between items-center border-l-4 border-amber-400"><div><p class="font-bold text-white">${g.concepto}</p><p class="text-[10px] text-amber-400 uppercase font-black">${g.fecha}</p></div><p class="font-black text-lg text-white">${disp}</p></div>`;
                     }
                 });
+
                 document.getElementById('valReal').innerText = isPrivate ? "****€" : real.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
                 drawChart(cats);
             } catch (e) { console.error(e); }
@@ -183,7 +192,7 @@
         function drawChart(data) {
             const ctx = document.getElementById('chartGastos').getContext('2d');
             if (mainChart) mainChart.destroy();
-            mainChart = new Chart(ctx, { type: 'doughnut', data: { labels: Object.keys(data), datasets: [{ data: Object.values(data), backgroundColor: ['#004481','#00e5ff','#8b5cf6','#10b981','#f59e0b','#ef4444','#3b82f6'], borderWidth: 0 }] }, options: { plugins: { legend: { display: false } }, cutout: '85%' } });
+            mainChart = new Chart(ctx, { type: 'doughnut', data: { labels: Object.keys(data), datasets: [{ data: Object.values(data), backgroundColor: ['#004481','#00e5ff','#8b5cf6','#10b981','#f59e0b','#ef4444'], borderWidth: 0 }] }, options: { plugins: { legend: { display: false } }, cutout: '85%' } });
             document.getElementById('legendBox').innerHTML = Object.keys(data).map(l => `<div class="bg-white/5 p-3 rounded-2xl flex justify-between items-center"><span class="text-[9px] font-bold text-slate-400 uppercase">${l}</span><span class="text-xs font-black text-white">${isPrivate ? "***" : data[l].toFixed(0) + '€'}</span></div>`).join('');
         }
 
@@ -196,12 +205,12 @@
             document.getElementById('in-categoria').value = g.categoria;
             document.getElementById('in-fecha').value = g.fecha;
             document.getElementById('in-recurrente').checked = g.recurrente || false;
-            document.getElementById('btn-submit').innerText = "Actualizar Registro";
-            switchTab('tab-add', document.querySelectorAll('.nav-btn')[2]);
+            document.getElementById('btn-submit').innerText = "Actualizar";
+            switchTab('tab-add', document.querySelectorAll('.nav-btn')[3]);
         };
 
         window.deleteGasto = async function(id) {
-            if(confirm("¿Borrar registro?")) { await fetch(`${API_URL}/${id}`, { method: 'DELETE' }); renderApp(); }
+            if(confirm("¿Borrar?")) { await fetch(`${API_URL}/${id}`, { method: 'DELETE' }); renderApp(); }
         };
 
         function switchTab(id, el) { 
@@ -209,7 +218,8 @@
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.replace('active-tab', 'text-slate-500')); 
             el.classList.replace('text-slate-500', 'active-tab'); 
             document.getElementById(id).classList.remove('hidden'); 
-            if(id !== 'tab-add') { document.getElementById('mainForm').reset(); document.getElementById('in-id').value = ""; document.getElementById('btn-submit').innerText = "Confirmar Operación"; }
+            if(id !== 'tab-add') { document.getElementById('mainForm').reset(); document.getElementById('in-id').value = ""; document.getElementById('btn-submit').innerText = "Confirmar"; }
+            window.scrollTo(0,0);
         }
 
         document.getElementById('mainForm').addEventListener('submit', async (e) => {
