@@ -3,71 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BBVA Suite v9.3</title>
+    <title>BBVA Executive v9.4</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=JetBrains+Mono&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
         :root { --bbva-navy: #072146; --bbva-blue: #004481; --bbva-cyan: #00e5ff; }
-        body { font-family: 'Inter', sans-serif; background-color: #000000; color: #ffffff; -webkit-tap-highlight-color: transparent; margin: 0; }
+        body { font-family: 'Inter', sans-serif; background-color: #000000; color: #ffffff; -webkit-tap-highlight-color: transparent; margin: 0; overflow-x: hidden; }
         .hidden { display: none !important; }
-        .bg-bbva-card { background-color: var(--bbva-navy); border: 1px solid rgba(0, 229, 255, 0.1); }
+        .bg-bbva-card { background-color: var(--bbva-navy); border: 1px solid rgba(0, 229, 255, 0.08); }
         .bbva-gradient { background: linear-gradient(135deg, #072146 0%, #004481 100%); }
         .active-tab { color: var(--bbva-cyan); border-top: 3px solid var(--bbva-cyan); }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-up { animation: slideUp 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-view { animation: fadeIn 0.3s ease-out; }
     </style>
 </head>
-<body class="pb-28">
+<body class="pb-24">
 
-    <header class="bg-black/90 backdrop-blur-md p-4 sticky top-0 z-50 flex justify-between items-center border-b border-white/5">
+    <header class="bg-black/90 backdrop-blur-md p-3 sticky top-0 z-50 flex justify-between items-center border-b border-white/5">
         <div class="flex flex-col">
-            <h1 class="font-[900] text-xl tracking-tighter italic leading-none text-white">BBVA</h1>
-            <span class="text-[7px] uppercase tracking-widest text-[#00e5ff] font-bold">Private Banking</span>
+            <h1 class="font-[900] text-lg tracking-tighter italic leading-none text-white text-bbva-cyan">BBVA</h1>
+            <span class="text-[6px] uppercase tracking-[0.3em] text-[#00e5ff] font-bold">Private Banking</span>
         </div>
-        <div class="flex items-center gap-3">
-            <span class="text-[8px] font-mono text-[#00e5ff] border border-[#00e5ff]/30 px-2 py-0.5 rounded">v9.3-PRO</span>
-            <button onclick="togglePrivacy()" class="text-lg opacity-70">👁️</button>
+        <div class="flex items-center gap-2">
+            <span class="text-[7px] font-mono text-[#00e5ff] opacity-60">v9.4-PRO</span>
+            <button onclick="togglePrivacy()" class="p-2 opacity-50">👁️</button>
         </div>
     </header>
 
-    <main class="max-w-md mx-auto p-3">
+    <main class="max-w-md mx-auto p-2">
         
-        <section id="tab-cuenta" class="tab-content animate-up">
-            <div class="p-5 rounded-[1.5rem] text-center mb-3 bbva-gradient border border-white/10">
-                <p class="text-[8px] uppercase font-black tracking-widest mb-1 text-cyan-300/60">Saldo Disponible</p>
-                <h2 id="valReal" class="text-4xl font-[900] tracking-tighter text-white">0.00€</h2>
+        <section id="tab-cuenta" class="tab-content animate-view">
+            <div class="p-4 rounded-[1.2rem] text-center mb-2 bbva-gradient border border-white/5 shadow-xl">
+                <p class="text-[7px] uppercase font-black tracking-widest mb-0.5 text-cyan-300/50">Patrimonio Neto</p>
+                <h2 id="valReal" class="text-3xl font-[900] tracking-tighter text-white">0.00€</h2>
             </div>
             
-            <div class="bg-bbva-card p-4 rounded-[1.5rem] mb-3">
-                <div class="h-48 mb-4"><canvas id="chartGastos"></canvas></div>
+            <div class="bg-bbva-card p-4 rounded-[1.2rem] mb-2">
+                <div class="h-44 mb-3"><canvas id="chartGastos"></canvas></div>
                 <div id="legendBox" class="grid grid-cols-2 gap-2"></div>
-            </div>
-
-            <div class="bg-zinc-900/30 p-2 rounded-lg border border-white/5 flex justify-around text-[7px] font-mono opacity-40 uppercase">
-                <p>Ping: <span id="debug-ping" class="text-[#00e5ff]">--</span></p>
-                <p>Status: <span class="text-emerald-500">Live</span></p>
-                <p>DB: <span id="debug-count" class="text-[#00e5ff]">0</span></p>
             </div>
         </section>
 
-        <section id="tab-mes" class="tab-content hidden animate-up">
-            <div class="bg-bbva-card p-2 rounded-xl mb-4 flex justify-between items-center px-4">
+        <section id="tab-mes" class="tab-content hidden animate-view">
+            <div class="bg-bbva-card p-2 rounded-xl mb-3 flex justify-between items-center px-4">
                 <input type="month" id="filtroMes" class="bg-transparent text-white font-bold text-xs outline-none invert opacity-80" onchange="renderApp()">
-                <button onclick="exportarCSV()" class="text-[#00e5ff] text-[10px] font-black uppercase tracking-widest">Exportar</button>
+                <button onclick="exportarCSV()" class="text-[#00e5ff] text-[9px] font-black uppercase">Exportar</button>
             </div>
             <div id="listaMes" class="space-y-2"></div>
         </section>
 
-        <section id="tab-add" class="tab-content hidden animate-up">
-            <div class="bg-bbva-card p-6 rounded-[1.5rem]">
-                <h2 class="text-center font-black uppercase text-[10px] text-[#00e5ff] mb-4">Nueva Operación</h2>
-                <form id="mainForm" class="space-y-3">
+        <section id="tab-add" class="tab-content hidden animate-view">
+            <div class="bg-bbva-card p-5 rounded-[1.5rem]">
+                <h2 class="text-center font-black uppercase text-[9px] text-[#00e5ff] mb-4 tracking-widest">Nueva Operación</h2>
+                <form id="mainForm" class="space-y-2">
                     <input type="text" id="in-concepto" placeholder="Concepto" class="w-full p-3 bg-black/40 border border-white/10 rounded-xl text-white text-sm outline-none focus:border-[#00e5ff]">
                     <input type="number" id="in-importe" step="0.01" placeholder="0.00" class="w-full p-3 bg-black/40 border border-white/10 rounded-xl font-[900] text-3xl text-white outline-none">
                     <select id="in-categoria" class="w-full p-3 bg-black/40 border border-white/10 rounded-xl text-white text-sm outline-none">
                         <option value="Sueldo">💰 Sueldo</option>
-                        <option value="Otros Ingresos">💵 Otros Ingresos</option>
                         <option value="Amazon">📦 Amazon</option>
                         <option value="Tarjeta BBVA">🟦 Tarjeta BBVA</option>
                         <option value="Tarjeta Explora">🧭 Tarjeta Explora</option>
@@ -76,23 +69,24 @@
                         <option value="Gasolina">⛽ Gasolina</option>
                         <option value="El Corte Inglés">🏬 El Corte Inglés</option>
                         <option value="Cuenta BBVA">🏦 Cuenta BBVA</option>
+                        <option value="Otros Ingresos">💵 Otros</option>
                     </select>
                     <input type="date" id="in-fecha" class="w-full p-3 bg-black/40 border border-white/10 rounded-xl text-white text-sm outline-none">
-                    <button type="submit" class="w-full bg-[#00e5ff] text-navy-900 font-[900] p-4 rounded-xl text-xs uppercase tracking-widest text-[#072146]">Confirmar Orden</button>
+                    <button type="submit" class="w-full bg-[#00e5ff] text-[#072146] font-[900] p-4 rounded-xl text-xs uppercase tracking-widest">Ejecutar</button>
                 </form>
             </div>
         </section>
     </main>
 
-    <nav class="fixed bottom-0 left-0 right-0 bg-black/95 border-t border-white/10 flex justify-around p-3 pb-6 z-50">
-        <button onclick="switchTab('tab-cuenta', this)" class="nav-btn flex flex-col items-center gap-1 active-tab">
-            <span class="text-xl">🏦</span><span class="text-[7px] font-black uppercase">Global</span>
+    <nav class="fixed bottom-0 left-0 right-0 bg-black/95 border-t border-white/5 flex justify-around p-2 pb-5 z-50">
+        <button onclick="switchTab('tab-cuenta', this)" class="nav-btn flex flex-col items-center gap-0.5 active-tab">
+            <span class="text-lg">🏦</span><span class="text-[6px] font-black uppercase">Global</span>
         </button>
-        <button onclick="switchTab('tab-mes', this)" class="nav-btn flex flex-col items-center gap-1 text-slate-500">
-            <span class="text-xl">📋</span><span class="text-[7px] font-black uppercase">Extracto</span>
+        <button onclick="switchTab('tab-mes', this)" class="nav-btn flex flex-col items-center gap-0.5 text-slate-500">
+            <span class="text-lg">📋</span><span class="text-[6px] font-black uppercase">Extracto</span>
         </button>
-        <button onclick="switchTab('tab-add', this)" class="nav-btn flex flex-col items-center gap-1 text-slate-500">
-            <span class="text-xl">➕</span><span class="text-[7px] font-black uppercase">Operar</span>
+        <button onclick="switchTab('tab-add', this)" class="nav-btn flex flex-col items-center gap-0.5 text-slate-500">
+            <span class="text-lg">➕</span><span class="text-[6px] font-black uppercase">Operar</span>
         </button>
     </nav>
 
@@ -102,13 +96,9 @@
         let appData = [], mainChart = null, privacyMode = false;
 
         async function renderApp() {
-            const start = Date.now();
             try {
                 const res = await fetch(API_URL);
                 appData = await res.json();
-                document.getElementById('debug-ping').innerText = (Date.now() - start) + "ms";
-                document.getElementById('debug-count').innerText = appData.length;
-
                 const hoy = new Date().toISOString().split('T')[0], mesSel = document.getElementById('filtroMes').value;
                 let real=0, cats={};
                 const lMes = document.getElementById('listaMes'); lMes.innerHTML='';
@@ -126,23 +116,19 @@
             } catch (e) { console.error(e); }
         }
 
-        // FUNCIÓN DE ITEM CON FECHA CELESTE FORZADA POR STYLE INLINE
         function itemHTML(g, isI) {
-            return `<div class="bg-bbva-card p-4 rounded-xl flex justify-between items-center border-l-2 ${isI?'border-[#00e5ff]':'border-rose-500'} animate-up">
+            return `<div class="bg-bbva-card p-3.5 rounded-xl flex justify-between items-center border-l-2 ${isI?'border-[#00e5ff]':'border-rose-500'}">
                 <div>
-                    <p class="font-black text-white text-[13px] leading-tight mb-1">${g.concepto}</p>
-                    <p class="text-[9px] font-black uppercase tracking-tighter">
+                    <p class="font-bold text-white text-xs mb-0.5">${g.concepto}</p>
+                    <p class="text-[8px] font-bold uppercase tracking-tight">
                         <span style="color: #64748b;">${g.categoria}</span> 
-                        <span style="color: #334155; margin: 0 4px;">•</span> 
-                        <span style="color: #00e5ff !important; font-weight: 800;">Día ${g.fecha.split('-')[2]}</span>
+                        <span style="color: #334155; margin: 0 3px;">•</span> 
+                        <span style="color: #00e5ff !important;">Día ${g.fecha.split('-')[2]}</span>
                     </p>
                 </div>
                 <div class="flex items-center gap-3">
-                    <p class="font-[900] text-base ${isI?'text-[#00e5ff]':'text-rose-400'}">${mask(parseFloat(g.importe).toFixed(2)+"€")}</p>
-                    <div class="flex gap-2">
-                        <button onclick="editMode('${g._id}')" class="text-xs opacity-50">✏️</button>
-                        <button onclick="deleteItem('${g._id}')" class="text-xs opacity-30">🗑️</button>
-                    </div>
+                    <p class="font-black text-sm ${isI?'text-[#00e5ff]':'text-rose-400'}">${mask(parseFloat(g.importe).toFixed(2)+"€")}</p>
+                    <button onclick="deleteItem('${g._id}')" class="opacity-20 text-[8px]">🗑️</button>
                 </div>
             </div>`;
         }
@@ -150,17 +136,23 @@
         function drawChart(data) {
             const ctx = document.getElementById('chartGastos').getContext('2d');
             if (mainChart) mainChart.destroy();
-            const labels = Object.keys(data);
+            const labels = Object.keys(data), values = Object.values(data);
             if (labels.length === 0 || privacyMode) return;
+            
             mainChart = new Chart(ctx, { 
                 type: 'doughnut', 
-                data: { labels: labels, datasets: [{ data: Object.values(data), backgroundColor: COLORS, borderWidth: 2, borderColor: '#072146' }] }, 
-                options: { plugins: { legend: { display: false } }, maintainAspectRatio: false, cutout: '80%' } 
+                data: { labels: labels, datasets: [{ data: values, backgroundColor: COLORS, borderWidth: 1, borderColor: '#072146' }] }, 
+                options: { plugins: { legend: { display: false } }, maintainAspectRatio: false, cutout: '82%' } 
             });
+
+            // LEYENDA CON EUROS
             document.getElementById('legendBox').innerHTML = labels.map((l, i) => `
-                <div class="flex items-center gap-2 p-1.5 bg-white/5 rounded-lg border border-white/5">
-                    <div class="w-1.5 h-1.5 rounded-full" style="background:${COLORS[i]}"></div>
-                    <span class="text-[7px] font-black text-slate-400 uppercase truncate w-16">${l}</span>
+                <div class="flex items-center justify-between p-2 bg-white/5 rounded-lg border border-white/5">
+                    <div class="flex items-center gap-2 truncate">
+                        <div class="w-1.5 h-1.5 rounded-full shrink-0" style="background:${COLORS[i]}"></div>
+                        <span class="text-[7px] font-bold text-slate-400 uppercase truncate">${l}</span>
+                    </div>
+                    <span class="text-[8px] font-black text-white ml-1">${values[i].toFixed(0)}€</span>
                 </div>`).join('');
         }
 
@@ -183,7 +175,6 @@
         });
 
         async function deleteItem(id) { if(confirm("¿Borrar?")) { await fetch(`${API_URL}/${id}`, { method: 'DELETE' }); renderApp(); } }
-        
         document.getElementById('filtroMes').value = new Date().toISOString().slice(0, 7);
         document.getElementById('in-fecha').valueAsDate = new Date();
         renderApp();
