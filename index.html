@@ -3,70 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mi Cuenta Real v8.0</title>
+    <title>Mi Cuenta Real v8.2 Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
         body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
         .active-tab { color: #10b981; border-top: 4px solid #10b981; }
-        .hidden { display: none; }
+        .hidden { display: none !important; }
+        .font-900 { font-weight: 900; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-up { animation: slideUp 0.4s ease-out; }
     </style>
 </head>
 <body class="bg-slate-50 pb-28">
 
+    <div id="pantalla-pin" class="fixed inset-0 bg-slate-900 z-[100] flex flex-col items-center justify-center p-6">
+        <h2 class="text-white font-900 text-2xl mb-2 italic tracking-tighter">MI CUENTA REAL</h2>
+        <p id="pin-msg" class="text-emerald-500 text-[10px] uppercase font-black mb-8 tracking-widest text-center">Configura tu nuevo PIN</p>
+        <div class="flex gap-4 mb-12" id="pin-dots">
+            <div class="w-4 h-4 rounded-full border-2 border-slate-700"></div>
+            <div class="w-4 h-4 rounded-full border-2 border-slate-700"></div>
+            <div class="w-4 h-4 rounded-full border-2 border-slate-700"></div>
+            <div class="w-4 h-4 rounded-full border-2 border-slate-700"></div>
+        </div>
+        <div class="grid grid-cols-3 gap-6 max-w-[280px]">
+            <button onclick="teclado(1)" class="w-16 h-16 bg-slate-800 text-white rounded-full font-black text-2xl active:bg-emerald-500">1</button>
+            <button onclick="teclado(2)" class="w-16 h-16 bg-slate-800 text-white rounded-full font-black text-2xl active:bg-emerald-500">2</button>
+            <button onclick="teclado(3)" class="w-16 h-16 bg-slate-800 text-white rounded-full font-black text-2xl active:bg-emerald-500">3</button>
+            <button onclick="teclado(4)" class="w-16 h-16 bg-slate-800 text-white rounded-full font-black text-2xl active:bg-emerald-500">4</button>
+            <button onclick="teclado(5)" class="w-16 h-16 bg-slate-800 text-white rounded-full font-black text-2xl active:bg-emerald-500">5</button>
+            <button onclick="teclado(6)" class="w-16 h-16 bg-slate-800 text-white rounded-full font-black text-2xl active:bg-emerald-500">6</button>
+            <button onclick="teclado(7)" class="w-16 h-16 bg-slate-800 text-white rounded-full font-black text-2xl active:bg-emerald-500">7</button>
+            <button onclick="teclado(8)" class="w-16 h-16 bg-slate-800 text-white rounded-full font-black text-2xl active:bg-emerald-500">8</button>
+            <button onclick="teclado(9)" class="w-16 h-16 bg-slate-800 text-white rounded-full font-black text-2xl active:bg-emerald-500">9</button>
+            <div></div>
+            <button onclick="teclado(0)" class="w-16 h-16 bg-slate-800 text-white rounded-full font-black text-2xl active:bg-emerald-500">0</button>
+            <button onclick="borrarPin()" class="w-16 h-16 text-rose-500 font-black text-[10px] uppercase">DEL</button>
+        </div>
+    </div>
+
     <header class="bg-slate-900 text-white p-5 sticky top-0 z-50 flex justify-between items-center shadow-lg">
         <div class="flex items-center gap-2">
-            <div class="w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></div>
             <h1 class="font-900 text-xl tracking-tighter italic">MI CUENTA REAL</h1>
         </div>
-        <span class="text-[10px] font-bold bg-slate-800 px-3 py-1 rounded-full border border-slate-700">v8.0 CLEAN</span>
+        <button onclick="togglePrivacy()" class="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center text-lg">
+            <span id="ojo-icon">👁️</span>
+        </button>
     </header>
 
     <main class="max-w-md mx-auto p-4">
         
-        <div id="alertHoy" class="hidden bg-rose-600 text-white p-4 rounded-2xl mb-4 text-center shadow-xl animate-bounce">
-            <p class="text-[10px] font-black uppercase tracking-widest">⚠️ Tienes pagos pendientes para hoy</p>
+        <div id="alertHoy" class="hidden bg-rose-600 text-white p-4 rounded-2xl mb-4 text-center shadow-xl">
+            <p class="text-[10px] font-black uppercase tracking-widest">⚠️ Tienes pagos para hoy</p>
         </div>
 
         <section id="tab-cuenta" class="tab-content animate-up">
-            <div id="cardMain" class="p-8 rounded-[2.5rem] text-center shadow-2xl mb-6 transition-colors duration-500">
-                <p class="text-[11px] uppercase font-black tracking-[0.2em] mb-2 opacity-80">Dinero Disponible</p>
-                <h2 id="valReal" class="text-5xl font-900 tracking-tighter">0.00€</h2>
+            <div id="cardMain" class="p-8 rounded-[2.5rem] text-center shadow-2xl mb-6 transition-all duration-500">
+                <p class="text-[11px] uppercase font-black tracking-[0.2em] mb-2 opacity-80">Saldo Actual</p>
+                <h2 id="valReal" class="text-5xl font-900 tracking-tighter transition-all">0.00€</h2>
             </div>
 
             <div class="grid grid-cols-2 gap-4 mb-8">
                 <div class="bg-slate-800 text-white p-5 rounded-[2rem] text-center border-b-4 border-indigo-500">
-                    <p class="text-[9px] font-black uppercase text-indigo-300 mb-1">Final de Mes</p>
+                    <p class="text-[9px] font-black uppercase text-indigo-300 mb-1">Final Mes</p>
                     <p id="valEstimado" class="text-xl font-900">0.00€</p>
                 </div>
                 <div class="bg-slate-800 text-white p-5 rounded-[2rem] text-center border-b-4 border-emerald-500">
-                    <p class="text-[9px] font-black uppercase text-emerald-300 mb-1">En Previsión</p>
+                    <p class="text-[9px] font-black uppercase text-emerald-300 mb-1">Previsión</p>
                     <p id="valPendiente" class="text-xl font-900">0.00€</p>
                 </div>
             </div>
 
-            <div class="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100">
-                <p class="text-[10px] font-black uppercase text-slate-400 text-center mb-6 tracking-widest">Distribución Gastos Mes</p>
-                <div class="h-56 mb-6">
-                    <canvas id="chartGastos"></canvas>
-                </div>
+            <div class="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 mb-20">
+                <div class="h-56 mb-6"><canvas id="chartGastos"></canvas></div>
                 <div id="legendBox" class="grid grid-cols-2 gap-2"></div>
             </div>
         </section>
 
         <section id="tab-plan" class="tab-content hidden animate-up">
-            <div class="flex justify-between items-center mb-4 px-2">
-                <h3 class="font-black uppercase text-xs text-slate-400 tracking-widest text-emerald-600">Calendario de Pagos</h3>
-                <button onclick="checkTodayAlert()" class="text-[10px] font-black bg-indigo-100 text-indigo-600 px-3 py-1 rounded-lg">🔔 NOTIFICAR</button>
-            </div>
+            <h3 class="font-black uppercase text-[10px] text-slate-400 mb-4 px-2 tracking-widest">Calendario de Pagos</h3>
             <div id="listaPlan" class="space-y-3"></div>
         </section>
 
         <section id="tab-mes" class="tab-content hidden animate-up">
-            <div class="bg-white p-4 rounded-2xl mb-4 shadow-sm border border-slate-100 flex justify-center">
+            <div class="bg-white p-4 rounded-2xl mb-4 shadow-sm flex justify-center border border-slate-100">
                 <input type="month" id="filtroMes" class="font-black bg-transparent outline-none text-slate-700" onchange="renderApp()">
             </div>
             <div id="resumenMes" class="grid grid-cols-2 gap-3 mb-4"></div>
@@ -78,48 +99,29 @@
                 <h2 id="formTitle" class="text-center font-black uppercase text-[10px] text-slate-400 mb-6 tracking-widest">Nuevo Movimiento</h2>
                 <form id="mainForm" class="space-y-4">
                     <input type="hidden" id="in-id">
-                    <div class="space-y-1">
-                        <label class="text-[10px] font-black text-slate-400 ml-2 uppercase">Concepto</label>
-                        <input type="text" id="in-concepto" placeholder="Ej: Compra Mercadona" class="w-full p-4 bg-slate-50 rounded-2xl font-bold outline-none border-2 border-transparent focus:border-emerald-500 transition-all" required>
-                    </div>
-                    <div class="space-y-1">
-                        <label class="text-[10px] font-black text-slate-400 ml-2 uppercase">Importe</label>
-                        <input type="number" id="in-importe" step="0.01" placeholder="0.00" class="w-full p-4 bg-slate-50 rounded-2xl font-900 text-3xl outline-none border-2 border-transparent focus:border-emerald-500 transition-all" required>
-                    </div>
-                    <div class="space-y-1">
-                        <label class="text-[10px] font-black text-slate-400 ml-2 uppercase">Categoría</label>
-                        <select id="in-categoria" class="w-full p-4 bg-slate-50 rounded-2xl font-bold outline-none appearance-none border-2 border-transparent focus:border-emerald-500 transition-all">
-                            <optgroup label="INGRESOS">
-                                <option value="Sueldo">💰 Sueldo</option>
-                                <option value="Otros Ingresos">💵 Otros Ingresos</option>
-                            </optgroup>
-                            <optgroup label="GASTOS">
-                                <option value="El Corte Inglés">🏬 El Corte Inglés</option>
-                                <option value="Cuenta BBVA">🏦 Cuenta BBVA</option>
-                                <option value="Tarjeta BBVA">🟦 Tarjeta BBVA</option>
-                                <option value="Tarjeta Explora">🧭 Tarjeta Explora</option>
-                                <option value="Imagine">🟣 Imagine</option>
-                                <option value="PayPal">💳 PayPal</option>
-                                <option value="Amazon">📦 Amazon</option>
-                                <option value="Gasolina">⛽ Gasolina</option>
-                            </optgroup>
-                        </select>
-                    </div>
-                    <div class="space-y-1">
-                        <label class="text-[10px] font-black text-slate-400 ml-2 uppercase">Fecha</label>
-                        <input type="date" id="in-fecha" class="w-full p-4 bg-slate-50 rounded-2xl font-bold outline-none border-2 border-transparent focus:border-emerald-500 transition-all" required>
-                    </div>
-                    
-                    <div class="pt-4 space-y-3">
-                        <button type="submit" id="btnSubmit" class="w-full bg-slate-900 text-white font-900 p-5 rounded-2xl shadow-xl active:scale-95 transition-all">GUARDAR</button>
-                        <button type="button" id="btnCancel" onclick="resetForm()" class="hidden w-full text-rose-500 font-black text-[10px] uppercase py-2">Cancelar Edición</button>
-                    </div>
+                    <input type="text" id="in-concepto" placeholder="Concepto" class="w-full p-4 bg-slate-50 rounded-2xl font-bold outline-none border-2 border-transparent focus:border-emerald-500 transition-all" required>
+                    <input type="number" id="in-importe" step="0.01" placeholder="0.00" class="w-full p-4 bg-slate-50 rounded-2xl font-900 text-3xl outline-none" required>
+                    <select id="in-categoria" class="w-full p-4 bg-slate-50 rounded-2xl font-bold outline-none">
+                        <option value="Sueldo">💰 Sueldo</option>
+                        <option value="Otros Ingresos">💵 Otros Ingresos</option>
+                        <option value="El Corte Inglés">🏬 El Corte Inglés</option>
+                        <option value="Cuenta BBVA">🏦 Cuenta BBVA</option>
+                        <option value="Tarjeta BBVA">🟦 Tarjeta BBVA</option>
+                        <option value="Tarjeta Explora">🧭 Tarjeta Explora</option>
+                        <option value="Imagine">🟣 Imagine</option>
+                        <option value="PayPal">💳 PayPal</option>
+                        <option value="Amazon">📦 Amazon</option>
+                        <option value="Gasolina">⛽ Gasolina</option>
+                    </select>
+                    <input type="date" id="in-fecha" class="w-full p-4 bg-slate-50 rounded-2xl font-bold outline-none" required>
+                    <button type="submit" id="btnSubmit" class="w-full bg-slate-900 text-white font-900 p-5 rounded-2xl shadow-xl active:scale-95 transition-all">GUARDAR</button>
+                    <button type="button" id="btnCancel" onclick="resetForm()" class="hidden w-full text-rose-500 font-black text-[10px] uppercase py-2">Cancelar</button>
                 </form>
             </div>
         </section>
     </main>
 
-    <nav class="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-slate-100 flex justify-around p-3 pb-8 z-50">
+    <nav id="navBar" class="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-slate-100 flex justify-around p-3 pb-8 z-50">
         <button onclick="switchTab('tab-cuenta', this)" class="nav-btn flex flex-col items-center gap-1 active-tab">
             <span class="text-2xl">💰</span><span class="text-[9px] font-black uppercase">Cuenta</span>
         </button>
@@ -135,246 +137,172 @@
     </nav>
 
     <script>
-        // CONFIGURACIÓN CENTRALIZADA
         const API_URL = 'https://mis-gastos-app.onrender.com/api/gastos';
         const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316', '#3b82f6', '#0f172a'];
         let appData = [];
         let mainChart = null;
+        let pinEntrada = "";
+        let privacyMode = false;
 
-        // INICIALIZACIÓN
+        // --- SISTEMA DE SEGURIDAD (PIN) ---
+        const pinGuardado = localStorage.getItem('user_pin');
+        if (pinGuardado) {
+            document.getElementById('pin-msg').innerText = "Introduce tu PIN de acceso";
+        }
+
+        function teclado(num) {
+            if (pinEntrada.length < 4) {
+                pinEntrada += num;
+                actualizarDots();
+                if (pinEntrada.length === 4) {
+                    setTimeout(verificarPin, 200);
+                }
+            }
+        }
+
+        function actualizarDots() {
+            const dots = document.getElementById('pin-dots').children;
+            for (let i = 0; i < 4; i++) {
+                dots[i].className = i < pinEntrada.length ? "w-4 h-4 rounded-full bg-emerald-500 shadow-[0_0_10px_#10b981]" : "w-4 h-4 rounded-full border-2 border-slate-700";
+            }
+        }
+
+        function borrarPin() {
+            pinEntrada = "";
+            actualizarDots();
+        }
+
+        function verificarPin() {
+            if (!pinGuardado) {
+                localStorage.setItem('user_pin', pinEntrada);
+                alert("✅ PIN creado con éxito");
+                desbloquearApp();
+            } else if (pinEntrada === pinGuardado) {
+                desbloquearApp();
+            } else {
+                alert("❌ PIN Incorrecto");
+                borrarPin();
+            }
+        }
+
+        function desbloquearApp() {
+            document.getElementById('pantalla-pin').classList.add('hidden');
+            renderApp();
+        }
+
+        // --- MODO PRIVACIDAD ---
+        function togglePrivacy() {
+            privacyMode = !privacyMode;
+            document.getElementById('ojo-icon').innerText = privacyMode ? "🙈" : "👁️";
+            renderApp();
+        }
+
+        function mask(valor) {
+            return privacyMode ? "****€" : valor;
+        }
+
+        // --- LÓGICA DE LA APP ---
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('filtroMes').value = new Date().toISOString().slice(0, 7);
             document.getElementById('in-fecha').valueAsDate = new Date();
-            renderApp();
         });
 
-        // NAVEGACIÓN
         function switchTab(id, el) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active-tab', 'text-slate-400'));
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.add('text-slate-400'));
-            
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.replace('active-tab', 'text-slate-400'));
+            el.classList.replace('text-slate-400', 'active-tab');
             document.getElementById(id).classList.remove('hidden');
-            el.classList.add('active-tab');
-            el.classList.remove('text-slate-400');
-            
             if(id !== 'tab-add') renderApp();
         }
 
-        // MOTOR PRINCIPAL
         async function renderApp() {
             try {
                 const response = await fetch(API_URL);
                 appData = await response.json();
-                
-                const now = new Date();
-                now.setHours(0,0,0,0);
-                const todayStr = now.toISOString().split('T')[0];
-                const selectedMonth = document.getElementById('filtroMes').value;
+                const hoy = new Date().toISOString().split('T')[0];
+                const mesSel = document.getElementById('filtroMes').value;
 
-                let balReal = 0, balPlan = 0, inMes = 0, outMes = 0;
-                let catStats = {};
-                let hasPaymentToday = false;
+                let real = 0, plan = 0, inM = 0, outM = 0, cats = {}, alertH = false;
+                const lPlan = document.getElementById('listaPlan'), lMes = document.getElementById('listaMes');
+                lPlan.innerHTML = ''; lMes.innerHTML = '';
 
-                const listPlan = document.getElementById('listaPlan');
-                const listMes = document.getElementById('listaMes');
-                listPlan.innerHTML = ''; listMes.innerHTML = '';
-
-                appData.sort((a,b) => new Date(a.fecha) - new Date(b.fecha)).forEach(item => {
-                    const val = parseFloat(item.importe);
-                    const isIncome = ["Sueldo", "Otros Ingresos"].includes(item.categoria);
-                    const itemDate = item.fecha;
-
-                    // Lógica de Balances
-                    if (itemDate <= todayStr) {
-                        isIncome ? balReal += val : balReal -= val;
-                    } else {
-                        isIncome ? balPlan += val : balPlan -= val;
-                        // Render Lista Plan (Futuro)
-                        listPlan.innerHTML += createItemHTML(item, isIncome, true);
-                    }
-
-                    // Aviso hoy
-                    if (itemDate === todayStr && !isIncome) hasPaymentToday = true;
-
-                    // Lógica Mes Seleccionado
-                    if (itemDate.startsWith(selectedMonth)) {
-                        if (isIncome) inMes += val;
-                        else {
-                            outMes += val;
-                            catStats[item.categoria] = (catStats[item.categoria] || 0) + val;
-                        }
-                        listMes.innerHTML += createItemHTML(item, isIncome, false);
+                appData.sort((a,b) => new Date(a.fecha) - new Date(b.fecha)).forEach(g => {
+                    const val = parseFloat(g.importe), isIn = ["Sueldo", "Otros Ingresos"].includes(g.categoria);
+                    if (g.fecha <= hoy) { isIn ? real += val : real -= val; }
+                    else { isIn ? plan += val : plan -= val; lPlan.innerHTML += itemHTML(g, isIn, true); }
+                    if (g.fecha === hoy && !isIn) alertH = true;
+                    if (g.fecha.startsWith(mesSel)) {
+                        isIn ? inM += val : (outM += val, cats[g.categoria] = (cats[g.categoria] || 0) + val);
+                        lMes.innerHTML += itemHTML(g, isIn, false);
                     }
                 });
 
-                // Actualizar Interfaz
-                updateUI(balReal, balPlan, inMes, outMes, catStats, hasPaymentToday);
-
-            } catch (err) {
-                console.error("Error de renderizado:", err);
-            }
+                document.getElementById('valReal').innerText = mask(real.toFixed(2) + "€");
+                document.getElementById('valEstimado').innerText = mask((real + plan).toFixed(2) + "€");
+                document.getElementById('valPendiente').innerText = mask(plan.toFixed(2) + "€");
+                document.getElementById('cardMain').className = real >= 0 ? "p-8 rounded-[2.5rem] text-center shadow-2xl mb-6 bg-emerald-500 text-white" : "p-8 rounded-[2.5rem] text-center shadow-2xl mb-6 bg-rose-500 text-white";
+                document.getElementById('alertHoy').classList.toggle('hidden', !alertH);
+                document.getElementById('resumenMes').innerHTML = `
+                    <div class="bg-white p-4 rounded-2xl border border-slate-100 text-center"><p class="text-[8px] font-black uppercase text-slate-400">Ingresos</p><p class="text-emerald-500 font-900">${mask(inM.toFixed(2)+"€")}</p></div>
+                    <div class="bg-white p-4 rounded-2xl border border-slate-100 text-center"><p class="text-[8px] font-black uppercase text-slate-400">Gastos</p><p class="text-rose-500 font-900">${mask(outM.toFixed(2)+"€")}</p></div>
+                `;
+                drawChart(cats, outM);
+            } catch (e) { console.log(e); }
         }
 
-        function createItemHTML(g, isIncome, showDate) {
-            return `
-                <div class="bg-white p-4 rounded-2xl border border-slate-100 flex justify-between items-center shadow-sm animate-up">
-                    <div>
-                        <p class="font-black text-slate-800 text-sm leading-tight">${g.concepto}</p>
-                        <p class="text-[9px] font-black uppercase text-slate-400 mt-1">
-                            ${showDate ? g.fecha : g.categoria}
-                        </p>
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <p class="font-900 ${isIncome ? 'text-emerald-500' : 'text-rose-500'}">
-                            ${isIncome ? '+' : '-'}${parseFloat(g.importe).toFixed(2)}€
-                        </p>
-                        <div class="flex gap-2">
-                            <button onclick="editMode('${g._id}')" class="p-2 bg-slate-50 rounded-lg">✏️</button>
-                            <button onclick="deleteItem('${g._id}')" class="p-2 bg-slate-50 rounded-lg text-slate-300">🗑️</button>
-                        </div>
-                    </div>
+        function itemHTML(g, isI, isPlan) {
+            return `<div class="bg-white p-4 rounded-2xl border border-slate-100 flex justify-between items-center shadow-sm">
+                <div><p class="font-black text-slate-800 text-sm">${g.concepto}</p><p class="text-[9px] font-black uppercase text-slate-400">${isPlan ? g.fecha : g.categoria}</p></div>
+                <div class="flex items-center gap-3">
+                    <p class="font-900 ${isI?'text-emerald-500':'text-rose-500'}">${mask(parseFloat(g.importe).toFixed(2)+"€")}</p>
+                    <button onclick="editMode('${g._id}')" class="p-2 bg-slate-50 rounded-lg">✏️</button>
+                    <button onclick="deleteItem('${g._id}')" class="p-2 bg-slate-50 rounded-lg text-slate-300">🗑️</button>
                 </div>
-            `;
-        }
-
-        function updateUI(real, plan, inM, outM, cats, alert) {
-            document.getElementById('valReal').innerText = `${real.toFixed(2)}€`;
-            document.getElementById('valEstimado').innerText = `${(real + plan).toFixed(2)}€`;
-            document.getElementById('valPendiente').innerText = `${plan >= 0 ? '+' : ''}${plan.toFixed(2)}€`;
-            
-            const card = document.getElementById('cardMain');
-            card.className = real >= 0 ? 'p-8 rounded-[2.5rem] text-center shadow-2xl mb-6 bg-emerald-500 text-white' : 'p-8 rounded-[2.5rem] text-center shadow-2xl mb-6 bg-rose-500 text-white';
-
-            document.getElementById('resumenMes').innerHTML = `
-                <div class="bg-emerald-50 p-4 rounded-2xl border border-emerald-100 text-center">
-                    <p class="text-[9px] font-black text-emerald-600 uppercase">Ingresos</p>
-                    <p class="text-lg font-900 text-emerald-700">${inM.toFixed(2)}€</p>
-                </div>
-                <div class="bg-rose-50 p-4 rounded-2xl border border-rose-100 text-center">
-                    <p class="text-[9px] font-black text-rose-600 uppercase">Gastos</p>
-                    <p class="text-lg font-900 text-rose-700">${outM.toFixed(2)}€</p>
-                </div>
-            `;
-
-            document.getElementById('alertHoy').classList.toggle('hidden', !alert);
-            drawChart(cats, outM);
+            </div>`;
         }
 
         function drawChart(data, total) {
             const ctx = document.getElementById('chartGastos').getContext('2d');
-            const legend = document.getElementById('legendBox');
-            legend.innerHTML = '';
             if (mainChart) mainChart.destroy();
-
             const labels = Object.keys(data);
-            const values = Object.values(data);
-
-            if (labels.length === 0) {
-                legend.innerHTML = '<p class="col-span-2 text-center text-xs font-black text-slate-300 py-4 italic">Sin gastos este mes</p>';
-                return;
-            }
-
-            mainChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: labels,
-                    datasets: [{ data: values, backgroundColor: COLORS, borderWidth: 0, hoverOffset: 10 }]
-                },
-                options: {
-                    plugins: { legend: { display: false } },
-                    maintainAspectRatio: false,
-                    cutout: '80%'
-                }
-            });
-
-            labels.forEach((label, i) => {
-                const perc = ((data[label] / total) * 100).toFixed(0);
-                legend.innerHTML += `
-                    <div class="flex items-center gap-2 p-2 bg-slate-50 rounded-xl border border-slate-100">
-                        <div class="w-2 h-2 rounded-full" style="background:${COLORS[i]}"></div>
-                        <div class="flex flex-col">
-                            <span class="text-[8px] font-black text-slate-400 uppercase leading-none">${label}</span>
-                            <span class="text-[10px] font-900 text-slate-700">${data[label].toFixed(1)}€ (${perc}%)</span>
-                        </div>
-                    </div>
-                `;
-            });
+            if (labels.length === 0 || privacyMode) { document.getElementById('legendBox').innerHTML = ""; return; }
+            mainChart = new Chart(ctx, { type: 'doughnut', data: { labels: labels, datasets: [{ data: Object.values(data), backgroundColor: COLORS, borderWidth: 0 }] }, options: { plugins: { legend: { display: false } }, maintainAspectRatio: false, cutout: '85%' } });
+            document.getElementById('legendBox').innerHTML = labels.map((l, i) => `<div class="flex items-center gap-2 p-2 bg-slate-50 rounded-xl"><div class="w-2 h-2 rounded-full" style="background:${COLORS[i]}"></div><div class="flex flex-col"><span class="text-[7px] font-black text-slate-400 uppercase">${l}</span><span class="text-[10px] font-900 text-slate-700">${data[l].toFixed(1)}€</span></div></div>`).join('');
         }
 
-        // ACCIONES (CRUD)
-        async function deleteItem(id) {
-            if (!confirm("¿Eliminar este movimiento?")) return;
-            try {
-                await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
-                renderApp();
-            } catch (err) { console.error(err); }
-        }
+        async function deleteItem(id) { if(confirm("¿Eliminar?")) { await fetch(`${API_URL}/${id}`, { method: 'DELETE' }); renderApp(); } }
 
         function editMode(id) {
             const g = appData.find(x => x._id === id);
-            if (!g) return;
-            
             document.getElementById('in-id').value = g._id;
             document.getElementById('in-concepto').value = g.concepto;
             document.getElementById('in-importe').value = g.importe;
             document.getElementById('in-categoria').value = g.categoria;
             document.getElementById('in-fecha').value = g.fecha;
-            
-            document.getElementById('formTitle').innerText = "Editando Movimiento";
-            document.getElementById('btnSubmit').innerText = "ACTUALIZAR DATOS";
+            document.getElementById('btnSubmit').innerText = "ACTUALIZAR";
             document.getElementById('btnSubmit').classList.replace('bg-slate-900', 'bg-orange-500');
             document.getElementById('btnCancel').classList.remove('hidden');
-            
             switchTab('tab-add', document.querySelectorAll('.nav-btn')[3]);
         }
 
         function resetForm() {
             document.getElementById('mainForm').reset();
             document.getElementById('in-id').value = "";
-            document.getElementById('formTitle').innerText = "Nuevo Movimiento";
             document.getElementById('btnSubmit').innerText = "GUARDAR";
-            document.getElementById('btnSubmit').className = "w-full bg-slate-900 text-white font-900 p-5 rounded-2xl shadow-xl active:scale-95 transition-all";
+            document.getElementById('btnSubmit').className = "w-full bg-slate-900 text-white font-900 p-5 rounded-2xl shadow-xl";
             document.getElementById('btnCancel').classList.add('hidden');
             document.getElementById('in-fecha').valueAsDate = new Date();
         }
 
         document.getElementById('mainForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const idViejo = document.getElementById('in-id').value;
-            const data = {
-                concepto: document.getElementById('in-concepto').value,
-                importe: parseFloat(document.getElementById('in-importe').value),
-                categoria: document.getElementById('in-categoria').value,
-                fecha: document.getElementById('in-fecha').value
-            };
-
-            try {
-                // Si es edición, borramos el anterior primero para asegurar éxito
-                if (idViejo) await fetch(`${API_URL}/${idViejo}`, { method: 'DELETE' });
-                
-                const res = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-
-                if (res.ok) {
-                    resetForm();
-                    switchTab('tab-cuenta', document.querySelectorAll('.nav-btn')[0]);
-                }
-            } catch (err) { alert("Error al conectar con el servidor"); }
+            const idV = document.getElementById('in-id').value;
+            const data = { concepto: document.getElementById('in-concepto').value, importe: parseFloat(document.getElementById('in-importe').value), categoria: document.getElementById('in-categoria').value, fecha: document.getElementById('in-fecha').value };
+            if (idV) await fetch(`${API_URL}/${idV}`, { method: 'DELETE' });
+            await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+            resetForm();
+            switchTab('tab-cuenta', document.querySelectorAll('.nav-btn')[0]);
         });
-
-        function checkTodayAlert() {
-            const now = new Date().toISOString().split('T')[0];
-            const hoy = appData.filter(g => g.fecha === now && !["Sueldo", "Otros Ingresos"].includes(g.categoria));
-            if(hoy.length > 0) {
-                alert(`⚠️ RECORDATORIO:\n\nTienes ${hoy.length} pagos para hoy:\n${hoy.map(h => `- ${h.concepto}: ${h.importe}€`).join('\n')}`);
-            } else {
-                alert("✅ Genial, no tienes pagos pendientes para hoy.");
-            }
-        }
     </script>
 </body>
 </html>
