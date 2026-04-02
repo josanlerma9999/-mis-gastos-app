@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BBVA Master v11.3 - Previsión</title>
+    <title>BBVA Master v11.3 - Previsión Full</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -20,7 +20,6 @@
         .pin-dot.filled { background: var(--bbva-cyan); box-shadow: 0 0 10px var(--bbva-cyan); }
         .num-btn { width: 70px; height: 70px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1); font-size: 1.5rem; font-weight: 700; display: flex; align-items: center; justify-content: center; }
 
-        /* Contenedor de tarjetas deslizantes */
         .slider-wrapper { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 10px; scrollbar-width: none; }
         .slider-wrapper::-webkit-scrollbar { display: none; }
         .card-slide { min-width: 100%; scroll-snap-align: start; }
@@ -28,6 +27,7 @@
         .donut-container { height: 200px; width: 100%; display: flex; justify-content: center; align-items: center; margin: 5px 0; }
         .debug-panel { font-family: 'JetBrains Mono', monospace; background: #111; border-top: 2px solid #333; }
         
+        /* Botones de acción recuperados */
         .btn-edit { color: #00e5ff; padding: 8px; border-radius: 8px; background: rgba(0, 229, 255, 0.1); }
         .btn-delete { color: #ff4d4d; padding: 8px; border-radius: 8px; background: rgba(255, 77, 77, 0.1); }
     </style>
@@ -63,7 +63,6 @@
 
         <main class="max-w-md mx-auto p-2">
             <section id="tab-cuenta" class="tab-content flex flex-col gap-2">
-                
                 <div class="slider-wrapper">
                     <div class="card-slide">
                         <div class="p-6 rounded-[2rem] text-center bbva-gradient border border-white/10 shadow-xl relative">
@@ -80,7 +79,7 @@
                                 <p class="text-[9px] uppercase font-black tracking-widest text-cyan-300/60">Disponible fin de mes</p>
                             </div>
                             <h2 id="valPrevision" class="text-5xl font-[900] tracking-tighter text-cyan-400">0.00€</h2>
-                            <p class="text-[8px] uppercase mt-2 opacity-50">Calculado con gastos pendientes</p>
+                            <p class="text-[8px] uppercase mt-2 opacity-50 italic">Cálculo estimado</p>
                         </div>
                     </div>
                 </div>
@@ -94,8 +93,7 @@
                     <h3 class="text-[10px] font-black uppercase text-cyan-400 mb-4 tracking-[0.3em]">System Debugger</h3>
                     <div class="space-y-3 text-[10px] font-mono">
                         <div class="flex justify-between border-b border-white/5 pb-1"><span class="text-slate-500">API:</span><span class="text-emerald-400">ONLINE</span></div>
-                        <div class="flex justify-between border-b border-white/5 pb-1"><span class="text-slate-500">PING:</span><span id="debug-ping" class="text-white">--ms</span></div>
-                        <div class="flex justify-between border-b border-white/5 pb-1"><span id="debug-count" class="text-white">--</span></div>
+                        <div class="flex justify-between border-b border-white/5 pb-1"><span class="text-slate-500">RECORDS:</span><span id="debug-count" class="text-white">--</span></div>
                     </div>
                 </div>
             </section>
@@ -154,43 +152,45 @@
         function togglePrivacy() { isPrivate = !isPrivate; renderApp(); }
 
         async function renderApp() {
-            const start = Date.now();
             try {
                 const res = await fetch(API_URL);
                 appData = await res.json();
-                document.getElementById('debug-ping').innerText = (Date.now() - start) + "ms";
+                document.getElementById('debug-count').innerText = appData.length;
 
                 const hoy = new Date();
                 const hoyStr = hoy.toISOString().split('T')[0];
                 const mesActualStr = hoy.toISOString().slice(0, 7);
+                const mesSel = document.getElementById('filtroMes').value;
                 
-                let real = 0; // Saldo hasta hoy
-                let prevision = 0; // Saldo fin de mes
-                let cats = {};
+                let real = 0, prevision = 0, cats = {};
                 const lMes = document.getElementById('listaMes'); lMes.innerHTML = '';
 
                 appData.forEach(g => {
                     const val = parseFloat(g.importe);
                     const esIngreso = (g.categoria === "Sueldo" || g.categoria === "Otros Ingresos");
                     
-                    // Lógica Patrimonio Actual (Solo lo que ya ha pasado)
-                    if (g.fecha <= hoyStr) {
-                        esIngreso ? real += val : real -= val;
-                    }
+                    if (g.fecha <= hoyStr) esIngreso ? real += val : real -= val;
+                    if (g.fecha.startsWith(mesActualStr)) esIngreso ? prevision += val : prevision -= val;
 
-                    // Lógica Previsión (Todo lo del mes actual, pasado y futuro)
-                    if (g.fecha.startsWith(mesActualStr)) {
-                        esIngreso ? prevision += val : prevision -= val;
-                    }
-
-                    // Render lista extracto
-                    const mesSel = document.getElementById('filtroMes').value;
                     if (g.fecha.startsWith(mesSel)) {
                         if(!esIngreso) cats[g.categoria] = (cats[g.categoria]||0) + val;
                         const disp = isPrivate ? "****€" : (esIngreso?'+':'') + val.toFixed(2) + '€';
-                        lMes.innerHTML += `<div class="bg-bbva-card p-4 rounded-2xl flex justify-between items-center border-l-2 ${esIngreso?'border-[#00e5ff]':'border-rose-500'}">
-                            <div class="flex-1"><p class="font-bold text-white text-sm mb-1">${g.concepto}</p><p class="text-[10px] text-slate-500 font-bold uppercase">${g.categoria}</p></div>
-                            <p class="font-black text-lg ${esIngreso?'text-[#00e5ff]':'text-rose-400'}">${disp}</p></div>`;
+                        
+                        // LÁPIZ Y PAPELERA RECUPERADOS AQUÍ
+                        lMes.innerHTML += `
+                            <div class="bg-bbva-card p-4 rounded-2xl flex justify-between items-center border-l-2 ${esIngreso?'border-[#00e5ff]':'border-rose-500'}">
+                                <div class="flex-1">
+                                    <p class="font-bold text-white text-sm mb-1">${g.concepto}</p>
+                                    <p class="text-[10px] text-slate-500 font-bold uppercase">${g.categoria} • ${g.fecha.split('-')[2]}</p>
+                                </div>
+                                <div class="flex items-center gap-4">
+                                    <p class="font-black text-lg ${esIngreso?'text-[#00e5ff]':'text-rose-400'}">${disp}</p>
+                                    <div class="flex gap-1">
+                                        <button onclick="preEdit('${g._id}')" class="btn-edit">✏️</button>
+                                        <button onclick="deleteGasto('${g._id}')" class="btn-delete">🗑️</button>
+                                    </div>
+                                </div>
+                            </div>`;
                     }
                 });
 
@@ -204,8 +204,26 @@
             const ctx = document.getElementById('chartGastos').getContext('2d');
             if (mainChart) mainChart.destroy();
             const labels = Object.keys(data), values = Object.values(data);
-            mainChart = new Chart(ctx, { type: 'doughnut', data: { labels: labels, datasets: [{ data: values, backgroundColor: ['#004481','#00e5ff','#8b5cf6','#10b981'], borderWidth: 2, borderColor: '#072146' }] }, options: { plugins: { legend: { display: false } }, maintainAspectRatio: false, cutout: '80%' } });
+            mainChart = new Chart(ctx, { type: 'doughnut', data: { labels: labels, datasets: [{ data: values, backgroundColor: ['#004481','#00e5ff','#8b5cf6','#10b981','#f59e0b','#fb7185'], borderWidth: 2, borderColor: '#072146' }] }, options: { plugins: { legend: { display: false } }, maintainAspectRatio: false, cutout: '80%' } });
             document.getElementById('legendBox').innerHTML = labels.map((l, i) => `<div class="flex items-center justify-between p-2 bg-white/5 rounded-xl"><span class="text-[7px] font-bold text-slate-400 uppercase">${l}</span><span class="text-[8px] font-black text-white">${isPrivate ? "***" : data[l].toFixed(0)}€</span></div>`).join('');
+        }
+
+        function preEdit(id) {
+            const g = appData.find(x => x._id === id);
+            document.getElementById('in-id').value = g._id;
+            document.getElementById('in-concepto').value = g.concepto;
+            document.getElementById('in-importe').value = g.importe;
+            document.getElementById('in-categoria').value = g.categoria;
+            document.getElementById('in-fecha').value = g.fecha;
+            document.getElementById('btn-submit').innerText = "Actualizar Registro";
+            switchTab('tab-add', document.querySelectorAll('.nav-btn')[2]);
+        }
+
+        async function deleteGasto(id) {
+            if(confirm("¿Seguro que quieres borrar este registro?")) {
+                await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+                renderApp();
+            }
         }
 
         function switchTab(id, el) { 
@@ -217,14 +235,19 @@
 
         document.getElementById('mainForm').addEventListener('submit', async (e) => {
             e.preventDefault();
+            const id = document.getElementById('in-id').value;
             const data = { 
                 concepto: document.getElementById('in-concepto').value, 
                 importe: parseFloat(document.getElementById('in-importe').value),
                 categoria: document.getElementById('in-categoria').value,
                 fecha: document.getElementById('in-fecha').value
             };
-            await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+            const method = id ? 'PUT' : 'POST';
+            const url = id ? `${API_URL}/${id}` : API_URL;
+            await fetch(url, { method: method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
             document.getElementById('mainForm').reset();
+            document.getElementById('in-id').value = "";
+            document.getElementById('btn-submit').innerText = "Confirmar Operación";
             renderApp();
             switchTab('tab-cuenta', document.querySelectorAll('.nav-btn')[0]);
         });
