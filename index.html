@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BBVA Premium v15.7 - PIN 1763</title>
+    <title>BBVA Premium v15.8 - Fixed Math</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
@@ -21,24 +21,20 @@
 
         .bg-bbva-card { background: var(--bbva-navy); border: 1px solid rgba(255,255,255,0.05); border-radius: 2rem; }
         .bbva-gradient { background: linear-gradient(135deg, #072146 0%, #004481 100%); border-radius: 2.2rem; border: 1px solid rgba(0, 229, 255, 0.2); }
-        .progress-bar { background: var(--bbva-cyan); height: 100%; transition: width 1s ease; box-shadow: 0 0 15px var(--bbva-cyan); }
+        .bbva-input { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 1.25rem; padding: 1.1rem; width: 100%; color: white; outline: none; }
         .active-tab { color: var(--bbva-cyan) !important; border-top: 3px solid var(--bbva-cyan); }
         
         #viewport { width: 100%; height: calc(100% - 150px); overflow: hidden; position: relative; }
         #main-view { display: flex; width: 400%; height: 100%; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .tab-content { width: 25%; height: 100%; overflow-y: auto; padding: 1.2rem; -webkit-overflow-scrolling: touch; }
         
-        /* FIX CRÍTICO: Botones de acción con máxima prioridad */
         .action-btn { 
             background: rgba(255, 255, 255, 0.08); 
             border: 1px solid rgba(255, 255, 255, 0.15); 
             border-radius: 0.9rem; width: 44px; height: 44px; 
             display: flex; align-items: center; justify-content: center;
-            position: relative; z-index: 999 !important;
-            pointer-events: auto !important;
-            touch-action: manipulation;
+            position: relative; z-index: 999;
         }
-        .action-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.2); }
     </style>
 </head>
 <body>
@@ -64,36 +60,54 @@
             <div id="main-view">
                 <section class="tab-content space-y-6">
                     <div class="p-10 bbva-gradient text-center">
-                        <p class="text-[11px] font-black tracking-[0.3em] text-cyan-200/40 mb-1 uppercase">Saldo Real Hoy</p>
-                        <h2 id="valReal" class="text-6xl font-black tracking-tighter">0.00€</h2>
+                        <p class="text-[11px] font-black tracking-[0.3em] text-cyan-200/40 mb-1 uppercase">Saldo Disponible</p>
+                        <h2 id="valReal" class="text-5xl font-black tracking-tighter">0.00€</h2>
                     </div>
                     <div class="grid grid-cols-2 gap-4 text-center">
-                        <div class="bg-bbva-card p-6"><p class="text-[10px] font-bold text-slate-500 uppercase">Cierre Mes</p><p id="valProj" class="text-2xl font-black text-cyan-400 mt-1">0.00€</p></div>
-                        <div class="bg-bbva-card p-6"><p class="text-[10px] font-bold text-slate-500 uppercase">A Pagar</p><p id="valPend" class="text-2xl font-black text-rose-400 mt-1">0.00€</p></div>
+                        <div class="bg-bbva-card p-6">
+                            <p class="text-[10px] font-bold text-slate-500 uppercase">Cierre proyectado</p>
+                            <p id="valProj" class="text-2xl font-black text-cyan-400 mt-1">0.00€</p>
+                        </div>
+                        <div class="bg-bbva-card p-6">
+                            <p class="text-[10px] font-bold text-slate-500 uppercase">Pendiente pago</p>
+                            <p id="valPend" class="text-2xl font-black text-rose-400 mt-1">0.00€</p>
+                        </div>
                     </div>
                 </section>
+
                 <section class="tab-content space-y-4">
-                    <h3 class="text-xs font-black uppercase text-cyan-400 italic px-2 tracking-widest">Próximos Pagos</h3>
+                    <h3 class="text-xs font-black uppercase text-cyan-400 italic px-2 tracking-widest">Próximos movimientos</h3>
                     <div id="listaFuturo" class="space-y-4"></div>
                 </section>
+
                 <section class="tab-content space-y-3">
-                    <input type="month" id="filtroMes" class="bg-bbva-card w-full p-4 text-white font-black uppercase text-xs mb-2 outline-none" onchange="renderApp()">
-                    <div id="listaPasado" class="space-y-3 pb-20"></div>
+                    <input type="month" id="filtroMes" class="bbva-input mb-4" onchange="renderApp()">
+                    <div id="listaPasado" class="space-y-3 pb-24"></div>
                 </section>
+
                 <section class="tab-content">
                     <form id="mainForm" class="bg-bbva-card p-8 space-y-5">
                         <input type="hidden" id="in-id">
                         <input type="text" id="in-concepto" placeholder="Concepto" class="bbva-input" required>
                         <input type="number" id="in-importe" step="0.01" placeholder="0.00" class="bbva-input text-4xl font-black text-center" required>
-                        <select id="in-categoria" class="bbva-input font-bold">
-                            <option value="Sueldo">💰 Sueldo</option>
-                            <option value="Cuenta BBVA">🏦 Cuenta BBVA</option>
-                            <option value="Tarjeta Aqua BBVA">🟦 Tarjeta Aqua BBVA</option>
-                            <option value="Tarjeta Explora">✈️ Tarjeta Explora</option>
-                            <option value="Amazon">📦 Amazon</option>
+                        <select id="in-categoria" class="bbva-input font-bold" required>
+                            <optgroup label="INGRESOS">
+                                <option value="Sueldo">💰 Sueldo</option>
+                                <option value="Otros Ingresos">💵 Otros Ingresos</option>
+                            </optgroup>
+                            <optgroup label="GASTOS">
+                                <option value="Cuenta BBVA">🏦 Cuenta BBVA</option>
+                                <option value="Tarjeta Aqua BBVA">🟦 Tarjeta Aqua BBVA</option>
+                                <option value="Tarjeta Explora">✈️ Tarjeta Explora</option>
+                                <option value="Imagine">📱 Imagine</option>
+                                <option value="PayPal">💳 PayPal</option>
+                                <option value="Amazon">📦 Amazon</option>
+                                <option value="El Corte Inglés">🏬 El Corte Inglés</option>
+                                <option value="Gasolina">⛽ Gasolina</option>
+                            </optgroup>
                         </select>
-                        <input type="date" id="in-fecha" class="bbva-input">
-                        <button type="submit" id="btn-submit" class="w-full bg-cyan-400 text-black font-black py-5 rounded-2xl uppercase">Confirmar</button>
+                        <input type="date" id="in-fecha" class="bbva-input" required>
+                        <button type="submit" id="btn-submit" class="w-full bg-cyan-400 text-black font-black py-5 rounded-2xl uppercase shadow-lg shadow-cyan-400/20">Confirmar</button>
                     </form>
                 </section>
             </div>
@@ -110,7 +124,7 @@
     <script>
         const API_URL = 'https://mis-gastos-app.onrender.com/api/gastos';
         let pin = "", isPrivate = false, currentTabIndex = 0, appData = [];
-        let touchStartX = 0;
+        const categIngresos = ["Sueldo", "Otros Ingresos"];
 
         // PIN PAD
         [1,2,3,4,5,6,7,8,9,'C',0,'DEL'].forEach(v => {
@@ -123,50 +137,44 @@
             document.getElementById('pin-pad').appendChild(b);
         });
 
-        function goToTab(index) {
-            if (index < 0 || index > 3) return;
-            currentTabIndex = index;
-            document.getElementById('main-view').style.transform = `translateX(-${index * 25}%)`;
-            document.querySelectorAll('.nav-btn').forEach((b, i) => {
-                if(i === index) b.classList.replace('text-slate-500', 'active-tab');
+        function goToTab(i) {
+            currentTabIndex = i;
+            document.getElementById('main-view').style.transform = `translateX(-${i * 25}%)`;
+            document.querySelectorAll('.nav-btn').forEach((b, idx) => {
+                if(idx === i) b.classList.replace('text-slate-500', 'active-tab');
                 else b.classList.replace('active-tab', 'text-slate-500');
             });
         }
-
-        const viewport = document.getElementById('viewport');
-        viewport.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; }, {passive: true});
-        viewport.addEventListener('touchend', e => {
-            const diff = touchStartX - e.changedTouches[0].screenX;
-            if (Math.abs(diff) > 120) diff > 0 ? goToTab(currentTabIndex + 1) : goToTab(currentTabIndex - 1);
-        });
 
         async function renderApp() {
             const res = await fetch(API_URL); appData = await res.json();
             const hoy = new Date().toISOString().split('T')[0];
             const mesSel = document.getElementById('filtroMes').value;
-            let saldoReal = 0, gastosFuturos = 0, ingresosFuturos = 0;
             
+            let saldoReal = 0, gastosFuturos = 0, ingresosFuturos = 0;
             document.getElementById('listaPasado').innerHTML = '';
             document.getElementById('listaFuturo').innerHTML = '';
 
-            appData.sort((a, b) => {
-                const aF = a.fecha > hoy; const bF = b.fecha > hoy;
-                if (aF && !bF) return 1; if (!aF && bF) return -1;
-                return b.fecha.localeCompare(a.fecha);
-            }).forEach(g => {
-                const val = parseFloat(g.importe); const esIngreso = ["Sueldo"].includes(g.categoria);
-                const esPasado = (g.fecha <= hoy);
+            appData.sort((a,b) => b.fecha.localeCompare(a.fecha)).forEach(g => {
+                const val = parseFloat(g.importe);
+                const esIngreso = categIngresos.includes(g.categoria);
+                const esPasado = g.fecha <= hoy;
                 const disp = isPrivate ? "****€" : val.toLocaleString('de-DE', {minimumFractionDigits: 2}) + "€";
 
-                if(esPasado) { esIngreso ? saldoReal += val : saldoReal -= val; }
-                else { esIngreso ? ingresosFuturos += val : gastosFuturos += val; }
+                // LÓGICA DE SUMA/RESTA CORRECTA
+                if(esPasado) {
+                    esIngreso ? saldoReal += val : saldoReal -= val;
+                } else {
+                    esIngreso ? ingresosFuturos += val : gastosFuturos += val;
+                }
 
+                // Render Extracto
                 if(g.fecha.startsWith(mesSel)) {
                     document.getElementById('listaPasado').insertAdjacentHTML('beforeend', `
                         <div class="bg-bbva-card p-5 flex justify-between items-center ${!esPasado ? 'opacity-30' : ''}">
                             <div class="flex-1">
                                 <p class="text-sm font-bold text-white">${g.concepto}</p>
-                                <p class="text-[9px] text-slate-500 font-bold uppercase mt-1">${g.fecha}</p>
+                                <p class="text-[9px] text-slate-500 font-bold uppercase mt-1">${g.fecha} • ${g.categoria}</p>
                             </div>
                             <div class="flex items-center gap-3">
                                 <p class="text-lg font-black ${esIngreso ? 'text-cyan-400' : 'text-white'}">${disp}</p>
@@ -177,17 +185,27 @@
                             </div>
                         </div>`);
                 }
+
+                // Render Próximos
                 if(!esPasado) {
-                    document.getElementById('listaFuturo').insertAdjacentHTML('beforeend', `<div class="bg-white/5 p-6 rounded-3xl border border-dashed border-cyan-400/30 mb-4"><div class="flex justify-between items-start mb-2"><div><p class="font-black">${g.concepto}</p><p class="text-[10px] text-slate-500 uppercase">${g.fecha}</p></div><span class="text-xl font-black">${disp}</span></div></div>`);
+                    document.getElementById('listaFuturo').insertAdjacentHTML('beforeend', `
+                        <div class="bg-white/5 p-6 rounded-3xl border border-dashed border-cyan-400/30">
+                            <div class="flex justify-between items-start">
+                                <div><p class="font-black">${g.concepto}</p><p class="text-[10px] text-slate-500">${g.fecha}</p></div>
+                                <span class="text-xl font-black ${esIngreso ? 'text-cyan-400' : 'text-white'}">${disp}</span>
+                            </div>
+                        </div>`);
                 }
             });
+
             document.getElementById('valReal').innerText = isPrivate ? "****€" : saldoReal.toLocaleString('de-DE', {minimumFractionDigits: 2}) + "€";
             document.getElementById('valPend').innerText = isPrivate ? "****€" : "-" + gastosFuturos.toLocaleString('de-DE', {minimumFractionDigits: 2}) + "€";
-            document.getElementById('valProj').innerText = isPrivate ? "****€" : (saldoReal - gastosFuturos + ingresosFuturos).toLocaleString('de-DE', {minimumFractionDigits: 2}) + "€";
+            const cierre = saldoReal - gastosFuturos + ingresosFuturos;
+            document.getElementById('valProj').innerText = isPrivate ? "****€" : cierre.toLocaleString('de-DE', {minimumFractionDigits: 2}) + "€";
         }
 
         async function deleteGasto(id) {
-            if(confirm("¿Borrar definitivamente?")) {
+            if(confirm("¿Eliminar este registro?")) {
                 await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
                 renderApp();
             }
@@ -209,16 +227,19 @@
         document.getElementById('mainForm').onsubmit = async (e) => {
             e.preventDefault();
             const id = document.getElementById('in-id').value;
-            const data = { 
-                concepto: document.getElementById('in-concepto').value, 
-                importe: parseFloat(document.getElementById('in-importe').value), 
-                categoria: document.getElementById('in-categoria').value, 
-                fecha: document.getElementById('in-fecha').value 
+            const data = {
+                concepto: document.getElementById('in-concepto').value,
+                importe: parseFloat(document.getElementById('in-importe').value),
+                categoria: document.getElementById('in-categoria').value,
+                fecha: document.getElementById('in-fecha').value
             };
             await fetch(id ? `${API_URL}/${id}` : API_URL, { 
-                method: id ? 'PUT' : 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) 
+                method: id ? 'PUT' : 'POST', 
+                headers: {'Content-Type':'application/json'}, 
+                body: JSON.stringify(data) 
             });
-            e.target.reset(); document.getElementById('in-id').value = "";
+            e.target.reset();
+            document.getElementById('in-id').value = "";
             document.getElementById('btn-submit').innerText = "Confirmar";
             document.getElementById('btn-submit').classList.replace('bg-amber-500', 'bg-cyan-400');
             renderApp(); goToTab(0);
