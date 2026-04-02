@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BBVA Premium v15.0 - Swipe Gestures</title>
+    <title>BBVA Premium v15.1 - Final Sort</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
@@ -25,7 +25,6 @@
         .num-btn { width: 72px; height: 72px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1); font-size: 1.5rem; font-weight: 700; display: flex; align-items: center; justify-content: center; }
         .action-btn { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 0.8rem; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; }
 
-        /* Contenedor Deslizable */
         #main-view { display: flex; width: 400%; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); will-change: transform; }
         .tab-content { width: 25%; flex-shrink: 0; padding: 1rem; min-height: 80vh; }
     </style>
@@ -38,7 +37,7 @@
         <div class="grid grid-cols-3 gap-6" id="pin-pad"></div>
     </div>
 
-    <div id="app-content" class="hidden overflow-x-hidden">
+    <div id="app-content" class="hidden">
         <header class="p-5 flex justify-between items-center sticky top-0 bg-black/90 backdrop-blur-md z-50">
             <h1 class="font-black text-2xl italic tracking-tighter">BBVA</h1>
             <div class="flex gap-3">
@@ -50,7 +49,7 @@
         <main class="max-w-md mx-auto">
             <div id="main-view">
                 <section id="tab-home" class="tab-content space-y-6">
-                    <div class="p-10 bbva-gradient text-center shadow-2xl">
+                    <div class="p-10 bbva-gradient text-center">
                         <p class="text-[11px] font-black tracking-[0.3em] text-cyan-200/40 mb-1 uppercase">Saldo Real Hoy</p>
                         <h2 id="valReal" class="text-6xl font-black tracking-tighter">0.00€</h2>
                         <div class="mt-10 space-y-2 text-left">
@@ -87,7 +86,7 @@
                         <input type="hidden" id="in-id">
                         <input type="text" id="in-concepto" placeholder="Concepto" class="bbva-input" required>
                         <input type="number" id="in-importe" step="0.01" placeholder="0.00" class="bbva-input text-4xl font-black text-center" required>
-                        <select id="in-categoria" class="bbva-input font-bold appearance-none">
+                        <select id="in-categoria" class="bbva-input font-bold">
                             <optgroup label="INGRESOS">
                                 <option value="Sueldo">💰 Sueldo</option>
                                 <option value="Otros Ingresos">💵 Otros Ingresos</option>
@@ -128,10 +127,9 @@
 
     <script>
         const API_URL = 'https://mis-gastos-app.onrender.com/api/gastos';
-        let pin = "", isPrivate = false, currentTabIndex = 0;
+        let pin = "", isPrivate = false, currentTabIndex = 0, appData = [];
         let touchStartX = 0, touchEndX = 0;
 
-        // PIN PAD
         [1,2,3,4,5,6,7,8,9,'C',0,'DEL'].forEach(v => {
             const b = document.createElement('button'); b.className = "num-btn"; b.innerText = v;
             b.onclick = () => {
@@ -142,12 +140,10 @@
             document.getElementById('pin-pad').appendChild(b);
         });
 
-        // NAVEGACIÓN Y SWIPE
         function goToTab(index) {
             if (index < 0 || index > 3) return;
             currentTabIndex = index;
             document.getElementById('main-view').style.transform = `translateX(-${index * 25}%)`;
-            
             const btns = document.querySelectorAll('.nav-btn');
             btns.forEach((b, i) => {
                 if(i === index) b.classList.replace('text-slate-500', 'active-tab');
@@ -160,15 +156,14 @@
         appEl.addEventListener('touchend', e => {
             touchEndX = e.changedTouches[0].screenX;
             const diff = touchStartX - touchEndX;
-            if (Math.abs(diff) > 70) { // Umbral de sensibilidad
-                if (diff > 0) goToTab(currentTabIndex + 1); // Izquierda -> Derecha
-                else goToTab(currentTabIndex - 1); // Derecha -> Izquierda
+            if (Math.abs(diff) > 70) {
+                if (diff > 0) goToTab(currentTabIndex + 1);
+                else goToTab(currentTabIndex - 1);
             }
         });
 
         async function renderApp() {
-            const res = await fetch(API_URL); const data = await res.json();
-            appData = data;
+            const res = await fetch(API_URL); appData = await res.json();
             const hoy = new Date().toISOString().split('T')[0];
             const mesSel = document.getElementById('filtroMes').value;
 
@@ -176,7 +171,14 @@
             document.getElementById('listaPasado').innerHTML = '';
             document.getElementById('listaFuturo').innerHTML = '';
 
-            data.sort((a,b) => a.fecha.localeCompare(b.fecha)).forEach(g => {
+            // ORDENACIÓN: Pasado arriba, Futuro abajo
+            appData.sort((a, b) => {
+                const aFuturo = a.fecha > hoy;
+                const bFuturo = b.fecha > hoy;
+                if (aFuturo && !bFuturo) return 1;
+                if (!aFuturo && bFuturo) return -1;
+                return b.fecha.localeCompare(a.fecha);
+            }).forEach(g => {
                 const val = parseFloat(g.importe);
                 const esIngreso = ["Sueldo", "Otros Ingresos"].includes(g.categoria);
                 const esPasado = (g.fecha <= hoy);
@@ -192,7 +194,7 @@
                 }
 
                 if(g.fecha.startsWith(mesSel)) {
-                    document.getElementById('listaPasado').insertAdjacentHTML('afterbegin', `
+                    document.getElementById('listaPasado').insertAdjacentHTML('beforeend', `
                         <div class="bg-bbva-card p-5 flex justify-between items-center ${!esPasado ? 'opacity-30' : ''}">
                             <div class="flex-1">
                                 <p class="text-sm font-bold text-white">${g.concepto}</p>
@@ -257,9 +259,8 @@
                 categoria: document.getElementById('in-categoria').value, 
                 fecha: document.getElementById('in-fecha').value 
             };
-            const method = id ? 'PUT' : 'POST';
             await fetch(id ? `${API_URL}/${id}` : API_URL, { 
-                method: method, headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) 
+                method: id ? 'PUT' : 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) 
             });
             e.target.reset(); document.getElementById('in-id').value = "";
             document.getElementById('btn-submit').innerText = "Confirmar";
