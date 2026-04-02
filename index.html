@@ -31,7 +31,6 @@
         .donut-container { height: 200px; width: 100%; display: flex; justify-content: center; align-items: center; margin: 5px 0; }
         .debug-panel { font-family: 'JetBrains Mono', monospace; background: #111; border-top: 2px solid #333; }
         
-        /* Estilos botones edición */
         .btn-edit { color: #00e5ff; padding: 8px; border-radius: 8px; background: rgba(0, 229, 255, 0.1); }
         .btn-delete { color: #ff4d4d; padding: 8px; border-radius: 8px; background: rgba(255, 77, 77, 0.1); }
     </style>
@@ -97,9 +96,9 @@
                 <div id="listaMes" class="space-y-2"></div>
             </section>
 
-            <section id="tab-add" class="tab-content hidden flex flex-col pt-4">
-                <div class="bg-bbva-card p-6 rounded-[2.5rem] border-t-4 border-[#00e5ff] w-full">
-                    <form id="mainForm" class="space-y-4">
+            <section id="tab-add" class="tab-content hidden flex flex-col pt-1">
+                <div class="bg-bbva-card p-5 rounded-[2.5rem] border-t-4 border-[#00e5ff] w-full mt-0">
+                    <form id="mainForm" class="space-y-3">
                         <input type="hidden" id="in-id">
                         <input type="text" id="in-concepto" placeholder="Concepto" class="w-full p-4 bg-black/40 border border-white/10 rounded-xl text-white outline-none" required>
                         <input type="number" id="in-importe" step="0.01" placeholder="0.00" class="w-full p-4 bg-black/40 border border-white/10 rounded-xl font-bold text-3xl text-white outline-none" required>
@@ -136,7 +135,6 @@
         let appData = [], currentPinInput = "", isPrivate = false, mainChart = null;
         let recurrentes = JSON.parse(localStorage.getItem('bbva_recurrentes') || '[]');
 
-        // PIN y Acceso
         let savedPin = localStorage.getItem('bbva_user_pin');
         function pressPin(n) {
             if(currentPinInput.length < 4) {
@@ -194,7 +192,6 @@
                     }
                 });
 
-                // Pagos Automáticos (Aviso y Resta)
                 const diaHoy = hoy.getDate();
                 document.getElementById('alert-pago').style.display = 'none';
                 recurrentes.forEach(r => {
