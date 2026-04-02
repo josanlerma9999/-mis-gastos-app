@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BBVA Master v11.3 - Previsión Full</title>
+    <title>BBVA Master v11.3 - Ajuste Espacio</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -25,16 +25,12 @@
         .card-slide { min-width: 100%; scroll-snap-align: start; }
 
         .donut-container { height: 200px; width: 100%; display: flex; justify-content: center; align-items: center; margin: 5px 0; }
-        .debug-panel { font-family: 'JetBrains Mono', monospace; background: #111; border-top: 2px solid #333; }
         
-        /* Botones de acción recuperados */
         .btn-edit { color: #00e5ff; padding: 8px; border-radius: 8px; background: rgba(0, 229, 255, 0.1); }
         .btn-delete { color: #ff4d4d; padding: 8px; border-radius: 8px; background: rgba(255, 77, 77, 0.1); }
     </style>
 </head>
-<body class="pb-24">
-
-    <div id="pin-screen">
+<body class="pb-20"> <div id="pin-screen">
         <div class="text-center mb-10">
             <h1 class="text-4xl font-[900] italic text-[#00e5ff] tracking-tighter">BBVA</h1>
             <p class="text-[9px] uppercase tracking-[0.4em] text-white/40 mt-2">Acceso Privado</p>
@@ -79,7 +75,6 @@
                                 <p class="text-[9px] uppercase font-black tracking-widest text-cyan-300/60">Disponible fin de mes</p>
                             </div>
                             <h2 id="valPrevision" class="text-5xl font-[900] tracking-tighter text-cyan-400">0.00€</h2>
-                            <p class="text-[8px] uppercase mt-2 opacity-50 italic">Cálculo estimado</p>
                         </div>
                     </div>
                 </div>
@@ -87,14 +82,6 @@
                 <div class="bg-bbva-card p-3 rounded-[2rem] flex flex-col items-center mt-2">
                     <div class="donut-container"><canvas id="chartGastos"></canvas></div>
                     <div id="legendBox" class="grid grid-cols-2 gap-2 w-full mt-2"></div>
-                </div>
-
-                <div class="debug-panel p-6 rounded-[2rem] mt-10 mb-20">
-                    <h3 class="text-[10px] font-black uppercase text-cyan-400 mb-4 tracking-[0.3em]">System Debugger</h3>
-                    <div class="space-y-3 text-[10px] font-mono">
-                        <div class="flex justify-between border-b border-white/5 pb-1"><span class="text-slate-500">API:</span><span class="text-emerald-400">ONLINE</span></div>
-                        <div class="flex justify-between border-b border-white/5 pb-1"><span class="text-slate-500">RECORDS:</span><span id="debug-count" class="text-white">--</span></div>
-                    </div>
                 </div>
             </section>
 
@@ -105,7 +92,7 @@
                 <div id="listaMes" class="space-y-2"></div>
             </section>
 
-            <section id="tab-add" class="tab-content hidden flex flex-col pt-1">
+            <section id="tab-add" class="tab-content hidden flex flex-col pt-1 -mb-6">
                 <div class="bg-bbva-card p-5 rounded-[2.5rem] border-t-4 border-[#00e5ff] w-full mt-0">
                     <form id="mainForm" class="space-y-3">
                         <input type="hidden" id="in-id">
@@ -155,45 +142,24 @@
             try {
                 const res = await fetch(API_URL);
                 appData = await res.json();
-                document.getElementById('debug-count').innerText = appData.length;
-
                 const hoy = new Date();
                 const hoyStr = hoy.toISOString().split('T')[0];
                 const mesActualStr = hoy.toISOString().slice(0, 7);
                 const mesSel = document.getElementById('filtroMes').value;
-                
                 let real = 0, prevision = 0, cats = {};
                 const lMes = document.getElementById('listaMes'); lMes.innerHTML = '';
 
                 appData.forEach(g => {
                     const val = parseFloat(g.importe);
                     const esIngreso = (g.categoria === "Sueldo" || g.categoria === "Otros Ingresos");
-                    
                     if (g.fecha <= hoyStr) esIngreso ? real += val : real -= val;
                     if (g.fecha.startsWith(mesActualStr)) esIngreso ? prevision += val : prevision -= val;
-
                     if (g.fecha.startsWith(mesSel)) {
                         if(!esIngreso) cats[g.categoria] = (cats[g.categoria]||0) + val;
                         const disp = isPrivate ? "****€" : (esIngreso?'+':'') + val.toFixed(2) + '€';
-                        
-                        // LÁPIZ Y PAPELERA RECUPERADOS AQUÍ
-                        lMes.innerHTML += `
-                            <div class="bg-bbva-card p-4 rounded-2xl flex justify-between items-center border-l-2 ${esIngreso?'border-[#00e5ff]':'border-rose-500'}">
-                                <div class="flex-1">
-                                    <p class="font-bold text-white text-sm mb-1">${g.concepto}</p>
-                                    <p class="text-[10px] text-slate-500 font-bold uppercase">${g.categoria} • ${g.fecha.split('-')[2]}</p>
-                                </div>
-                                <div class="flex items-center gap-4">
-                                    <p class="font-black text-lg ${esIngreso?'text-[#00e5ff]':'text-rose-400'}">${disp}</p>
-                                    <div class="flex gap-1">
-                                        <button onclick="preEdit('${g._id}')" class="btn-edit">✏️</button>
-                                        <button onclick="deleteGasto('${g._id}')" class="btn-delete">🗑️</button>
-                                    </div>
-                                </div>
-                            </div>`;
+                        lMes.innerHTML += `<div class="bg-bbva-card p-4 rounded-2xl flex justify-between items-center border-l-2 ${esIngreso?'border-[#00e5ff]':'border-rose-500'}"><div class="flex-1"><p class="font-bold text-white text-sm mb-1">${g.concepto}</p><p class="text-[10px] text-slate-500 font-bold uppercase">${g.categoria}</p></div><div class="flex items-center gap-4"><p class="font-black text-lg ${esIngreso?'text-[#00e5ff]':'text-rose-400'}">${disp}</p><div class="flex gap-1"><button onclick="preEdit('${g._id}')" class="btn-edit">✏️</button><button onclick="deleteGasto('${g._id}')" class="btn-delete">🗑️</button></div></div></div>`;
                     }
                 });
-
                 document.getElementById('valReal').innerText = isPrivate ? "****€" : real.toLocaleString('de-DE', {minimumFractionDigits: 2}) + "€";
                 document.getElementById('valPrevision').innerText = isPrivate ? "****€" : prevision.toLocaleString('de-DE', {minimumFractionDigits: 2}) + "€";
                 drawChart(cats);
@@ -220,10 +186,7 @@
         }
 
         async function deleteGasto(id) {
-            if(confirm("¿Seguro que quieres borrar este registro?")) {
-                await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
-                renderApp();
-            }
+            if(confirm("¿Seguro que quieres borrar este registro?")) { await fetch(`${API_URL}/${id}`, { method: 'DELETE' }); renderApp(); }
         }
 
         function switchTab(id, el) { 
@@ -236,12 +199,7 @@
         document.getElementById('mainForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const id = document.getElementById('in-id').value;
-            const data = { 
-                concepto: document.getElementById('in-concepto').value, 
-                importe: parseFloat(document.getElementById('in-importe').value),
-                categoria: document.getElementById('in-categoria').value,
-                fecha: document.getElementById('in-fecha').value
-            };
+            const data = { concepto: document.getElementById('in-concepto').value, importe: parseFloat(document.getElementById('in-importe').value), categoria: document.getElementById('in-categoria').value, fecha: document.getElementById('in-fecha').value };
             const method = id ? 'PUT' : 'POST';
             const url = id ? `${API_URL}/${id}` : API_URL;
             await fetch(url, { method: method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
