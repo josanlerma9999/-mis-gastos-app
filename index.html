@@ -233,9 +233,7 @@
                 
                 updateChart();
             } catch (err) { console.error("Error cargando datos", err); }
-        } 
-
-        function updateChart() {
+        }         function updateChart() {
             const ctx = document.getElementById('gastosChart').getContext('2d');
             const mesActual = new Date().toISOString().slice(0, 7);
             const desgloseGastos = {};
@@ -251,12 +249,44 @@
             if (gastosChart) gastosChart.destroy();
             gastosChart = new Chart(ctx, {
                 type: 'doughnut',
-                data: { labels: labels, datasets: [{ data: data, backgroundColor: colores, borderColor: '#072146', borderWidth: 2, hoverOffset: 10 }] },
-                options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'right', labels: { color: 'white', font: { size: 10, weight: 'bold' }, boxWidth: 12, padding: 10 } } } }
+                data: { labels: labels, datasets: [{ data: data, backgroundColor: colores, borderColor: '#072146', borderWidth: 2 }] },
+                options: { 
+                    responsive: true, maintainAspectRatio: false, cutout: '70%',
+                    onClick: (evt, item) => {
+                        if (item.length > 0) {
+                            const index = item[0].index;
+                            const categoriaSeleccionada = labels[index];
+                            aplicarFiltroCategoria(categoriaSeleccionada);
+                        }
+                    },
+                    plugins: { legend: { position: 'right', labels: { color: 'white', font: { size: 10, weight: 'bold' }, boxWidth: 12, padding: 10 } } } 
+                }
             });
-        } 
+        }
 
-        async function deleteGasto(id) {
+        function aplicarFiltroCategoria(cat) {
+            const listaMovs = document.getElementById('listaPasado');
+            goToTab(2); // Salta a la pestaña de Movimientos
+            setTimeout(() => {
+                const todosLosMovs = listaMovs.querySelectorAll('.bbva-card');
+                todosLosMovs.forEach(card => {
+                    if (!card.innerText.includes(cat)) {
+                        card.style.display = 'none';
+                    } else {
+                        card.style.borderLeft = '4px solid #00e5ff';
+                    }
+                });
+                if (!document.getElementById('btn-quitar-filtro')) {
+                    const btn = document.createElement('button');
+                    btn.id = 'btn-quitar-filtro';
+                    btn.className = "w-full mb-4 py-2 bg-rose-500/20 text-rose-400 text-[10px] font-bold uppercase rounded-lg";
+                    btn.innerText = `Limpiar Filtro: ${cat} ✖`;
+                    btn.onclick = () => { renderApp(); btn.remove(); };
+                    listaMovs.prepend(btn);
+                }
+            }, 350);
+        }
+  async function deleteGasto(id) {
             if(confirm("¿Eliminar?")) { await fetch(`${API_URL}/${id}`, {method:'DELETE'}); renderApp(); }
         } 
 
