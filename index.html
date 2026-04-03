@@ -264,28 +264,45 @@
             });
         }
 
-        function aplicarFiltroCategoria(cat) {
+                function aplicarFiltroCategoria(cat) {
             const listaMovs = document.getElementById('listaPasado');
             goToTab(2); // Salta a la pestaña de Movimientos
+            
+            // Limpiamos el nombre de la categoría de emojis para comparar mejor
+            const catLimpia = cat.replace(/[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF]/g, '').trim().toLowerCase();
+
             setTimeout(() => {
-                const todosLosMovs = listaMovs.querySelectorAll('.bbva-card');
-                todosLosMovs.forEach(card => {
-                    if (!card.innerText.includes(cat)) {
-                        card.style.display = 'none';
-                    } else {
+                const tarjetas = listaMovs.querySelectorAll('.bbva-card');
+                let encontrados = 0;
+
+                tarjetas.forEach(card => {
+                    // Buscamos el texto de la categoría dentro de la tarjeta
+                    const textoTarjeta = card.innerText.toLowerCase();
+                    
+                    if (textoTarjeta.includes(catLimpia)) {
+                        card.style.display = 'flex';
                         card.style.borderLeft = '4px solid #00e5ff';
+                        encontrados++;
+                    } else {
+                        card.style.display = 'none';
                     }
                 });
-                if (!document.getElementById('btn-quitar-filtro')) {
-                    const btn = document.createElement('button');
-                    btn.id = 'btn-quitar-filtro';
-                    btn.className = "w-full mb-4 py-2 bg-rose-500/20 text-rose-400 text-[10px] font-bold uppercase rounded-lg";
-                    btn.innerText = `Limpiar Filtro: ${cat} ✖`;
-                    btn.onclick = () => { renderApp(); btn.remove(); };
-                    listaMovs.prepend(btn);
-                }
+
+                // Si ya había un botón de quitar filtro, lo borramos para no duplicar
+                const btnViejo = document.getElementById('btn-quitar-filtro');
+                if (btnViejo) btnViejo.remove();
+
+                // Añadimos el botón de control arriba
+                const btn = document.createElement('button');
+                btn.id = 'btn-quitar-filtro';
+                btn.className = "w-full mb-4 py-3 bg-cyan-400/10 text-cyan-400 text-[11px] font-black uppercase rounded-xl border border-cyan-400/20";
+                btn.innerHTML = `Filtrado por: ${cat} <span class="ml-2">✕</span>`;
+                btn.onclick = () => { renderApp(); btn.remove(); };
+                listaMovs.prepend(btn);
+                
             }, 350);
         }
+
   async function deleteGasto(id) {
             if(confirm("¿Eliminar?")) { await fetch(`${API_URL}/${id}`, {method:'DELETE'}); renderApp(); }
         } 
