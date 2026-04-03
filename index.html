@@ -235,17 +235,40 @@
             });
         }
 
-        function aplicarFiltroCategoria(cat) {
+                function aplicarFiltroCategoria(cat) {
             const lista = document.getElementById('listaPasado');
-            const catLimpia = cat.replace(/[^\w\s]/gi, '').trim().toLowerCase();
-            goToTab(2);
+            // Quitamos emojis y espacios extra para comparar solo el texto
+            const catLimpia = cat.replace(/[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF]/g, '').trim().toLowerCase();
+            
+            goToTab(2); // Te lleva a la pestaña de Movimientos (Movs)
+
             setTimeout(() => {
+                let encontrados = 0;
                 lista.querySelectorAll('.bbva-card').forEach(card => {
-                    const match = card.innerText.toLowerCase().includes(catLimpia);
+                    // Buscamos si el texto de la tarjeta contiene la categoría (ignora mayúsculas/minúsculas)
+                    const textoTarjeta = card.innerText.toLowerCase();
+                    const match = textoTarjeta.includes(catLimpia);
+                    
                     card.style.display = match ? 'flex' : 'none';
+                    if(match) {
+                        card.style.borderLeft = '4px solid #00e5ff';
+                        encontrados++;
+                    }
                 });
+
+                // Añadimos el botón para quitar el filtro si no existe
+                const oldBtn = document.getElementById('btn-quitar-filtro');
+                if (oldBtn) oldBtn.remove();
+
+                const btn = document.createElement('button');
+                btn.id = 'btn-quitar-filtro';
+                btn.className = "w-full mb-4 py-3 bg-cyan-400/10 text-cyan-400 text-[11px] font-black uppercase rounded-xl border border-cyan-400/20";
+                btn.innerHTML = `Filtrado: ${cat} (${encontrados}) ✕`;
+                btn.onclick = () => { renderApp(); btn.remove(); };
+                lista.prepend(btn);
             }, 350);
-        } 
+        }
+
 
         async function deleteGasto(id) { if(confirm("¿Eliminar?")) { await fetch(`${API_URL}/${id}`, {method:'DELETE'}); renderApp(); } } 
 
