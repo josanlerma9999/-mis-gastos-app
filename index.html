@@ -197,7 +197,6 @@
                 updateChart();
             } catch (e) { console.error(e); }
         }
-
         function updateChart() {
             const canvas = document.getElementById('gastosChart');
             if(!canvas) return;
@@ -210,32 +209,43 @@
                     const val = Math.abs(parseFloat(g.importe));
                     desglose[g.categoria] = (desglose[g.categoria] || 0) + val;
                 }
-            });
+            }); 
 
             const labels = Object.keys(desglose), data = Object.values(desglose);
             if (gastosChart) gastosChart.destroy();
             gastosChart = new Chart(ctx, {
                 type: 'doughnut',
-                data: { labels, datasets: [{ data, backgroundColor: [
-    '#00e5ff', // Cyan (Aqua)
-    '#7c4dff', // Morado (Imagine)
-    '#ff4081', // Rosa (Amazon)
-    '#ffee33', // Amarillo (Gasolina/Varios)
-    '#4caf50', // Verde (Sueldo)
-    '#ff9800', // Naranja
-    '#E0E0E0', // Gris Plata (Explora) <- NUEVO
-    '#0091EA', // Azul PayPal <- NUEVO
-    '#8D6E63', // Marrón
-    '#26A69A'  // Turquesa
-], , borderColor: '#072146', borderWidth: 2 }] },
+                data: { 
+                    labels, 
+                    datasets: [{ 
+                        data, 
+                        backgroundColor: [
+                            '#00e5ff', // Cyan (Aqua)
+                            '#7c4dff', // Morado (Imagine)
+                            '#ff4081', // Rosa (Amazon)
+                            '#ffee33', // Amarillo (Gasolina/Varios)
+                            '#4caf50', // Verde
+                            '#ff9800', // Naranja
+                            '#E0E0E0', // Gris Plata (Explora)
+                            '#0091EA', // Azul PayPal
+                            '#8D6E63', // Marrón
+                            '#26A69A'  // Turquesa
+                        ], 
+                        borderColor: '#072146', 
+                        borderWidth: 2 
+                    }] 
+                },
                 options: { 
-                    responsive: true, maintainAspectRatio: false, cutout: '75%',
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    cutout: '75%',
                     onHover: (e, i) => e.native.target.style.cursor = i.length > 0 ? 'pointer' : 'default',
                     onClick: (e, i) => { if(i.length > 0) aplicarFiltroCategoria(labels[i[0].index]); },
                     plugins: { legend: { position: 'right', labels: { color: 'white', font: { size: 10, weight: 'bold' }, boxWidth: 12 } } }
                 }
             });
         }
+
 
         function aplicarFiltroCategoria(cat) {
             const lista = document.getElementById('listaPasado');
