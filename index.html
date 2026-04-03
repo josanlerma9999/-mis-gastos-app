@@ -235,6 +235,26 @@ document.getElementById('main-view').style.transform = `translateX(-${i * 25}%)`
 
         function togglePrivacy() { isPrivate = !isPrivate; renderApp(); }
         document.getElementById('filtroMes').value = new Date().toISOString().slice(0, 7);
+function handleGesture() {
+    const deltaX = touchendX - touchstartX;
+    const deltaY = touchendY - touchstartY;
+
+    // Filtro de seguridad:
+    // 1. Que el movimiento sea más horizontal que vertical (Math.abs(deltaX) > Math.abs(deltaY))
+    // 2. Que el movimiento tenga una distancia mínima de 80 píxeles para evitar toques accidentales
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 80) {
+        if (deltaX < 0 && currentTabIndex < 3) {
+            // Deslizar a la izquierda -> pestaña siguiente
+            currentTabIndex++;
+            goToTab(currentTabIndex);
+        } else if (deltaX > 0 && currentTabIndex > 0) {
+            // Deslizar a la derecha -> pestaña anterior
+            currentTabIndex--;
+            goToTab(currentTabIndex);
+        }
+    }
+}
+
     </script>
 </body>
 </html>
