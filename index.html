@@ -131,11 +131,11 @@
     </div>
 
     <script>
-        const API_URL = 'https://mis-gastos-app.onrender.com/api/gastos';
+                const API_URL = 'https://mis-gastos-app.onrender.com/api/gastos';
         let touchstartX = 0, touchendX = 0, currentTabIndex = 0;
         let pin = "", isPrivate = false, appData = [];
         const categIngresos = ["Sueldo", "Otros Ingresos"];
-        let gastosChart = null;
+        let gastosChart = null; 
 
         // PIN PAD
         [1,2,3,4,5,6,7,8,9,'C',0,'DEL'].forEach(v => {
@@ -146,29 +146,31 @@
                 if(pin === "1763") { document.getElementById('pin-screen').remove(); document.getElementById('app-content').classList.remove('hidden'); renderApp(); }
             };
             document.getElementById('pin-pad').appendChild(b);
-        });
+        }); 
 
         function goToTab(i) {
             currentTabIndex = i;
             document.getElementById('main-view').style.transform = `translateX(-${i * 25}%)`;
             document.querySelectorAll('.nav-btn').forEach((b, idx) => idx === i ? b.classList.add('active-tab') : b.classList.remove('active-tab'));
             if(i === 0) setTimeout(updateChart, 100);
-        }
+        } 
 
         async function renderApp() {
             try {
-                const res = await fetch(API_URL); appData = await res.json();
+                const res = await fetch(API_URL); 
+                appData = await res.json();
                 const hoy = new Date().toISOString().split('T')[0];
                 const mesSel = document.getElementById('filtroMes').value;
                 let saldoReal = 0, gFuturos = 0, iFuturos = 0;
+                
                 document.getElementById('listaPasado').innerHTML = '';
-                document.getElementById('listaFuturo').innerHTML = '';
+                document.getElementById('listaFuturo').innerHTML = ''; 
 
                 appData.sort((a, b) => {
                     const aF = a.fecha > hoy, bF = b.fecha > hoy;
                     if (aF && !bF) return 1; if (!aF && bF) return -1;
                     return b.fecha.localeCompare(a.fecha);
-                });
+                }); 
 
                 appData.forEach(g => {
                     const val = Math.abs(parseFloat(g.importe)), esI = categIngresos.includes(g.categoria), esP = g.fecha <= hoy;
@@ -178,7 +180,7 @@
                     if(g.fecha.startsWith(mesSel)) {
                         document.getElementById('listaPasado').insertAdjacentHTML('beforeend', `
                             <div class="bbva-card p-4 flex justify-between items-center ${!esP ? 'opacity-40 border-l-4 border-cyan-400' : ''}">
-                                <div class="flex-1"><p class="text-sm font-bold text-white">${g.concept || g.concepto}</p><p class="text-[9px] text-slate-500 uppercase mt-1">${g.fecha} • ${g.categoria}</p></div>
+                                <div class="flex-1"><p class="text-sm font-bold text-white">${g.concepto}</p><p class="text-[9px] text-slate-500 uppercase mt-1">${g.fecha} • ${g.categoria}</p></div>
                                 <div class="flex items-center gap-3"><p class="font-black ${esI ? 'text-cyan-400' : 'text-white'}">${esI ? '+' : '-'}${disp}</p>
                                 <button onclick="event.stopPropagation(); deleteGasto('${g._id}')" class="btn-action text-rose-500">🗑️</button></div>
                             </div>`);
@@ -186,7 +188,7 @@
                     if(!esP) {
                         document.getElementById('listaFuturo').insertAdjacentHTML('afterbegin', `
                             <div class="bbva-card border-l-4 border-cyan-400 p-5 flex justify-between items-center">
-                                <div><p class="font-black text-white">${g.concept || g.concepto}</p><p class="text-[10px] text-slate-500">${g.fecha}</p></div>
+                                <div><p class="font-black text-white">${g.concepto}</p><p class="text-[10px] text-slate-500">${g.fecha}</p></div>
                                 <p class="text-xl font-black ${esI ? 'text-cyan-400' : 'text-white'}">${esI ? '+' : '-'}${disp}</p>
                             </div>`);
                     }
@@ -197,6 +199,7 @@
                 updateChart();
             } catch (e) { console.error(e); }
         }
+
         function updateChart() {
             const canvas = document.getElementById('gastosChart');
             if(!canvas) return;
@@ -219,67 +222,47 @@
                     labels, 
                     datasets: [{ 
                         data, 
-                        backgroundColor: [
-                            '#00e5ff', // Cyan (Aqua)
-                            '#7c4dff', // Morado (Imagine)
-                            '#ff4081', // Rosa (Amazon)
-                            '#ffee33', // Amarillo (Gasolina/Varios)
-                            '#4caf50', // Verde
-                            '#ff9800', // Naranja
-                            '#E0E0E0', // Gris Plata (Explora)
-                            '#0091EA', // Azul PayPal
-                            '#8D6E63', // Marrón
-                            '#26A69A'  // Turquesa
-                        ], 
+                        backgroundColor: ['#00e5ff','#7c4dff','#ff4081','#ffee33','#4caf50','#ff9800','#E0E0E0','#0091EA','#8D6E63','#26A69A'], 
                         borderColor: '#072146', 
                         borderWidth: 2 
                     }] 
                 },
                 options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false, 
-                    cutout: '75%',
-                    onHover: (e, i) => e.native.target.style.cursor = i.length > 0 ? 'pointer' : 'default',
-                    onClick: (e, i) => { if(i.length > 0) aplicarFiltroCategoria(labels[i[0].index]); },
-                    plugins: { legend: { position: 'right', labels: { color: 'white', font: { size: 10, weight: 'bold' }, boxWidth: 12 } } }
+                    responsive: true, maintainAspectRatio: false, cutout: '75%',
+                    plugins: { legend: { position: 'right', labels: { color: 'white', font: { size: 10 }, boxWidth: 10 } } },
+                    onClick: (e, i) => { if(i.length > 0) aplicarFiltroCategoria(labels[i[0].index]); }
                 }
             });
         }
 
-
         function aplicarFiltroCategoria(cat) {
             const lista = document.getElementById('listaPasado');
-            const catLimpia = cat.replace(/[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF]/g, '').trim().toLowerCase();
+            const catLimpia = cat.replace(/[^\w\s]/gi, '').trim().toLowerCase();
             goToTab(2);
             setTimeout(() => {
                 lista.querySelectorAll('.bbva-card').forEach(card => {
                     const match = card.innerText.toLowerCase().includes(catLimpia);
                     card.style.display = match ? 'flex' : 'none';
-                    if(match) card.style.borderLeft = '4px solid #00e5ff';
                 });
-                const oldBtn = document.getElementById('btn-quitar-filtro');
-                if (oldBtn) oldBtn.remove();
-                const btn = document.createElement('button');
-                btn.id = 'btn-quitar-filtro';
-                btn.className = "w-full mb-4 py-3 bg-cyan-400/10 text-cyan-400 text-[11px] font-black uppercase rounded-xl border border-cyan-400/20";
-                btn.innerHTML = `Filtrado: ${cat} ✕`;
-                btn.onclick = () => { renderApp(); btn.remove(); };
-                lista.prepend(btn);
             }, 350);
-        }
+        } 
 
-        async function deleteGasto(id) { if(confirm("¿Eliminar?")) { await fetch(`${API_URL}/${id}`, {method:'DELETE'}); renderApp(); } }
+        async function deleteGasto(id) { if(confirm("¿Eliminar?")) { await fetch(`${API_URL}/${id}`, {method:'DELETE'}); renderApp(); } } 
 
         document.getElementById('mainForm').onsubmit = async (e) => {
             e.preventDefault();
-            const data = { concepto: document.getElementById('in-concept') ? document.getElementById('in-concept').value : document.getElementById('in-concepto').value, importe: parseFloat(document.getElementById('in-importe').value), categoria: document.getElementById('in-categoria').value, fecha: document.getElementById('in-fecha').value };
+            const data = { 
+                concepto: document.getElementById('in-concepto').value, 
+                importe: parseFloat(document.getElementById('in-importe').value), 
+                categoria: document.getElementById('in-categoria').value, 
+                fecha: document.getElementById('in-fecha').value 
+            };
             await fetch(API_URL, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
             e.target.reset(); renderApp(); goToTab(0);
-        };
+        }; 
 
         function togglePrivacy() { isPrivate = !isPrivate; renderApp(); }
         
-        // GESTOS SWIPE
         const vp = document.getElementById('viewport');
         vp.addEventListener('touchstart', e => touchstartX = e.changedTouches[0].screenX, {passive:true});
         vp.addEventListener('touchend', e => { 
@@ -289,6 +272,7 @@
         }, {passive:true});
         
         document.getElementById('filtroMes').value = new Date().toISOString().slice(0, 7);
+
     </script>
 </body>
 </html>
