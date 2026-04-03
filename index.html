@@ -226,14 +226,39 @@ document.getElementById('main-view').style.transform = `translateX(-${i * 25}%)`
         }
 
         document.getElementById('mainForm').onsubmit = async (e) => {
-            e.preventDefault();
-            const id = document.getElementById('in-id').value;
-            const data = { concepto: document.getElementById('in-concepto').value, importe: parseFloat(document.getElementById('in-importe').value), categoria: document.getElementById('in-categoria').value, fecha: document.getElementById('in-fecha').value };
-            await fetch(id ? `${API_URL}/${id}` : API_URL, { method: id ? 'PUT' : 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
-            e.target.reset(); document.getElementById('in-id').value = ""; renderApp(); goToTab(0);
-        };
+    e.preventDefault();
+    const data = { 
+        concepto: document.getElementById('in-concepto').value, 
+        importe: parseFloat(document.getElementById('in-importe').value), 
+        categoria: document.getElementById('in-categoria').value, 
+        fecha: document.getElementById('in-fecha').value 
+    };
+    await fetch(API_URL, { 
+        method: 'POST', 
+        headers: {'Content-Type':'application/json'}, 
+        body: JSON.stringify(data) 
+    });
+    e.target.reset(); 
+    renderApp(); 
+    goToTab(0);
+};
 
-        function togglePrivacy() { isPrivate = !isPrivate; renderApp(); }
+
+        function togglePrivacy()
+const viewport = document.getElementById('viewport');
+
+viewport.addEventListener('touchstart', e => {
+    touchstartX = e.changedTouches[0].screenX;
+    touchstartY = e.changedTouches[0].screenY;
+}, {passive: true});
+
+viewport.addEventListener('touchend', e => {
+    touchendX = e.changedTouches[0].screenX;
+    touchendY = e.changedTouches[0].screenY;
+    handleGesture(); 
+}, {passive: true});
+
+ { isPrivate = !isPrivate; renderApp(); }
         document.getElementById('filtroMes').value = new Date().toISOString().slice(0, 7);
 function handleGesture() {
     const deltaX = touchendX - touchstartX;
