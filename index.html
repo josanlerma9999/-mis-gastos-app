@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -101,9 +112,20 @@
                         <input type="text" id="in-concepto" placeholder="Concepto" class="bbva-input" required>
                         <input type="number" id="in-importe" step="0.01" placeholder="0.00" class="bbva-input text-3xl text-center font-bold" required>
                         <select id="in-categoria" class="bbva-input font-bold" required>
-                            <optgroup label="INGRESOS"><option value="Sueldo">💰 Sueldo</option><option value="Otros Ingresos">💵 Otros Ingresos</option></optgroup>
-                            <optgroup label="GASTOS"><option value="Cuenta BBVA">🏦 Cuenta BBVA</option><option value="Tarjeta Aqua">🟦 Tarjeta Aqua</option><option value="Amazon">📦 Amazon</option><option value="Gasolina">⛽ Gasolina</option><option value="Imagine">📱 Imagine</option><option value="Varios">🛍️ Varios</option></optgroup>
-                        </select>
+    <optgroup label="INGRESOS">
+        <option value="Sueldo">💰 Sueldo</option>
+        <option value="Otros Ingresos">💵 Otros Ingresos</option>
+    </optgroup>
+    <optgroup label="GASTOS">
+        <option value="Cuenta BBVA">🏦 Cuenta BBVA</option>
+        <option value="Tarjeta Aqua">🟦 Tarjeta Aqua</option>
+        <option value="Tarjeta Explora">💳 Tarjeta Explora</option> <option value="PayPal">💙 PayPal</option> <option value="Amazon">📦 Amazon</option>
+        <option value="Gasolina">⛽ Gasolina</option>
+        <option value="Imagine">📱 Imagine</option>
+        <option value="Varios">🛍️ Varios</option>
+    </optgroup>
+</select>
+
                         <input type="date" id="in-fecha" class="bbva-input" required>
                         <button type="submit" class="w-full bg-cyan-400 text-black font-black py-4 rounded-xl uppercase">Confirmar</button>
                     </form>
