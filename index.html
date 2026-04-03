@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BBVA Premium v16.6 - Visible PIN</title>
+    <title>BBVA Premium v16.6 - Pro Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -11,42 +11,31 @@
         :root { --bbva-navy: #072146; --bbva-blue: #004481; --bbva-cyan: #00e5ff; }
         html, body { height: 100%; margin: 0; padding: 0; background: #000; overflow: hidden; font-family: 'Inter', sans-serif; }
         
+        /* PIN PAD Estilo */
         .num-btn { 
             width: 72px; height: 72px; border-radius: 50%; 
             border: 1px solid rgba(255,255,255,0.15); 
             font-size: 1.6rem; font-weight: 600; 
             display: flex; align-items: center; justify-content: center;
-            background: rgba(255,255,255,0.08); 
-            color: white;
+            background: rgba(255,255,255,0.08); color: white;
             transition: all 0.1s ease;
         }
-        .num-btn:active { 
-            background: var(--bbva-cyan) !important; 
-            color: #000 !important; 
-            box-shadow: 0 0 30px var(--bbva-cyan); 
-            transform: scale(0.9);
-        } 
+        .num-btn:active { background: var(--bbva-cyan) !important; color: #000 !important; box-shadow: 0 0 30px var(--bbva-cyan); transform: scale(0.9); }
 
-        .bbva-card { background: var(--bbva-navy); border-radius: 1.5rem; border: 1px solid rgba(255,255,255,0.05); }
+        .bbva-card { background: var(--bbva-navy); border-radius: 1.5rem; border: 1px solid rgba(255,255,255,0.05); transition: all 0.3s ease; }
         .bbva-gradient { background: linear-gradient(135deg, #072146 0%, #004481 100%); border-radius: 2rem; }
         .bbva-input { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 1rem; padding: 1rem; width: 100%; color: white; outline: none; }
         
-        #viewport { 
-            width: 100%; 
-            height: calc(100% - 140px); 
-            overflow: hidden; 
-            position: relative;
-            touch-action: pan-y;
-        }
+        #viewport { width: 100%; height: calc(100% - 140px); overflow: hidden; position: relative; touch-action: pan-y; }
         #main-view { display: flex; width: 400%; height: 100%; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .tab-content { width: 25%; height: 100%; overflow-y: auto; padding: 1.25rem; -webkit-overflow-scrolling: touch; }
         
         .active-tab { color: var(--bbva-cyan) !important; border-top: 3px solid var(--bbva-cyan); }
         .btn-action { z-index: 50; position: relative; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.1); border-radius: 0.8rem; }
-        .chart-container { position: relative; height: 200px; width: 100%; margin-top: 1rem; }
+        .chart-container { position: relative; height: 220px; width: 100%; margin-top: 1rem; }
     </style>
 </head>
-<body> 
+<body>
 
     <div id="pin-screen" class="fixed inset-0 bg-black z-[9999] flex flex-col items-center justify-center">
         <div class="text-3xl font-black italic mb-12 text-white tracking-tighter">BBVA</div>
@@ -57,7 +46,7 @@
             <div class="w-3 h-3 rounded-full border-2 border-cyan-400 mx-2"></div>
         </div>
         <div class="grid grid-cols-3 gap-5" id="pin-pad"></div>
-    </div> 
+    </div>
 
     <div id="app-content" class="hidden h-full flex flex-col text-white">
         <header class="p-5 flex justify-between items-center bg-black">
@@ -66,7 +55,7 @@
                 <button onclick="togglePrivacy()">👁️</button>
                 <button onclick="location.reload()">🔒</button>
             </div>
-        </header> 
+        </header>
 
         <div id="viewport">
             <div id="main-view">
@@ -85,56 +74,42 @@
                             <p id="valPend" class="text-xl font-bold text-rose-400 mt-1">0.00€</p>
                         </div>
                     </div>
-                    
                     <div class="bbva-card p-6 shadow-xl">
                         <div class="flex justify-between items-center mb-2">
                             <h3 class="text-xs font-bold text-white uppercase tracking-widest">Distribución de Gastos</h3>
-                            <span id="filtroChartMes" class="text-[10px] font-black text-cyan-400 uppercase tracking-tight">Este Mes</span>
+                            <span class="text-[10px] font-black text-cyan-400 uppercase tracking-tight">Toca para filtrar</span>
                         </div>
                         <div class="chart-container">
                             <canvas id="gastosChart"></canvas>
                         </div>
                     </div>
-                </section> 
+                </section>
 
                 <section class="tab-content">
                     <h3 class="text-xs font-bold text-cyan-400 uppercase mb-4 tracking-widest">Pagos Agendados</h3>
                     <div id="listaFuturo" class="space-y-3"></div>
-                </section> 
+                </section>
 
                 <section class="tab-content">
                     <input type="month" id="filtroMes" class="bbva-input mb-4" onchange="renderApp()">
                     <div id="listaPasado" class="space-y-2 pb-20"></div>
-                </section> 
+                </section>
 
                 <section class="tab-content">
                     <form id="mainForm" class="bbva-card p-6 space-y-4 shadow-xl">
-                        <h2 id="form-title" class="text-xs font-black uppercase text-cyan-400 tracking-widest mb-2">Operación</h2>
-                        <input type="hidden" id="in-id">
+                        <h2 class="text-xs font-black uppercase text-cyan-400 tracking-widest mb-2">Nueva Operación</h2>
                         <input type="text" id="in-concepto" placeholder="Concepto" class="bbva-input" required>
                         <input type="number" id="in-importe" step="0.01" placeholder="0.00" class="bbva-input text-3xl text-center font-bold" required>
                         <select id="in-categoria" class="bbva-input font-bold" required>
-                            <optgroup label="INGRESOS (Suman)">
-                                <option value="Sueldo">💰 Sueldo</option>
-                                <option value="Otros Ingresos">💵 Otros Ingresos</option>
-                            </optgroup>
-                            <optgroup label="GASTOS (Restan)">
-                                <option value="Cuenta BBVA">🏦 Cuenta BBVA</option>
-                                <option value="Tarjeta Aqua">🟦 Tarjeta Aqua</option>
-                                <option value="Tarjeta Explora">✈️ Tarjeta Explora</option>
-                                <option value="PayPal">💳 PayPal</option>
-                                <option value="Amazon">📦 Amazon</option>
-                                <option value="Gasolina">⛽ Gasolina</option>
-                                <option value="Imagine">📱 Imagine</option>
-                                <option value="Varios">🛍️ Varios</option>
-                            </optgroup>
+                            <optgroup label="INGRESOS"><option value="Sueldo">💰 Sueldo</option><option value="Otros Ingresos">💵 Otros Ingresos</option></optgroup>
+                            <optgroup label="GASTOS"><option value="Cuenta BBVA">🏦 Cuenta BBVA</option><option value="Tarjeta Aqua">🟦 Tarjeta Aqua</option><option value="Amazon">📦 Amazon</option><option value="Gasolina">⛽ Gasolina</option><option value="Imagine">📱 Imagine</option><option value="Varios">🛍️ Varios</option></optgroup>
                         </select>
                         <input type="date" id="in-fecha" class="bbva-input" required>
-                        <button type="submit" id="btn-submit" class="w-full bg-cyan-400 text-black font-black py-4 rounded-xl uppercase">Confirmar</button>
+                        <button type="submit" class="w-full bg-cyan-400 text-black font-black py-4 rounded-xl uppercase">Confirmar</button>
                     </form>
                 </section>
             </div>
-        </div> 
+        </div>
 
         <nav class="bg-black border-t border-white/10 flex justify-around p-3 pb-8">
             <button onclick="goToTab(0)" class="nav-btn active-tab flex-1 flex flex-col items-center gap-1"><span class="text-xl">🏠</span><span class="text-[8px] uppercase">Inicio</span></button>
@@ -142,15 +117,14 @@
             <button onclick="goToTab(2)" class="nav-btn text-slate-500 flex-1 flex flex-col items-center gap-1"><span class="text-xl">📋</span><span class="text-[8px] uppercase">Movs</span></button>
             <button onclick="goToTab(3)" class="nav-btn text-slate-500 flex-1 flex flex-col items-center gap-1"><span class="text-xl">➕</span><span class="text-[8px] uppercase">Operar</span></button>
         </nav>
-    </div> 
+    </div>
 
     <script>
         const API_URL = 'https://mis-gastos-app.onrender.com/api/gastos';
-        let touchstartX = 0, touchstartY = 0, touchendX = 0, touchendY = 0;
-        let currentTabIndex = 0; 
+        let touchstartX = 0, touchendX = 0, currentTabIndex = 0;
         let pin = "", isPrivate = false, appData = [];
         const categIngresos = ["Sueldo", "Otros Ingresos"];
-        let gastosChart = null; 
+        let gastosChart = null;
 
         // PIN PAD
         [1,2,3,4,5,6,7,8,9,'C',0,'DEL'].forEach(v => {
@@ -161,202 +135,128 @@
                 if(pin === "1763") { document.getElementById('pin-screen').remove(); document.getElementById('app-content').classList.remove('hidden'); renderApp(); }
             };
             document.getElementById('pin-pad').appendChild(b);
-        }); 
+        });
 
         function goToTab(i) {
             currentTabIndex = i;
             document.getElementById('main-view').style.transform = `translateX(-${i * 25}%)`;
             document.querySelectorAll('.nav-btn').forEach((b, idx) => idx === i ? b.classList.add('active-tab') : b.classList.remove('active-tab'));
-            if(i === 0) updateChart();
-        } 
+            if(i === 0) setTimeout(updateChart, 100);
+        }
 
         async function renderApp() {
             try {
-                const res = await fetch(API_URL); 
-                appData = await res.json();
+                const res = await fetch(API_URL); appData = await res.json();
                 const hoy = new Date().toISOString().split('T')[0];
                 const mesSel = document.getElementById('filtroMes').value;
                 let saldoReal = 0, gFuturos = 0, iFuturos = 0;
-                
                 document.getElementById('listaPasado').innerHTML = '';
-                document.getElementById('listaFuturo').innerHTML = ''; 
+                document.getElementById('listaFuturo').innerHTML = '';
 
                 appData.sort((a, b) => {
-                    const aEsFuturo = a.fecha > hoy;
-                    const bEsFuturo = b.fecha > hoy;
-                    if (aEsFuturo && !bEsFuturo) return 1;
-                    if (!aEsFuturo && bEsFuturo) return -1;
+                    const aF = a.fecha > hoy, bF = b.fecha > hoy;
+                    if (aF && !bF) return 1; if (!aF && bF) return -1;
                     return b.fecha.localeCompare(a.fecha);
-                }); 
+                });
 
                 appData.forEach(g => {
-                    const val = Math.abs(parseFloat(g.importe));
-                    const esIngreso = categIngresos.includes(g.categoria);
-                    const esPasado = g.fecha <= hoy;
-                    
-                    if(esPasado) { 
-                        esIngreso ? saldoReal += val : saldoReal -= val; 
-                    } else { 
-                        esIngreso ? iFuturos += val : gFuturos += val; 
-                    }
-                    
+                    const val = Math.abs(parseFloat(g.importe)), esI = categIngresos.includes(g.categoria), esP = g.fecha <= hoy;
+                    if(esP) { esI ? saldoReal += val : saldoReal -= val; } else { esI ? iFuturos += val : gFuturos += val; }
                     const disp = isPrivate ? "****€" : val.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
                     
                     if(g.fecha.startsWith(mesSel)) {
                         document.getElementById('listaPasado').insertAdjacentHTML('beforeend', `
-                            <div class="bbva-card p-4 flex justify-between items-center ${!esPasado ? 'opacity-40 border-l-4 border-cyan-400' : ''}">
-                                <div class="flex-1">
-                                    <p class="text-sm font-bold text-white">${g.concepto}</p>
-                                    <p class="text-[9px] text-slate-500 uppercase mt-1 tracking-tight">${g.fecha} • ${g.categoria}</p>
-                                </div>
-                                <div class="flex items-center gap-3">
-                                    <p class="font-black ${esIngreso ? 'text-cyan-400' : 'text-white'}">${esIngreso ? '+' : '-'}${disp}</p>
-                                    <div class="flex gap-2 relative z-50">
-                                        <button onclick="event.stopPropagation(); deleteGasto('${g._id}')" class="btn-action text-rose-500">🗑️</button>
-                                    </div>
-                                </div>
+                            <div class="bbva-card p-4 flex justify-between items-center ${!esP ? 'opacity-40 border-l-4 border-cyan-400' : ''}">
+                                <div class="flex-1"><p class="text-sm font-bold text-white">${g.concept || g.concepto}</p><p class="text-[9px] text-slate-500 uppercase mt-1">${g.fecha} • ${g.categoria}</p></div>
+                                <div class="flex items-center gap-3"><p class="font-black ${esI ? 'text-cyan-400' : 'text-white'}">${esI ? '+' : '-'}${disp}</p>
+                                <button onclick="event.stopPropagation(); deleteGasto('${g._id}')" class="btn-action text-rose-500">🗑️</button></div>
                             </div>`);
                     }
-                    
-                    if(!esPasado) {
+                    if(!esP) {
                         document.getElementById('listaFuturo').insertAdjacentHTML('afterbegin', `
                             <div class="bbva-card border-l-4 border-cyan-400 p-5 flex justify-between items-center">
-                                <div><p class="font-black text-white">${g.concepto}</p><p class="text-[10px] text-slate-500">${g.fecha}</p></div>
-                                <p class="text-xl font-black ${esIngreso ? 'text-cyan-400' : 'text-white'}">${esIngreso ? '+' : '-'}${disp}</p>
+                                <div><p class="font-black text-white">${g.concept || g.concepto}</p><p class="text-[10px] text-slate-500">${g.fecha}</p></div>
+                                <p class="text-xl font-black ${esI ? 'text-cyan-400' : 'text-white'}">${esI ? '+' : '-'}${disp}</p>
                             </div>`);
                     }
-                }); 
-
+                });
                 document.getElementById('valReal').innerText = isPrivate ? "****€" : saldoReal.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
                 document.getElementById('valPend').innerText = isPrivate ? "****€" : "-" + gFuturos.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
                 document.getElementById('valProj').innerText = isPrivate ? "****€" : (saldoReal - gFuturos + iFuturos).toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
-                
                 updateChart();
-            } catch (err) { console.error("Error cargando datos", err); }
-        }         function updateChart() {
-            const ctx = document.getElementById('gastosChart').getContext('2d');
+            } catch (e) { console.error(e); }
+        }
+
+        function updateChart() {
+            const canvas = document.getElementById('gastosChart');
+            if(!canvas) return;
+            const ctx = canvas.getContext('2d');
             const mesActual = new Date().toISOString().slice(0, 7);
-            const desgloseGastos = {};
+            const desglose = {};
+            
             appData.forEach(g => {
                 if(g.fecha.startsWith(mesActual) && !categIngresos.includes(g.categoria) && g.fecha <= new Date().toISOString().split('T')[0]) {
                     const val = Math.abs(parseFloat(g.importe));
-                    desgloseGastos[g.categoria] = (desgloseGastos[g.categoria] || 0) + val;
+                    desglose[g.categoria] = (desglose[g.categoria] || 0) + val;
                 }
             });
-            const labels = Object.keys(desgloseGastos);
-            const data = Object.values(desgloseGastos);
-            const colores = ['#00e5ff', '#ff4081', '#7c4dff', '#ffeb3b', '#4caf50', '#ff9800', '#009688', '#f44336'];
+
+            const labels = Object.keys(desglose), data = Object.values(desglose);
             if (gastosChart) gastosChart.destroy();
             gastosChart = new Chart(ctx, {
                 type: 'doughnut',
-                data: { labels: labels, datasets: [{ data: data, backgroundColor: colores, borderColor: '#072146', borderWidth: 2 }] },
+                data: { labels, datasets: [{ data, backgroundColor: ['#00e5ff', '#ff4081', '#7c4dff', '#ffeb3b', '#4caf50', '#ff9800'], borderColor: '#072146', borderWidth: 2 }] },
                 options: { 
-                    responsive: true, maintainAspectRatio: false, cutout: '70%',
-                    onClick: (evt, item) => {
-                        if (item.length > 0) {
-                            const index = item[0].index;
-                            const categoriaSeleccionada = labels[index];
-                            aplicarFiltroCategoria(categoriaSeleccionada);
-                        }
-                    },
-                    plugins: { legend: { position: 'right', labels: { color: 'white', font: { size: 10, weight: 'bold' }, boxWidth: 12, padding: 10 } } } 
+                    responsive: true, maintainAspectRatio: false, cutout: '75%',
+                    onHover: (e, i) => e.native.target.style.cursor = i.length > 0 ? 'pointer' : 'default',
+                    onClick: (e, i) => { if(i.length > 0) aplicarFiltroCategoria(labels[i[0].index]); },
+                    plugins: { legend: { position: 'right', labels: { color: 'white', font: { size: 10, weight: 'bold' }, boxWidth: 12 } } }
                 }
             });
         }
 
-                function aplicarFiltroCategoria(cat) {
-            const listaMovs = document.getElementById('listaPasado');
-            goToTab(2); // Salta a la pestaña de Movimientos
-            
-            // Limpiamos el nombre de la categoría de emojis para comparar mejor
+        function aplicarFiltroCategoria(cat) {
+            const lista = document.getElementById('listaPasado');
             const catLimpia = cat.replace(/[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF]/g, '').trim().toLowerCase();
-
+            goToTab(2);
             setTimeout(() => {
-                const tarjetas = listaMovs.querySelectorAll('.bbva-card');
-                let encontrados = 0;
-
-                tarjetas.forEach(card => {
-                    // Buscamos el texto de la categoría dentro de la tarjeta
-                    const textoTarjeta = card.innerText.toLowerCase();
-                    
-                    if (textoTarjeta.includes(catLimpia)) {
-                        card.style.display = 'flex';
-                        card.style.borderLeft = '4px solid #00e5ff';
-                        encontrados++;
-                    } else {
-                        card.style.display = 'none';
-                    }
+                lista.querySelectorAll('.bbva-card').forEach(card => {
+                    const match = card.innerText.toLowerCase().includes(catLimpia);
+                    card.style.display = match ? 'flex' : 'none';
+                    if(match) card.style.borderLeft = '4px solid #00e5ff';
                 });
-
-                // Si ya había un botón de quitar filtro, lo borramos para no duplicar
-                const btnViejo = document.getElementById('btn-quitar-filtro');
-                if (btnViejo) btnViejo.remove();
-
-                // Añadimos el botón de control arriba
+                const oldBtn = document.getElementById('btn-quitar-filtro');
+                if (oldBtn) oldBtn.remove();
                 const btn = document.createElement('button');
                 btn.id = 'btn-quitar-filtro';
                 btn.className = "w-full mb-4 py-3 bg-cyan-400/10 text-cyan-400 text-[11px] font-black uppercase rounded-xl border border-cyan-400/20";
-                btn.innerHTML = `Filtrado por: ${cat} <span class="ml-2">✕</span>`;
+                btn.innerHTML = `Filtrado: ${cat} ✕`;
                 btn.onclick = () => { renderApp(); btn.remove(); };
-                listaMovs.prepend(btn);
-                
+                lista.prepend(btn);
             }, 350);
         }
 
-  async function deleteGasto(id) {
-            if(confirm("¿Eliminar?")) { await fetch(`${API_URL}/${id}`, {method:'DELETE'}); renderApp(); }
-        } 
+        async function deleteGasto(id) { if(confirm("¿Eliminar?")) { await fetch(`${API_URL}/${id}`, {method:'DELETE'}); renderApp(); } }
 
         document.getElementById('mainForm').onsubmit = async (e) => {
             e.preventDefault();
-            const data = { 
-                concepto: document.getElementById('in-concepto').value, 
-                importe: parseFloat(document.getElementById('in-importe').value), 
-                categoria: document.getElementById('in-categoria').value, 
-                fecha: document.getElementById('in-fecha').value 
-            };
-            await fetch(API_URL, { 
-                method: 'POST', 
-                headers: {'Content-Type':'application/json'}, 
-                body: JSON.stringify(data) 
-            });
-            e.target.reset(); 
-            renderApp(); 
-            goToTab(0);
+            const data = { concepto: document.getElementById('in-concept') ? document.getElementById('in-concept').value : document.getElementById('in-concepto').value, importe: parseFloat(document.getElementById('in-importe').value), categoria: document.getElementById('in-categoria').value, fecha: document.getElementById('in-fecha').value };
+            await fetch(API_URL, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
+            e.target.reset(); renderApp(); goToTab(0);
         };
 
-        function togglePrivacy() { 
-            isPrivate = !isPrivate; 
-            renderApp(); 
-        } 
-
-        const viewport = document.getElementById('viewport'); 
-        viewport.addEventListener('touchstart', e => {
-            touchstartX = e.changedTouches[0].screenX;
-            touchstartY = e.changedTouches[0].screenY;
-        }, {passive: true}); 
-
-        viewport.addEventListener('touchend', e => {
-            touchendX = e.changedTouches[0].screenX;
-            touchendY = e.changedTouches[0].screenY;
-            handleGesture(); 
-        }, {passive: true}); 
-
+        function togglePrivacy() { isPrivate = !isPrivate; renderApp(); }
+        
+        // GESTOS SWIPE
+        const vp = document.getElementById('viewport');
+        vp.addEventListener('touchstart', e => touchstartX = e.changedTouches[0].screenX, {passive:true});
+        vp.addEventListener('touchend', e => { 
+            touchendX = e.changedTouches[0].screenX; 
+            const dx = touchendX - touchstartX;
+            if(Math.abs(dx) > 80) dx < 0 ? (currentTabIndex < 3 && goToTab(currentTabIndex+1)) : (currentTabIndex > 0 && goToTab(currentTabIndex-1));
+        }, {passive:true});
+        
         document.getElementById('filtroMes').value = new Date().toISOString().slice(0, 7);
-
-        function handleGesture() {
-            const deltaX = touchendX - touchstartX;
-            const deltaY = touchendY - touchstartY; 
-            if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 80) {
-                if (deltaX < 0 && currentTabIndex < 3) {
-                    currentTabIndex++;
-                    goToTab(currentTabIndex);
-                } else if (deltaX > 0 && currentTabIndex > 0) {
-                    currentTabIndex--;
-                    goToTab(currentTabIndex);
-                }
-            }
-        } 
     </script>
 </body>
 </html>
