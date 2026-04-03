@@ -177,7 +177,7 @@
                 else { esIngreso ? iFuturos += val : gFuturos += val; }
                 const disp = isPrivate ? "****€" : val.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
                 if(g.fecha.startsWith(mesSel)) {
-                    document.getElementById('listaPasado').insertAdjacentHTML('beforeend', `<div class="bbva-card p-4 flex justify-between items-center ${!esPasado ? 'opacity-40 border-l-4 border-cyan-400' : ''}"><div class="flex-1"><p class="text-sm font-bold text-white">${g.concepto}</p><p class="text-[9px] text-slate-500 uppercase mt-1 tracking-tight">${g.fecha} • ${g.categoria}</p></div><div class="flex items-center gap-3"><p class="font-black ${esIngreso ? 'text-cyan-400' : 'text-white'}">${esIngreso ? '+' : '-'}${disp}</p><div class="flex gap-2 relative z-50"><button onclick="event.stopPropagation(); preEdit('${g._id}')" class="btn-action text-cyan-400">✏️</button><button onclick="event.stopPropagation(); deleteGasto('${g._id}')" class="btn-action text-rose-500">🗑️</button></div></div></div>`);
+                    document.getElementById('listaPasado').insertAdjacentHTML('beforeend', `<div class="bbva-card p-4 flex justify-between items-center ${!esPasado ? 'opacity-40 border-l-4 border-cyan-400' : ''}"><div class="flex-1"><p class="text-sm font-bold text-white">${g.concepto}</p><p class="text-[9px] text-slate-500 uppercase mt-1 tracking-tight">${g.fecha} • ${g.categoria}</p></div><div class="flex items-center gap-3"><p class="font-black ${esIngreso ? 'text-cyan-400' : 'text-white'}">${esIngreso ? '+' : '-'}${disp}</p><div class="flex gap-2 relative z-50"><button onclick="event.stopPropagation(); deleteGasto('${g._id}')" class="btn-action text-rose-500">🗑️</button></div></div></div>`);
                 }
                 if(!esPasado) {
                     document.getElementById('listaFuturo').insertAdjacentHTML('afterbegin', `<div class="bbva-card border-l-4 border-cyan-400 p-5 flex justify-between items-center"><div><p class="font-black text-white">${g.concepto}</p><p class="text-[10px] text-slate-500">${g.fecha}</p></div><p class="text-xl font-black ${esIngreso ? 'text-cyan-400' : 'text-white'}">${esIngreso ? '+' : '-'}${disp}</p></div>`);
@@ -209,17 +209,6 @@
                 data: { labels: labels, datasets: [{ data: data, backgroundColor: colores, borderColor: '#072146', borderWidth: 2, hoverOffset: 10 }] },
                 options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'right', labels: { color: 'white', font: { size: 10, weight: 'bold' }, boxWidth: 12, padding: 10 } } } }
             });
-        }
-
-        function preEdit(id) {
-            const g = appData.find(x => x._id === id); if(!g) return;
-            document.getElementById('in-id').value = g._id;
-            document.getElementById('in-concepto').value = g.concepto;
-            document.getElementById('in-importe').value = Math.abs(g.importe);
-            document.getElementById('in-categoria').value = g.categoria;
-            document.getElementById('in-fecha').value = g.fecha;
-            document.getElementById('btn-submit').innerText = "Actualizar";
-            goToTab(3);
         }
 
         async function deleteGasto(id) {
