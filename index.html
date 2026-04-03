@@ -244,21 +244,24 @@ document.getElementById('main-view').style.transform = `translateX(-${i * 25}%)`
 };
 
 
-        function togglePrivacy()
-const viewport = document.getElementById('viewport');
+                function togglePrivacy() { 
+            isPrivate = !isPrivate; 
+            renderApp(); 
+        }
 
-viewport.addEventListener('touchstart', e => {
-    touchstartX = e.changedTouches[0].screenX;
-    touchstartY = e.changedTouches[0].screenY;
-}, {passive: true});
+        const viewport = document.getElementById('viewport'); 
 
-viewport.addEventListener('touchend', e => {
-    touchendX = e.changedTouches[0].screenX;
-    touchendY = e.changedTouches[0].screenY;
-    handleGesture(); 
-}, {passive: true});
+        viewport.addEventListener('touchstart', e => {
+            touchstartX = e.changedTouches[0].screenX;
+            touchstartY = e.changedTouches[0].screenY;
+        }, {passive: true}); 
 
- { isPrivate = !isPrivate; renderApp(); }
+        viewport.addEventListener('touchend', e => {
+            touchendX = e.changedTouches[0].screenX;
+            touchendY = e.changedTouches[0].screenY;
+            handleGesture(); 
+        }, {passive: true});
+
         document.getElementById('filtroMes').value = new Date().toISOString().slice(0, 7);
 function handleGesture() {
     const deltaX = touchendX - touchstartX;
