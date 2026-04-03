@@ -178,7 +178,19 @@ document.getElementById('main-view').style.transform = `translateX(-${i * 25}%)`
             let saldoReal = 0, gFuturos = 0, iFuturos = 0;
             document.getElementById('listaPasado').innerHTML = '';
             document.getElementById('listaFuturo').innerHTML = '';
-            appData.sort((a,b) => b.fecha.localeCompare(a.fecha)).forEach(g => {
+                        // Ordenar: Primero los de hoy hacia atrás, y al final los futuros
+            appData.sort((a, b) => {
+                const hoy = new Date().toISOString().split('T')[0];
+                const aEsFuturo = a.fecha > hoy;
+                const bEsFuturo = b.fecha > hoy;
+
+                if (aEsFuturo && !bEsFuturo) return 1;  // A va después
+                if (!aEsFuturo && bEsFuturo) return -1; // A va antes
+                
+                // Si ambos son pasados o ambos son futuros, ordenar por fecha (más reciente arriba)
+                return b.fecha.localeCompare(a.fecha);
+            });
+.forEach(g => {
                 const val = Math.abs(parseFloat(g.importe));
                 const esIngreso = categIngresos.includes(g.categoria);
                 const esPasado = g.fecha <= hoy;
