@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BBVA Premium v16.6 - Pro Edition</title>
+    <title>BBVA Premium v16.7 - Haptic Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -11,7 +11,6 @@
         :root { --bbva-navy: #072146; --bbva-blue: #004481; --bbva-cyan: #00e5ff; }
         html, body { height: 100%; margin: 0; padding: 0; background: #000; overflow: hidden; font-family: 'Inter', sans-serif; }
         
-        /* PIN PAD Estilo */
         .num-btn { 
             width: 72px; height: 72px; border-radius: 50%; 
             border: 1px solid rgba(255,255,255,0.15); 
@@ -126,13 +125,21 @@
         const categIngresos = ["Sueldo", "Otros Ingresos"];
         let gastosChart = null;
 
+        const vibrate = (ms) => { if (window.navigator.vibrate) window.navigator.vibrate(ms); };
+
         // PIN PAD
         [1,2,3,4,5,6,7,8,9,'C',0,'DEL'].forEach(v => {
             const b = document.createElement('button'); b.className = "num-btn"; b.innerText = v;
             b.onclick = () => {
+                vibrate(25); // Vibración al tocar tecla PIN
                 if(v === 'C') pin = ""; else if(v === 'DEL') pin = pin.slice(0,-1); else if(pin.length < 4) pin += v;
                 document.querySelectorAll('#pin-dots div').forEach((d, i) => d.style.background = i < pin.length ? '#00e5ff' : 'transparent');
-                if(pin === "1763") { document.getElementById('pin-screen').remove(); document.getElementById('app-content').classList.remove('hidden'); renderApp(); }
+                if(pin === "1763") { 
+                    vibrate([30, 50, 30]); // Éxito PIN
+                    document.getElementById('pin-screen').remove(); 
+                    document.getElementById('app-content').classList.remove('hidden'); 
+                    renderApp(); 
+                }
             };
             document.getElementById('pin-pad').appendChild(b);
         });
@@ -172,13 +179,6 @@
                                 <button onclick="event.stopPropagation(); deleteGasto('${g._id}')" class="btn-action text-rose-500">🗑️</button></div>
                             </div>`);
                     }
-                    if(!esP) {
-                        document.getElementById('listaFuturo').insertAdjacentHTML('afterbegin', `
-                            <div class="bbva-card border-l-4 border-cyan-400 p-5 flex justify-between items-center">
-                                <div><p class="font-black text-white">${g.concept || g.concepto}</p><p class="text-[10px] text-slate-500">${g.fecha}</p></div>
-                                <p class="text-xl font-black ${esI ? 'text-cyan-400' : 'text-white'}">${esI ? '+' : '-'}${disp}</p>
-                            </div>`);
-                    }
                 });
                 document.getElementById('valReal').innerText = isPrivate ? "****€" : saldoReal.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
                 document.getElementById('valPend').innerText = isPrivate ? "****€" : "-" + gFuturos.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
@@ -209,7 +209,12 @@
                 options: { 
                     responsive: true, maintainAspectRatio: false, cutout: '75%',
                     onHover: (e, i) => e.native.target.style.cursor = i.length > 0 ? 'pointer' : 'default',
-                    onClick: (e, i) => { if(i.length > 0) aplicarFiltroCategoria(labels[i[0].index]); },
+                    onClick: (e, i) => { 
+                        if(i.length > 0) {
+                            vibrate(40); // Vibración al tocar quesito
+                            aplicarFiltroCategoria(labels[i[0].index]); 
+                        }
+                    },
                     plugins: { legend: { position: 'right', labels: { color: 'white', font: { size: 10, weight: 'bold' }, boxWidth: 12 } } }
                 }
             });
@@ -217,7 +222,7 @@
 
         function aplicarFiltroCategoria(cat) {
             const lista = document.getElementById('listaPasado');
-            const catLimpia = cat.replace(/[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF]/g, '').trim().toLowerCase();
+            const catLimpia = cat.replace(/[^\w\s]/gi, '').trim().toLowerCase();
             goToTab(2);
             setTimeout(() => {
                 lista.querySelectorAll('.bbva-card').forEach(card => {
@@ -231,29 +236,38 @@
                 btn.id = 'btn-quitar-filtro';
                 btn.className = "w-full mb-4 py-3 bg-cyan-400/10 text-cyan-400 text-[11px] font-black uppercase rounded-xl border border-cyan-400/20";
                 btn.innerHTML = `Filtrado: ${cat} ✕`;
-                btn.onclick = () => { renderApp(); btn.remove(); };
+                btn.onclick = () => { vibrate(20); renderApp(); btn.remove(); };
                 lista.prepend(btn);
             }, 350);
         }
 
-        async function deleteGasto(id) { if(confirm("¿Eliminar?")) { await fetch(`${API_URL}/${id}`, {method:'DELETE'}); renderApp(); } }
+        async function deleteGasto(id) { 
+            if(confirm("¿Eliminar?")) { 
+                vibrate(70); // Vibración de borrado
+                await fetch(`${API_URL}/${id}`, {method:'DELETE'}); 
+                renderApp(); 
+            } 
+        }
 
         document.getElementById('mainForm').onsubmit = async (e) => {
             e.preventDefault();
-            const data = { concepto: document.getElementById('in-concept') ? document.getElementById('in-concept').value : document.getElementById('in-concepto').value, importe: parseFloat(document.getElementById('in-importe').value), categoria: document.getElementById('in-categoria').value, fecha: document.getElementById('in-fecha').value };
+            vibrate([40, 40, 40]); // Vibración doble éxito envío
+            const data = { concepto: document.getElementById('in-concepto').value, importe: parseFloat(document.getElementById('in-importe').value), categoria: document.getElementById('in-categoria').value, fecha: document.getElementById('in-fecha').value };
             await fetch(API_URL, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
             e.target.reset(); renderApp(); goToTab(0);
         };
 
-        function togglePrivacy() { isPrivate = !isPrivate; renderApp(); }
+        function togglePrivacy() { vibrate(20); isPrivate = !isPrivate; renderApp(); }
         
-        // GESTOS SWIPE
         const vp = document.getElementById('viewport');
         vp.addEventListener('touchstart', e => touchstartX = e.changedTouches[0].screenX, {passive:true});
         vp.addEventListener('touchend', e => { 
             touchendX = e.changedTouches[0].screenX; 
             const dx = touchendX - touchstartX;
-            if(Math.abs(dx) > 80) dx < 0 ? (currentTabIndex < 3 && goToTab(currentTabIndex+1)) : (currentTabIndex > 0 && goToTab(currentTabIndex-1));
+            if(Math.abs(dx) > 80) {
+                vibrate(15); // Vibración sutil al cambiar de pestaña
+                dx < 0 ? (currentTabIndex < 3 && goToTab(currentTabIndex+1)) : (currentTabIndex > 0 && goToTab(currentTabIndex-1));
+            }
         }, {passive:true});
         
         document.getElementById('filtroMes').value = new Date().toISOString().slice(0, 7);
