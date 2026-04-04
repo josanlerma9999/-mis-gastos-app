@@ -72,7 +72,10 @@
                         </div>
                     </div>
                     <div class="bbva-card p-6 shadow-xl">
-                        <h3 class="text-xs font-bold text-white uppercase tracking-widest mb-2">Distribución de Gastos</h3>
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="text-xs font-bold text-white uppercase tracking-widest">Distribución de Gastos</h3>
+                            <span class="text-[10px] font-black text-cyan-400 uppercase tracking-tight">Toca para filtrar</span>
+                        </div>
                         <div class="chart-container"><canvas id="gastosChart"></canvas></div>
                     </div>
                 </section>
@@ -98,16 +101,27 @@
                         <input type="text" id="in-concepto" placeholder="Concepto" class="bbva-input" required>
                         <input type="number" id="in-importe" step="0.01" placeholder="0.00" class="bbva-input text-3xl text-center font-bold" required>
                         <select id="in-categoria" class="bbva-input font-bold" required>
-                            <optgroup label="INGRESOS"><option value="Sueldo">💰 Sueldo</option><option value="Otros Ingresos">💵 Otros Ingresos</option></optgroup>
-                            <optgroup label="GASTOS"><option value="Cuenta BBVA">🏦 Cuenta BBVA</option><option value="Tarjeta Aqua">🟦 Tarjeta Aqua</option><option value="Tarjeta Explora">💳 Tarjeta Explora</option><option value="PayPal">💙 PayPal</option><option value="Amazon">📦 Amazon</option><option value="Gasolina">⛽ Gasolina</option><option value="Imagine">📱 Imagine</option><option value="Varios">🛍️ Varios</option></optgroup>
+                            <optgroup label="INGRESOS">
+                                <option value="Sueldo">💰 Sueldo</option>
+                                <option value="Otros Ingresos">💵 Otros Ingresos</option>
+                            </optgroup>
+                            <optgroup label="GASTOS">
+                                <option value="Cuenta BBVA">🏦 Cuenta BBVA</option>
+                                <option value="Tarjeta Aqua">🟦 Tarjeta Aqua</option>
+                                <option value="Tarjeta Explora">💳 Tarjeta Explora</option>
+                                <option value="PayPal">💙 PayPal</option>
+                                <option value="Amazon">📦 Amazon</option>
+                                <option value="Gasolina">⛽ Gasolina</option>
+                                <option value="Imagine">📱 Imagine</option>
+                                <option value="Varios">🛍️ Varios</option>
+                            </optgroup>
                         </select>
                         <input type="date" id="in-fecha" class="bbva-input" required>
                         
-                        <div class="flex items-center gap-3 p-4 bg-white/5 rounded-xl border border-white/10">
-                            <input type="checkbox" id="check-recurrente" class="w-6 h-6 accent-cyan-400">
-                            <label for="check-recurrente" class="text-[10px] font-black uppercase text-slate-400 leading-none">Convertir en pago fijo mensual</label>
+                        <div class="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/10 mb-2">
+                            <input type="checkbox" id="check-recurrente" class="w-5 h-5 accent-cyan-400">
+                            <label for="check-recurrente" class="text-[10px] font-black uppercase text-slate-400">Convertir en pago fijo mensual</label>
                         </div>
-
                         <button type="submit" class="w-full bg-cyan-400 text-black font-black py-4 rounded-xl uppercase">Confirmar Operación</button>
                     </form>
                 </section>
@@ -117,7 +131,7 @@
         <nav class="bg-black border-t border-white/10 flex justify-around p-3 pb-8">
             <button onclick="goToTab(0)" class="nav-btn active-tab flex-1 flex flex-col items-center gap-1"><span class="text-xl">🏠</span><span class="text-[8px] uppercase">Inicio</span></button>
             <button onclick="goToTab(1)" class="nav-btn text-slate-500 flex-1 flex flex-col items-center gap-1"><span class="text-xl">⏳</span><span class="text-[8px] uppercase">Planes</span></button>
-            <button onclick="goToTab(2)" class="nav-btn text-slate-500 flex-1 flex flex-col items-center gap-1"><span class="text-xl">🔄</span><span class="text-[8px] uppercase">Fijos</span></button>
+            <button onclick="goToTab(2)" class="nav-btn text-slate-500 flex-1 flex flex-col items-center gap-1"><span class="text-xl">🔄</span><span class="text-[8px] uppercase">Fijos</span></button> 
             <button onclick="goToTab(3)" class="nav-btn text-slate-500 flex-1 flex flex-col items-center gap-1"><span class="text-xl">📋</span><span class="text-[8px] uppercase">Movs</span></button>
             <button onclick="goToTab(4)" class="nav-btn text-slate-500 flex-1 flex flex-col items-center gap-1"><span class="text-xl">➕</span><span class="text-[8px] uppercase">Operar</span></button>
         </nav>
@@ -128,7 +142,7 @@
         let touchstartX = 0, touchendX = 0, currentTabIndex = 0, pin = "", isPrivate = false, appData = [], gastosChart = null;
         const categIngresos = ["Sueldo", "Otros Ingresos"];
 
-        // PIN PAD
+        // PIN PAD (Igual que el original)
         [1,2,3,4,5,6,7,8,9,'C',0,'DEL'].forEach(v => {
             const b = document.createElement('button'); b.className = "num-btn"; b.innerText = v;
             b.onclick = () => {
@@ -198,7 +212,11 @@
             const fecha = document.getElementById('in-fecha').value;
             const esRecurrente = document.getElementById('check-recurrente').checked;
 
-            await fetch(API_URL, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ concepto, importe, categoria, fecha }) });
+            await fetch(API_URL, { 
+                method: 'POST', 
+                headers: {'Content-Type':'application/json'}, 
+                body: JSON.stringify({ concepto, importe, categoria, fecha }) 
+            });
 
             if(esRecurrente) {
                 const dia = fecha.split('-')[2];
@@ -252,14 +270,34 @@
             const mes = new Date().toISOString().slice(0, 7), desglose = {};
             appData.forEach(g => { if(g.fecha.startsWith(mes) && !categIngresos.includes(g.categoria) && g.fecha <= new Date().toISOString().split('T')[0]) desglose[g.categoria] = (desglose[g.categoria] || 0) + Math.abs(g.importe); });
             if(gastosChart) gastosChart.destroy();
-            gastosChart = new Chart(ctx, { type: 'doughnut', data: { labels: Object.keys(desglose), datasets: [{ data: Object.values(desglose), backgroundColor: ['#00e5ff','#7c4dff','#ff4081','#ffee33','#4caf50','#ff9800','#E0E0E0'], borderColor: '#072146', borderWidth: 2 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'right', labels: { color: 'white', font: { size: 10 } } } } } });
+            gastosChart = new Chart(ctx, { type: 'doughnut', data: { labels: Object.keys(desglose), datasets: [{ data: Object.values(desglose), backgroundColor: ['#00e5ff','#7c4dff','#ff4081','#ffee33','#4caf50','#ff9800','#E0E0E0'], borderColor: '#072146', borderWidth: 2 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'right', labels: { color: 'white', font: { size: 10 } } } }, onClick: (e, i) => { if(i.length > 0) aplicarFiltroCategoria(gastosChart.data.labels[i[0].index]); } } });
+        }
+
+        function aplicarFiltroCategoria(cat) {
+            const lista = document.getElementById('listaPasado');
+            const catLimpia = cat.replace(/[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF]/g, '').trim().toLowerCase();
+            goToTab(3);
+            setTimeout(() => {
+                let enc = 0;
+                lista.querySelectorAll('.bbva-card').forEach(card => {
+                    const match = card.innerText.toLowerCase().includes(catLimpia);
+                    card.style.display = match ? 'flex' : 'none';
+                    if(match) enc++;
+                });
+                const old = document.getElementById('btn-quitar-filtro'); if(old) old.remove();
+                const btn = document.createElement('button');
+                btn.id = 'btn-quitar-filtro';
+                btn.className = "w-full mb-4 py-3 bg-cyan-400/10 text-cyan-400 text-[11px] font-black uppercase rounded-xl border border-cyan-400/20";
+                btn.innerHTML = `Filtrado: ${cat} (${enc}) ✕`;
+                btn.onclick = () => { renderApp(); btn.remove(); };
+                lista.prepend(btn);
+            }, 350);
         }
 
         async function deleteGasto(id) { if(confirm("¿Eliminar?")) { await fetch(`${API_URL}/${id}`, {method:'DELETE'}); renderApp(); } } 
         function togglePrivacy() { isPrivate = !isPrivate; renderApp(); }
         document.getElementById('filtroMes').value = new Date().toISOString().slice(0, 7);
         
-        // Swipe
         const vp = document.getElementById('viewport');
         vp.addEventListener('touchstart', e => touchstartX = e.changedTouches[0].screenX, {passive:true});
         vp.addEventListener('touchend', e => { 
