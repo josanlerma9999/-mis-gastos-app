@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BBVA Premium v16.6 - Pro Edition</title>
+    <title>BBVA Premium v16.6</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -24,6 +24,7 @@
         .bbva-input { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 1rem; padding: 1rem; width: 100%; color: white; outline: none; }
         
         #viewport { width: 100%; height: calc(100% - 140px); overflow: hidden; position: relative; touch-action: pan-y; }
+        /* CORREGIDO: width 500% para las 5 secciones */
         #main-view { display: flex; width: 500%; height: 100%; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .tab-content { width: 20%; height: 100%; overflow-y: auto; padding: 1.25rem; -webkit-overflow-scrolling: touch; }
         
@@ -72,11 +73,10 @@
                         </div>
                     </div>
                     <div class="bbva-card p-6 shadow-xl">
-                        <div class="flex justify-between items-center mb-2">
-                            <h3 class="text-xs font-bold text-white uppercase tracking-widest">Distribución de Gastos</h3>
-                            <span class="text-[10px] font-black text-cyan-400 uppercase tracking-tight">Toca para filtrar</span>
+                        <h3 class="text-xs font-bold text-white uppercase tracking-widest mb-2">Distribución de Gastos</h3>
+                        <div class="chart-container">
+                            <canvas id="gastosChart"></canvas>
                         </div>
-                        <div class="chart-container"><canvas id="gastosChart"></canvas></div>
                     </div>
                 </section>
 
@@ -86,7 +86,7 @@
                 </section>
 
                 <section class="tab-content">
-                    <h3 class="text-xs font-bold text-purple-400 uppercase mb-4 tracking-widest">Suscripciones Fijas</h3>
+                    <h3 class="text-xs font-bold text-purple-400 uppercase mb-4 tracking-widest">Suscripciones y Pagos Fijos</h3>
                     <div id="listaRecurrentes" class="space-y-3"></div>
                 </section>
 
@@ -109,7 +109,7 @@
                                 <option value="Cuenta BBVA">🏦 Cuenta BBVA</option>
                                 <option value="Tarjeta Aqua">🟦 Tarjeta Aqua</option>
                                 <option value="Tarjeta Explora">💳 Tarjeta Explora</option>
-                                <option value="PayPal">💙 PayPal</option>
+                                <option value="PayPal">💙 PayPal</option> 
                                 <option value="Amazon">📦 Amazon</option>
                                 <option value="Gasolina">⛽ Gasolina</option>
                                 <option value="Imagine">📱 Imagine</option>
@@ -118,10 +118,11 @@
                         </select>
                         <input type="date" id="in-fecha" class="bbva-input" required>
                         
-                        <div class="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/10 mb-2">
+                        <div class="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/10">
                             <input type="checkbox" id="check-recurrente" class="w-5 h-5 accent-cyan-400">
                             <label for="check-recurrente" class="text-[10px] font-black uppercase text-slate-400">Convertir en pago fijo mensual</label>
                         </div>
+
                         <button type="submit" class="w-full bg-cyan-400 text-black font-black py-4 rounded-xl uppercase">Confirmar Operación</button>
                     </form>
                 </section>
@@ -139,10 +140,12 @@
 
     <script>
         const API_URL = 'https://mis-gastos-app.onrender.com/api/gastos';
-        let touchstartX = 0, touchendX = 0, currentTabIndex = 0, pin = "", isPrivate = false, appData = [], gastosChart = null;
+        let touchstartX = 0, touchendX = 0, currentTabIndex = 0;
+        let pin = "", isPrivate = false, appData = [];
         const categIngresos = ["Sueldo", "Otros Ingresos"];
+        let gastosChart = null; 
 
-        // PIN PAD (Igual que el original)
+        // PIN PAD
         [1,2,3,4,5,6,7,8,9,'C',0,'DEL'].forEach(v => {
             const b = document.createElement('button'); b.className = "num-btn"; b.innerText = v;
             b.onclick = () => {
@@ -151,14 +154,15 @@
                 if(pin === "1763") { document.getElementById('pin-screen').remove(); document.getElementById('app-content').classList.remove('hidden'); renderApp(); }
             };
             document.getElementById('pin-pad').appendChild(b);
-        });
+        }); 
 
         function goToTab(i) {
             currentTabIndex = i;
+            // CORREGIDO: i * 20% porque hay 5 pestañas
             document.getElementById('main-view').style.transform = `translateX(-${i * 20}%)`;
             document.querySelectorAll('.nav-btn').forEach((b, idx) => idx === i ? b.classList.add('active-tab') : b.classList.remove('active-tab'));
             if(i === 0) setTimeout(updateChart, 100);
-        }
+        } 
 
         async function renderApp() {
             try {
@@ -171,7 +175,11 @@
                 document.getElementById('listaPasado').innerHTML = '';
                 document.getElementById('listaFuturo').innerHTML = ''; 
 
-                appData.sort((a, b) => b.fecha.localeCompare(a.fecha));
+                appData.sort((a, b) => {
+                    const aF = a.fecha > hoy, bF = b.fecha > hoy;
+                    if (aF && !bF) return 1; if (!aF && bF) return -1;
+                    return b.fecha.localeCompare(a.fecha);
+                }); 
 
                 appData.forEach(g => {
                     const val = Math.abs(parseFloat(g.importe)), esI = categIngresos.includes(g.categoria), esP = g.fecha <= hoy;
@@ -204,6 +212,7 @@
             } catch (e) { console.error(e); }
         }
 
+        // LÓGICA FORMULARIO ÚNICO
         document.getElementById('mainForm').onsubmit = async (e) => {
             e.preventDefault();
             const concepto = document.getElementById('in-concepto').value;
@@ -219,25 +228,56 @@
             });
 
             if(esRecurrente) {
-                const dia = fecha.split('-')[2];
+                const diaPago = fecha.split('-')[2];
                 let recs = JSON.parse(localStorage.getItem('recurrentes') || "[]");
-                recs.push({ concepto, importe, dia, categoria, id: Date.now() });
-                localStorage.setItem('recurrentes', JSON.stringify(recs));
+                if (!recs.some(p => p.concepto === concepto)) {
+                    recs.push({ concepto, importe, dia: diaPago, categoria, id: Date.now() });
+                    localStorage.setItem('recurrentes', JSON.stringify(recs));
+                }
             }
             e.target.reset(); renderApp(); goToTab(0);
         };
 
-        async function borrarRecurrente(id) {
-            if(!confirm("¿Borrar suscripción y su gasto de este mes?")) return;
-            let recs = JSON.parse(localStorage.getItem('recurrentes') || "[]");
-            const p = recs.find(x => x.id === id);
-            if(p) {
-                const mes = new Date().toISOString().slice(0, 7);
-                const g = appData.find(x => x.concepto === p.concepto && x.fecha.startsWith(mes));
-                if(g) await fetch(`${API_URL}/${g._id}`, { method: 'DELETE' });
-            }
-            localStorage.setItem('recurrentes', JSON.stringify(recs.filter(x => x.id !== id)));
-            renderApp();
+        function updateChart() {
+            const canvas = document.getElementById('gastosChart');
+            if(!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const mesActual = new Date().toISOString().slice(0, 7);
+            const desglose = {};
+            appData.forEach(g => {
+                if(g.fecha.startsWith(mesActual) && !categIngresos.includes(g.categoria) && g.fecha <= new Date().toISOString().split('T')[0]) {
+                    desglose[g.categoria] = (desglose[g.categoria] || 0) + Math.abs(parseFloat(g.importe));
+                }
+            }); 
+            const labels = Object.keys(desglose), data = Object.values(desglose);
+            if (gastosChart) gastosChart.destroy();
+            gastosChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: { labels, datasets: [{ data, backgroundColor: ['#00e5ff','#7c4dff','#ff4081','#ffee33','#4caf50','#ff9800','#E0E0E0','#0091EA','#8D6E63','#26A69A'], borderColor: '#072146', borderWidth: 2 }] },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'right', labels: { color: 'white', font: { size: 10 }, boxWidth: 10 } } },
+                onClick: (e, i) => { if(i.length > 0) aplicarFiltroCategoria(labels[i[0].index]); } }
+            });
+        }
+
+        function aplicarFiltroCategoria(cat) {
+            const lista = document.getElementById('listaPasado');
+            const catLimpia = cat.replace(/[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF]/g, '').trim().toLowerCase();
+            goToTab(3); // Pestaña Movimientos
+            setTimeout(() => {
+                let encontrados = 0;
+                lista.querySelectorAll('.bbva-card').forEach(card => {
+                    const match = card.innerText.toLowerCase().includes(catLimpia);
+                    card.style.display = match ? 'flex' : 'none';
+                    if(match) encontrados++;
+                });
+                const oldBtn = document.getElementById('btn-quitar-filtro'); if (oldBtn) oldBtn.remove();
+                const btn = document.createElement('button');
+                btn.id = 'btn-quitar-filtro';
+                btn.className = "w-full mb-4 py-3 bg-cyan-400/10 text-cyan-400 text-[11px] font-black uppercase rounded-xl border border-cyan-400/20";
+                btn.innerHTML = `Filtrado: ${cat} (${encontrados}) ✕`;
+                btn.onclick = () => { renderApp(); btn.remove(); };
+                lista.prepend(btn);
+            }, 350);
         }
 
         function renderRecurrentes() {
@@ -245,58 +285,35 @@
             let recs = JSON.parse(localStorage.getItem('recurrentes') || "[]");
             container.innerHTML = recs.map(p => `
                 <div class="bbva-card p-4 flex justify-between items-center border-l-4 border-purple-500">
-                    <div><p class="font-bold text-white">${p.concepto}</p><p class="text-[10px] text-slate-500">Día ${p.dia}</p></div>
-                    <div class="flex items-center gap-3"><p class="font-black text-rose-400">-${parseFloat(p.importe).toFixed(2)}€</p>
-                    <button onclick="borrarRecurrente(${p.id})" class="btn-action text-rose-500">🗑️</button></div>
+                    <div><p class="font-bold text-white">${p.concepto}</p><p class="text-[10px] text-slate-500">Día ${p.dia} de cada mes</p></div>
+                    <div class="flex items-center gap-2"><p class="font-black text-rose-400">-${parseFloat(p.importe).toFixed(2)}€</p>
+                    <button onclick="borrarRecurrente(${p.id})" class="text-xs opacity-30">🗑️</button></div>
                 </div>`).join('');
         }
 
         async function procesarPagosAutomaticos() {
-            const hoy = new Date(), dia = hoy.getDate(), mes = hoy.toISOString().slice(0, 7);
+            const hoy = new Date();
+            const diaHoy = hoy.getDate();
+            const mesActual = hoy.toISOString().slice(0, 7);
             let recs = JSON.parse(localStorage.getItem('recurrentes') || "[]");
-            for(let p of recs) {
-                if(dia >= parseInt(p.dia)) {
-                    const f = `${mes}-${p.dia.padStart(2,'0')}`;
-                    if(!appData.some(g => g.concepto === p.concepto && g.fecha === f)) {
-                        await fetch(API_URL, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ ...p, fecha: f }) });
+            for (let p of recs) {
+                if (diaHoy >= parseInt(p.dia)) {
+                    const f = `${mesActual}-${p.dia.padStart(2, '0')}`;
+                    if (!appData.some(g => g.concepto === p.concepto && g.fecha === f)) {
+                        await fetch(API_URL, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ concepto: p.concepto, importe: p.importe, categoria: p.categoria, fecha: f }) });
                     }
                 }
             }
         }
 
-        function updateChart() {
-            const ctx = document.getElementById('gastosChart')?.getContext('2d');
-            if(!ctx) return;
-            const mes = new Date().toISOString().slice(0, 7), desglose = {};
-            appData.forEach(g => { if(g.fecha.startsWith(mes) && !categIngresos.includes(g.categoria) && g.fecha <= new Date().toISOString().split('T')[0]) desglose[g.categoria] = (desglose[g.categoria] || 0) + Math.abs(g.importe); });
-            if(gastosChart) gastosChart.destroy();
-            gastosChart = new Chart(ctx, { type: 'doughnut', data: { labels: Object.keys(desglose), datasets: [{ data: Object.values(desglose), backgroundColor: ['#00e5ff','#7c4dff','#ff4081','#ffee33','#4caf50','#ff9800','#E0E0E0'], borderColor: '#072146', borderWidth: 2 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'right', labels: { color: 'white', font: { size: 10 } } } }, onClick: (e, i) => { if(i.length > 0) aplicarFiltroCategoria(gastosChart.data.labels[i[0].index]); } } });
-        }
-
-        function aplicarFiltroCategoria(cat) {
-            const lista = document.getElementById('listaPasado');
-            const catLimpia = cat.replace(/[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF]/g, '').trim().toLowerCase();
-            goToTab(3);
-            setTimeout(() => {
-                let enc = 0;
-                lista.querySelectorAll('.bbva-card').forEach(card => {
-                    const match = card.innerText.toLowerCase().includes(catLimpia);
-                    card.style.display = match ? 'flex' : 'none';
-                    if(match) enc++;
-                });
-                const old = document.getElementById('btn-quitar-filtro'); if(old) old.remove();
-                const btn = document.createElement('button');
-                btn.id = 'btn-quitar-filtro';
-                btn.className = "w-full mb-4 py-3 bg-cyan-400/10 text-cyan-400 text-[11px] font-black uppercase rounded-xl border border-cyan-400/20";
-                btn.innerHTML = `Filtrado: ${cat} (${enc}) ✕`;
-                btn.onclick = () => { renderApp(); btn.remove(); };
-                lista.prepend(btn);
-            }, 350);
+        function borrarRecurrente(id) {
+            let recs = JSON.parse(localStorage.getItem('recurrentes') || "[]").filter(p => p.id !== id);
+            localStorage.setItem('recurrentes', JSON.stringify(recs));
+            renderRecurrentes();
         }
 
         async function deleteGasto(id) { if(confirm("¿Eliminar?")) { await fetch(`${API_URL}/${id}`, {method:'DELETE'}); renderApp(); } } 
         function togglePrivacy() { isPrivate = !isPrivate; renderApp(); }
-        document.getElementById('filtroMes').value = new Date().toISOString().slice(0, 7);
         
         const vp = document.getElementById('viewport');
         vp.addEventListener('touchstart', e => touchstartX = e.changedTouches[0].screenX, {passive:true});
@@ -305,6 +322,8 @@
             const dx = touchendX - touchstartX;
             if(Math.abs(dx) > 80) dx < 0 ? (currentTabIndex < 4 && goToTab(currentTabIndex+1)) : (currentTabIndex > 0 && goToTab(currentTabIndex-1));
         }, {passive:true});
+        
+        document.getElementById('filtroMes').value = new Date().toISOString().slice(0, 7);
     </script>
 </body>
 </html>
