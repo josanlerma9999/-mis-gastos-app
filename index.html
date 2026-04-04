@@ -281,41 +281,18 @@
 
 
         async function deleteGasto(id) { if(confirm("¿Eliminar?")) { await fetch(`${API_URL}/${id}`, {method:'DELETE'}); renderApp(); } } 
-document.getElementById('mainForm').onsubmit = async (e) => {
-    e.preventDefault();
-    
-    const concepto = document.getElementById('in-concepto').value;
-    const importe = parseFloat(document.getElementById('in-importe').value);
-    const categoria = document.getElementById('in-categoria').value;
-    const fecha = document.getElementById('in-fecha').value;
-    const esRecurrente = document.getElementById('check-recurrente').checked;
 
-    const data = { concepto, importe, categoria, fecha };
-
-    // 1. Guardar el gasto actual en la API
-    await fetch(API_URL, { 
-        method: 'POST', 
-        headers: {'Content-Type':'application/json'}, 
-        body: JSON.stringify(data) 
-    });
-
-    // 2. Si marcaste la casilla, guardarlo como recurrente para el futuro
-    if(esRecurrente) {
-        const diaPago = fecha.split('-')[2]; // Extrae el día de la fecha elegida
-        let recurrentes = JSON.parse(localStorage.getItem('recurrentes') || "[]");
-        
-        // Evitamos duplicar si ya existe un recurrente con ese nombre
-        if (!recurrentes.some(p => p.concepto === concepto)) {
-            recurrentes.push({ concepto, importe, dia: diaPago, categoria, id: Date.now() });
-            localStorage.setItem('recurrentes', JSON.stringify(recurrentes));
-        }
-    }
-
-    e.target.reset(); 
-    renderApp(); 
-    goToTab(0);
-};
-
+        document.getElementById('mainForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const data = { 
+                concepto: document.getElementById('in-concepto').value, 
+                importe: parseFloat(document.getElementById('in-importe').value), 
+                categoria: document.getElementById('in-categoria').value, 
+                fecha: document.getElementById('in-fecha').value 
+            };
+            await fetch(API_URL, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
+            e.target.reset(); renderApp(); goToTab(0);
+        }; 
 
         function togglePrivacy() { isPrivate = !isPrivate; renderApp(); }
         
