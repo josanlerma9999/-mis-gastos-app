@@ -91,7 +91,7 @@
                 </section>
 
                 <section class="tab-content">
-                    <input type="month" id="filtroMes" class="bbva-input mb-4" onchange="renderApp()">
+•                     <input type="month" id="filtroMes" class="bbva-input mb-4"onchange="actualizarInterfaz()">
                     <div id="listaPasado" class="space-y-2 pb-20"></div>
                 </section>
 
@@ -353,7 +353,8 @@
 
 
         async function deleteGasto(id) { if(confirm("¿Eliminar?")) { await fetch(`${API_URL}/${id}`, {method:'DELETE'}); renderApp(); } } 
-        function togglePrivacy() { isPrivate = !isPrivate; renderApp(); }
+function togglePrivacy() { isPrivate = !isPrivate; actualizarInterfaz(); }
+
         
         const vp = document.getElementById('viewport');
         vp.addEventListener('touchstart', e => touchstartX = e.changedTouches[0].screenX, {passive:true});
