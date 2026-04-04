@@ -306,11 +306,43 @@
             }
         }
 
-        function borrarRecurrente(id) {
-            let recs = JSON.parse(localStorage.getItem('recurrentes') || "[]").filter(p => p.id !== id);
-            localStorage.setItem('recurrentes', JSON.stringify(recs));
-            renderRecurrentes();
+        async function borrarRecurrente(id) {
+    // 1. Confirmación para no borrar por error
+    if(!confirm("¿Eliminar suscripción y su gasto de este mes en toda la web?")) return;
+
+    // 2. Cargamos la lista de fijos actual del teléfono
+    let recs = JSON.parse(localStorage.getItem('recurrentes') || "[]");
+    const pagoFijo = recs.find(p => p.id === id);
+    
+    if (pagoFijo) {
+        // Buscamos el gasto real en la base de datos (appData) que coincida con este mes y nombre
+        const mesActual = new Date().toISOString().slice(0, 7); // Ejemplo: "2024-05"
+        
+        const gastoRealEnBD = appData.find(g => 
+            g.concepto === pagoFijo.concepto && 
+            g.fecha.startsWith(mesActual)
+        );
+
+        // 3. SI EXISTE EL GASTO ESTE MES, LO BORRAMOS DE RENDER (LA NUBE)
+        if (gastoRealEnBD) {
+            try {
+                await fetch(`${API_URL}/${gastoRealEnBD._id}`, { method: 'DELETE' });
+                console.log("Gasto eliminado de la base de datos de Render");
+            } catch (err) {
+                console.error("Error al borrar de la nube:", err);
+            }
         }
+    }
+
+    // 4. BORRAMOS LA PLANTILLA (EL PAGO FIJO) DEL TELÉFONO
+    recs = recs.filter(p => p.id !== id);
+    localStorage.setItem('recurrentes', JSON.stringify(recs));
+
+    // 5. REFRESCAR TODO AL INSTANTE
+    // Esto hace que el saldo suba y el gasto desaparezca de "Movs" y "Fijos" a la vez
+    await renderApp();
+}
+
 
         async function deleteGasto(id) { if(confirm("¿Eliminar?")) { await fetch(`${API_URL}/${id}`, {method:'DELETE'}); renderApp(); } } 
         function togglePrivacy() { isPrivate = !isPrivate; renderApp(); }
