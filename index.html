@@ -305,7 +305,7 @@
                 }
             }
         }
-        async function borrarRecurrente(id) {
+                async function borrarRecurrente(id) {
             if(!confirm("¿Borrar por completo de fijos, movimientos y saldo final?")) return;
 
             let recs = JSON.parse(localStorage.getItem('recurrentes') || "[]");
@@ -314,40 +314,59 @@
             if (pagoFijo) {
                 const mesActual = new Date().toISOString().slice(0, 7);
                 
-                // 1. Identificamos los gastos en la memoria de la APP
+                // 1. OBTENER los gastos antes de limpiar appData
                 const gastosABorrar = appData.filter(g => 
                     g.concepto === pagoFijo.concepto && 
                     g.fecha.startsWith(mesActual)
                 );
 
-                // 2. Los borramos de la base de datos de Render (Nube)
-                for (let gasto of gastosABorrar) {
-                    try {
-                        await fetch(`${API_URL}/${gasto._id}`, { method: 'DELETE' });
-                    } catch (err) {
-                        console.error("Error al borrar de la nube:", err);
-                    }
-                }
-
-                // 3. ¡QUIRÚRGICO! Eliminamos esos gastos de la variable local appData
-                // Esto es lo que hace que el Saldo Final se actualice al momento
+                // 2. LIMPIEZA LOCAL INMEDIATA (Para que el saldo baje al instante)
                 appData = appData.filter(g => 
                     !(g.concepto === pagoFijo.concepto && g.fecha.startsWith(mesActual))
                 );
+
+                // 3. BORRAR LA PLANTILLA DE FIJOS
+                recs = recs.filter(p => p.id !== id);
+                localStorage.setItem('recurrentes', JSON.stringify(recs));
+
+                // 4. ACTUALIZAR INTERFAZ (Sin llamar a la nube todavía)
+                // Usamos una versión local del render para que no descargue nada
+                actualizarPantallaSinDescargar();
+
+                // 5. SEGUNDO PLANO: Borrar de la nube (Render)
+                for (let gasto of gastosABorrar) {
+                    fetch(`${API_URL}/${gasto._id}`, { method: 'DELETE' })
+                        .then(() => console.log("Eliminado de la nube"))
+                        .catch(err => console.error("Error nube:", err));
+                }
             }
-
-            // 4. Borramos la "plantilla" de la pestaña Fijos
-            recs = recs.filter(p => p.id !== id);
-            localStorage.setItem('recurrentes', JSON.stringify(recs));
-
-            // 5. Refrescamos la interfaz completa
-            renderApp(); 
-            // Si después de renderApp no ves el cambio, forzamos el cálculo:
-            console.log("Limpieza completada. Saldo final recalculado.");
         }
 
+        // Nueva función auxiliar para que el saldo cambie al instante
+        function actualizarPantallaSinDescargar() {
+            const hoy = new Date().toISOString().split('T')[0];
+            const mesSel = document.getElementById('filtroMes').value;
+            let saldoReal = 0, gFuturos = 0, iFuturos = 0;
 
-        async function deleteGasto(id) { if(confirm("¿Eliminar?")) { await fetch(`${API_URL}/${id}`, {method:'DELETE'}); renderApp(); } } 
+            appData.forEach(g => {
+                const val = Math.abs(parseFloat(g.importe)), 
+                      esI = categIngresos.includes(g.categoria), 
+                      esP = g.fecha <= hoy;
+                if(esP) { esI ? saldoReal += val : saldoReal -= val; } 
+                else { esI ? iFuturos += val : gFuturos += val; }
+            });
+
+            document.getElementById('valReal').innerText = isPrivate ? "****€" : saldoReal.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
+            document.getElementById('valPend').innerText = isPrivate ? "****€" : "-" + gFuturos.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
+            document.getElementById('valProj').innerText = isPrivate ? "****€" : (saldoReal - gFuturos + iFuturos).toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
+            
+            renderRecurrentes();
+            updateChart();
+            // Refrescar las listas visuales
+            const currentTab = currentTabIndex;
+            goToTab(currentTab); 
+        }
+async function deleteGasto(id) { if(confirm("¿Eliminar?")) { await fetch(`${API_URL}/${id}`, {method:'DELETE'}); renderApp(); } } 
         function togglePrivacy() { isPrivate = !isPrivate; renderApp(); }
         
         const vp = document.getElementById('viewport');
