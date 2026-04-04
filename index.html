@@ -29,7 +29,8 @@
         
         .active-tab { color: var(--bbva-cyan) !important; border-top: 3px solid var(--bbva-cyan); }
         .btn-action { z-index: 50; position: relative; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.1); border-radius: 0.8rem; }
-        .chart-container { position: relative; height: 220px; width: 100%; margin-top: 1rem; }
+        .chart-container { position: relative; height: 180px; width: 100%; margin-top: 0.5rem; }
+
     </style>
 </head>
 <body> 
@@ -72,13 +73,13 @@
                             <p id="valPend" class="text-xl font-bold text-rose-400 mt-1">0.00€</p>
                         </div>
                     </div>
-                    <div class="bbva-card p-6 shadow-xl">
-                        <h3 class="text-xs font-bold text-white uppercase tracking-widest mb-2">Distribución de Gastos</h3>
-                        <div class="chart-container">
-                            <canvas id="gastosChart"></canvas>
-                        </div>
-                    </div>
-                </section> 
+                    <div class="bbva-card p-4 shadow-xl">
+    <h3 class="text-[10px] font-bold text-white uppercase tracking-widest mb-1">Distribución</h3>
+    <div class="chart-container">
+        <canvas id="gastosChart"></canvas>
+    </div>
+</div>
+ </section> 
 
                 <section class="tab-content">
                     <h3 class="text-xs font-bold text-cyan-400 uppercase mb-4 tracking-widest">Previsión de Pagos</h3>
