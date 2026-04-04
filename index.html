@@ -182,7 +182,7 @@
             }
         } 
 
-        function actualizarInterfaz() {
+                function actualizarInterfaz() {
             const hoy = new Date().toISOString().split('T')[0];
             const mesSel = document.getElementById('filtroMes').value;
             let saldoReal = 0, gFuturos = 0, iFuturos = 0;
@@ -201,11 +201,14 @@
                 if(esP) { esI ? saldoReal += val : saldoReal -= val; } else { esI ? iFuturos += val : gFuturos += val; }
                 const disp = isPrivate ? "****€" : val.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
                 
+                // Alerta visual: Borde derecho rojo si un gasto individual es > 100€
+                const alertaGastoPro = (val > 100 && !esI) ? 'border-r-4 border-rose-500/30' : '';
+
                 if(g.fecha.startsWith(mesSel)) {
                     document.getElementById('listaPasado').insertAdjacentHTML('beforeend', `
-                        <div class="bbva-card p-4 flex justify-between items-center ${!esP ? 'opacity-40 border-l-4 border-cyan-400' : ''}">
+                        <div class="bbva-card p-4 flex justify-between items-center ${alertaGastoPro} ${!esP ? 'opacity-40 border-l-4 border-cyan-400' : ''}">
                             <div class="flex-1"><p class="text-sm font-bold text-white">${g.concepto}</p><p class="text-[9px] text-slate-500 uppercase mt-1">${g.fecha} • ${g.categoria}</p></div>
-                            <div class="flex items-center gap-3"><p class="font-black ${esI ? 'text-cyan-400' : 'text-white'}">${esI ? '+' : '-'}${disp}</p>
+                            <div class="flex items-center gap-3"><p class="font-black ${esI ? 'text-cyan-400' : (val > 100 ? 'text-rose-400' : 'text-white')}">${esI ? '+' : '-'}${disp}</p>
                             <button onclick="event.stopPropagation(); deleteGasto('${g._id}')" class="btn-action text-rose-500">🗑️</button></div>
                         </div>`);
                 }
@@ -216,9 +219,23 @@
                             <p class="text-xl font-black ${esI ? 'text-cyan-400' : 'text-white'}">${esI ? '+' : '-'}${disp}</p>
                         </div>`);
                 }
-            }); 
+            });
 
-            document.getElementById('valReal').innerText = isPrivate ? "****€" : saldoReal.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
+            // --- LÓGICA DE ALERTAS DE COLOR ---
+            const valRealElement = document.getElementById('valReal');
+            valRealElement.className = "text-5xl font-black tracking-tighter transition-colors duration-500"; // Reset base
+
+            if (saldoReal > 200) {
+                valRealElement.classList.add('text-cyan-400'); // GENIAL
+            } else if (saldoReal >= 100) {
+                valRealElement.classList.add('text-amber-400'); // CUIDADO
+            } else {
+                valRealElement.classList.add('text-rose-500'); // PELIGRO
+            }
+
+            valRealElement.innerText = isPrivate ? "****€" : saldoReal.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
+            // --- FIN ALERTAS ---
+
             document.getElementById('valPend').innerText = isPrivate ? "****€" : "-" + gFuturos.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
             document.getElementById('valProj').innerText = isPrivate ? "****€" : (saldoReal - gFuturos + iFuturos).toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
             
@@ -226,8 +243,7 @@
             procesarPagosAutomaticos();
             updateChart();
         }
-
-        document.getElementById('mainForm').onsubmit = async (e) => {
+   document.getElementById('mainForm').onsubmit = async (e) => {
             e.preventDefault();
             const concepto = document.getElementById('in-concepto').value;
             const importe = parseFloat(document.getElementById('in-importe').value);
