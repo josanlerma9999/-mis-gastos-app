@@ -163,56 +163,77 @@
             document.querySelectorAll('.nav-btn').forEach((b, idx) => idx === i ? b.classList.add('active-tab') : b.classList.remove('active-tab'));
             if(i === 0) setTimeout(updateChart, 100);
         } 
-
+        // NUEVA FUNCIÓN CON CACHÉ
         async function renderApp() {
+            // 1. Carga instantánea desde el "bolsillo" (LocalStorage)
+            const cache = localStorage.getItem('appData_cache');
+            if (cache && appData.length === 0) {
+                appData = JSON.parse(cache);
+                actualizarInterfaz();
+            }
+
+            // 2. Consulta a la nube para ver si hay cambios
             try {
                 const res = await fetch(API_URL); 
-                appData = await res.json();
-                const hoy = new Date().toISOString().split('T')[0];
-                const mesSel = document.getElementById('filtroMes').value;
-                let saldoReal = 0, gFuturos = 0, iFuturos = 0;
+                const dataFresh = await res.json();
                 
-                document.getElementById('listaPasado').innerHTML = '';
-                document.getElementById('listaFuturo').innerHTML = ''; 
-
-                appData.sort((a, b) => {
-                    const aF = a.fecha > hoy, bF = b.fecha > hoy;
-                    if (aF && !bF) return 1; if (!aF && bF) return -1;
-                    return b.fecha.localeCompare(a.fecha);
-                }); 
-
-                appData.forEach(g => {
-                    const val = Math.abs(parseFloat(g.importe)), esI = categIngresos.includes(g.categoria), esP = g.fecha <= hoy;
-                    if(esP) { esI ? saldoReal += val : saldoReal -= val; } else { esI ? iFuturos += val : gFuturos += val; }
-                    const disp = isPrivate ? "****€" : val.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
-                    
-                    if(g.fecha.startsWith(mesSel)) {
-                        document.getElementById('listaPasado').insertAdjacentHTML('beforeend', `
-                            <div class="bbva-card p-4 flex justify-between items-center ${!esP ? 'opacity-40 border-l-4 border-cyan-400' : ''}">
-                                <div class="flex-1"><p class="text-sm font-bold text-white">${g.concepto}</p><p class="text-[9px] text-slate-500 uppercase mt-1">${g.fecha} • ${g.categoria}</p></div>
-                                <div class="flex items-center gap-3"><p class="font-black ${esI ? 'text-cyan-400' : 'text-white'}">${esI ? '+' : '-'}${disp}</p>
-                                <button onclick="event.stopPropagation(); deleteGasto('${g._id}')" class="btn-action text-rose-500">🗑️</button></div>
-                            </div>`);
-                    }
-                    if(!esP) {
-                        document.getElementById('listaFuturo').insertAdjacentHTML('afterbegin', `
-                            <div class="bbva-card border-l-4 border-cyan-400 p-5 flex justify-between items-center">
-                                <div><p class="font-black text-white">${g.concepto}</p><p class="text-[10px] text-slate-500">${g.fecha}</p></div>
-                                <p class="text-xl font-black ${esI ? 'text-cyan-400' : 'text-white'}">${esI ? '+' : '-'}${disp}</p>
-                            </div>`);
-                    }
-                });
-                document.getElementById('valReal').innerText = isPrivate ? "****€" : saldoReal.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
-                document.getElementById('valPend').innerText = isPrivate ? "****€" : "-" + gFuturos.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
-                document.getElementById('valProj').innerText = isPrivate ? "****€" : (saldoReal - gFuturos + iFuturos).toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
-                
-                renderRecurrentes();
-                procesarPagosAutomaticos();
-                updateChart();
-            } catch (e) { console.error(e); }
+                // Si los datos de la nube son distintos al caché, actualizamos
+                if (JSON.stringify(appData) !== JSON.stringify(dataFresh)) {
+                    appData = dataFresh;
+                    localStorage.setItem('appData_cache', JSON.stringify(appData));
+                    actualizarInterfaz();
+                }
+            } catch (e) { 
+                console.error("Sin conexión, usando datos guardados."); 
+            }
         }
 
-        // LÓGICA FORMULARIO ÚNICO
+        // NUEVA FUNCIÓN QUE PINTA LOS DATOS EN PANTALLA
+        function actualizarInterfaz() {
+            const hoy = new Date().toISOString().split('T')[0];
+            const mesSel = document.getElementById('filtroMes').value;
+            let saldoReal = 0, gFuturos = 0, iFuturos = 0;
+            
+            document.getElementById('listaPasado').innerHTML = '';
+            document.getElementById('listaFuturo').innerHTML = ''; 
+
+            appData.sort((a, b) => {
+                const aF = a.fecha > hoy, bF = b.fecha > hoy;
+                if (aF && !bF) return 1; if (!aF && bF) return -1;
+                return b.fecha.localeCompare(a.fecha);
+            }); 
+
+            appData.forEach(g => {
+                const val = Math.abs(parseFloat(g.importe)), esI = categIngresos.includes(g.categoria), esP = g.fecha <= hoy;
+                if(esP) { esI ? saldoReal += val : saldoReal -= val; } else { esI ? iFuturos += val : gFuturos += val; }
+                const disp = isPrivate ? "****€" : val.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
+                
+                if(g.fecha.startsWith(mesSel)) {
+                    document.getElementById('listaPasado').insertAdjacentHTML('beforeend', `
+                        <div class="bbva-card p-4 flex justify-between items-center ${!esP ? 'opacity-40 border-l-4 border-cyan-400' : ''}">
+                            <div class="flex-1"><p class="text-sm font-bold text-white">${g.concepto}</p><p class="text-[9px] text-slate-500 uppercase mt-1">${g.fecha} • ${g.categoria}</p></div>
+                            <div class="flex items-center gap-3"><p class="font-black ${esI ? 'text-cyan-400' : 'text-white'}">${esI ? '+' : '-'}${disp}</p>
+                            <button onclick="event.stopPropagation(); deleteGasto('${g._id}')" class="btn-action text-rose-500">🗑️</button></div>
+                        </div>`);
+                }
+                if(!esP) {
+                    document.getElementById('listaFuturo').insertAdjacentHTML('afterbegin', `
+                        <div class="bbva-card border-l-4 border-cyan-400 p-5 flex justify-between items-center">
+                            <div><p class="font-black text-white">${g.concepto}</p><p class="text-[10px] text-slate-500">${g.fecha}</p></div>
+                            <p class="text-xl font-black ${esI ? 'text-cyan-400' : 'text-white'}">${esI ? '+' : '-'}${disp}</p>
+                        </div>`);
+                }
+            });
+
+            document.getElementById('valReal').innerText = isPrivate ? "****€" : saldoReal.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
+            document.getElementById('valPend').innerText = isPrivate ? "****€" : "-" + gFuturos.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
+            document.getElementById('valProj').innerText = isPrivate ? "****€" : (saldoReal - gFuturos + iFuturos).toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
+            
+            renderRecurrentes();
+            procesarPagosAutomaticos();
+            updateChart();
+        }
+ // LÓGICA FORMULARIO ÚNICO
         document.getElementById('mainForm').onsubmit = async (e) => {
             e.preventDefault();
             const concepto = document.getElementById('in-concepto').value;
