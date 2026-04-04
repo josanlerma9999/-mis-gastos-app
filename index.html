@@ -305,12 +305,31 @@
                 }
             }
         }
-
-        function borrarRecurrente(id) {
-            let recs = JSON.parse(localStorage.getItem('recurrentes') || "[]").filter(p => p.id !== id);
+        async function borrarRecurrente(id) {
+            if(!confirm("¿Borrar por completo de fijos, movimientos y saldo final?")) return;
+            let recs = JSON.parse(localStorage.getItem('recurrentes') || "[]");
+            const pagoFijo = recs.find(p => p.id === id);
+            if (pagoFijo) {
+                const mesActual = new Date().toISOString().slice(0, 7);
+                const gastosABorrar = appData.filter(g => 
+                    g.concepto === pagoFijo.concepto && g.fecha.startsWith(mesActual)
+                );
+                for (let gasto of gastosABorrar) {
+                    try {
+                        await fetch(`${API_URL}/${gasto._id}`, { method: 'DELETE' });
+                    } catch (err) {
+                        console.error("Error:", err);
+                    }
+                }
+                appData = appData.filter(g => 
+                    !(g.concepto === pagoFijo.concepto && g.fecha.startsWith(mesActual))
+                );
+            }
+            recs = recs.filter(p => p.id !== id);
             localStorage.setItem('recurrentes', JSON.stringify(recs));
-            renderRecurrentes();
+            renderApp();
         }
+
 
         async function deleteGasto(id) { if(confirm("¿Eliminar?")) { await fetch(`${API_URL}/${id}`, {method:'DELETE'}); renderApp(); } } 
         function togglePrivacy() { isPrivate = !isPrivate; renderApp(); }
