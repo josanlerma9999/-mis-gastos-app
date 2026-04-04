@@ -10,6 +10,7 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
         :root { --bbva-navy: #072146; --bbva-blue: #004481; --bbva-cyan: #00e5ff; }
         html, body { height: 100%; margin: 0; padding: 0; background: #000; overflow: hidden; font-family: 'Inter', sans-serif; }
+        
         .num-btn { 
             width: 72px; height: 72px; border-radius: 50%; 
             border: 1px solid rgba(255,255,255,0.15); font-size: 1.6rem; font-weight: 600; 
@@ -17,15 +18,19 @@
             background: rgba(255,255,255,0.08); color: white; transition: all 0.1s ease;
         }
         .num-btn:active { background: var(--bbva-cyan) !important; color: #000 !important; box-shadow: 0 0 30px var(--bbva-cyan); transform: scale(0.9); }
+
         .bbva-card { background: var(--bbva-navy); border-radius: 1.5rem; border: 1px solid rgba(255,255,255,0.05); transition: all 0.3s ease; }
         .bbva-gradient { background: linear-gradient(135deg, #072146 0%, #004481 100%); border-radius: 2rem; }
         .bbva-input { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 1rem; padding: 1rem; width: 100%; color: white; outline: none; }
+        
         #viewport { width: 100%; height: calc(100% - 140px); overflow: hidden; position: relative; touch-action: pan-y; }
+        /* CORREGIDO: width 500% para las 5 secciones */
         #main-view { display: flex; width: 500%; height: 100%; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .tab-content { width: 20%; height: 100%; overflow-y: auto; padding: 1.25rem; -webkit-overflow-scrolling: touch; }
+        
         .active-tab { color: var(--bbva-cyan) !important; border-top: 3px solid var(--bbva-cyan); }
-        .btn-action { width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.1); border-radius: 0.8rem; }
-        .chart-container { position: relative; height: 220px; width: 100%; }
+        .btn-action { z-index: 50; position: relative; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.1); border-radius: 0.8rem; }
+        .chart-container { position: relative; height: 220px; width: 100%; margin-top: 1rem; }
     </style>
 </head>
 <body>
@@ -69,7 +74,9 @@
                     </div>
                     <div class="bbva-card p-6 shadow-xl">
                         <h3 class="text-xs font-bold text-white uppercase tracking-widest mb-2">Distribución de Gastos</h3>
-                        <div class="chart-container"><canvas id="gastosChart"></canvas></div>
+                        <div class="chart-container">
+                            <canvas id="gastosChart"></canvas>
+                        </div>
                     </div>
                 </section>
 
@@ -79,7 +86,7 @@
                 </section>
 
                 <section class="tab-content">
-                    <h3 class="text-xs font-bold text-purple-400 uppercase mb-4 tracking-widest">Fijos</h3>
+                    <h3 class="text-xs font-bold text-purple-400 uppercase mb-4 tracking-widest">Suscripciones y Pagos Fijos</h3>
                     <div id="listaRecurrentes" class="space-y-3"></div>
                 </section>
 
@@ -110,10 +117,12 @@
                             </optgroup>
                         </select>
                         <input type="date" id="in-fecha" class="bbva-input" required>
+                        
                         <div class="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/10">
                             <input type="checkbox" id="check-recurrente" class="w-5 h-5 accent-cyan-400">
                             <label for="check-recurrente" class="text-[10px] font-black uppercase text-slate-400">Convertir en pago fijo mensual</label>
                         </div>
+
                         <button type="submit" class="w-full bg-cyan-400 text-black font-black py-4 rounded-xl uppercase">Confirmar Operación</button>
                     </form>
                 </section>
@@ -131,31 +140,34 @@
 
     <script>
         const API_URL = 'https://mis-gastos-app.onrender.com/api/gastos';
-        let currentTabIndex = 0, pin = "", isPrivate = false, appData = [], gastosChart = null;
+        let touchstartX = 0, touchendX = 0, currentTabIndex = 0;
+        let pin = "", isPrivate = false, appData = [];
         const categIngresos = ["Sueldo", "Otros Ingresos"];
+        let gastosChart = null; 
 
         // PIN PAD
-        const pad = document.getElementById('pin-pad');
         [1,2,3,4,5,6,7,8,9,'C',0,'DEL'].forEach(v => {
             const b = document.createElement('button'); b.className = "num-btn"; b.innerText = v;
             b.onclick = () => {
                 if(v === 'C') pin = ""; else if(v === 'DEL') pin = pin.slice(0,-1); else if(pin.length < 4) pin += v;
                 document.querySelectorAll('#pin-dots div').forEach((d, i) => d.style.background = i < pin.length ? '#00e5ff' : 'transparent');
-                if(pin === "1763") { document.getElementById('pin-screen').classList.add('hidden'); document.getElementById('app-content').classList.remove('hidden'); renderApp(); }
+                if(pin === "1763") { document.getElementById('pin-screen').remove(); document.getElementById('app-content').classList.remove('hidden'); renderApp(); }
             };
-            pad.appendChild(b);
-        });
+            document.getElementById('pin-pad').appendChild(b);
+        }); 
 
         function goToTab(i) {
             currentTabIndex = i;
+            // CORREGIDO: i * 20% porque hay 5 pestañas
             document.getElementById('main-view').style.transform = `translateX(-${i * 20}%)`;
             document.querySelectorAll('.nav-btn').forEach((b, idx) => idx === i ? b.classList.add('active-tab') : b.classList.remove('active-tab'));
             if(i === 0) setTimeout(updateChart, 100);
-        }
+        } 
 
         async function renderApp() {
             try {
-                const res = await fetch(API_URL); appData = await res.json();
+                const res = await fetch(API_URL); 
+                appData = await res.json();
                 const hoy = new Date().toISOString().split('T')[0];
                 const mesSel = document.getElementById('filtroMes').value;
                 let saldoReal = 0, gFuturos = 0, iFuturos = 0;
@@ -163,103 +175,208 @@
                 document.getElementById('listaPasado').innerHTML = '';
                 document.getElementById('listaFuturo').innerHTML = ''; 
 
-                appData.sort((a, b) => b.fecha.localeCompare(a.fecha));
+                appData.sort((a, b) => {
+                    const aF = a.fecha > hoy, bF = b.fecha > hoy;
+                    if (aF && !bF) return 1; if (!aF && bF) return -1;
+                    return b.fecha.localeCompare(a.fecha);
+                }); 
 
                 appData.forEach(g => {
                     const val = Math.abs(parseFloat(g.importe)), esI = categIngresos.includes(g.categoria), esP = g.fecha <= hoy;
                     if(esP) { esI ? saldoReal += val : saldoReal -= val; } else { esI ? iFuturos += val : gFuturos += val; }
-                    
                     const disp = isPrivate ? "****€" : val.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
                     
                     if(g.fecha.startsWith(mesSel)) {
                         document.getElementById('listaPasado').insertAdjacentHTML('beforeend', `
-                            <div class="bbva-card p-4 flex justify-between items-center mb-2 ${!esP ? 'opacity-40 border-l-4 border-cyan-400' : ''}">
-                                <div><p class="text-sm font-bold">${g.concepto}</p><p class="text-[9px] text-slate-500 uppercase">${g.fecha}</p></div>
-                                <div class="flex items-center gap-3"><p class="font-black ${esI ? 'text-cyan-400' : 'white'}">${esI?'+':'-'}${disp}</p>
-                                <button onclick="deleteGasto('${g._id}')">🗑️</button></div>
+                            <div class="bbva-card p-4 flex justify-between items-center ${!esP ? 'opacity-40 border-l-4 border-cyan-400' : ''}">
+                                <div class="flex-1"><p class="text-sm font-bold text-white">${g.concepto}</p><p class="text-[9px] text-slate-500 uppercase mt-1">${g.fecha} • ${g.categoria}</p></div>
+                                <div class="flex items-center gap-3"><p class="font-black ${esI ? 'text-cyan-400' : 'text-white'}">${esI ? '+' : '-'}${disp}</p>
+                                <button onclick="event.stopPropagation(); deleteGasto('${g._id}')" class="btn-action text-rose-500">🗑️</button></div>
                             </div>`);
                     }
                     if(!esP) {
                         document.getElementById('listaFuturo').insertAdjacentHTML('afterbegin', `
-                            <div class="bbva-card border-l-4 border-cyan-400 p-4 flex justify-between items-center mb-2">
-                                <div><p class="font-bold">${g.concepto}</p><p class="text-[10px] text-slate-500">${g.fecha}</p></div>
-                                <p class="font-black ${esI ? 'text-cyan-400' : 'white'}">${esI?'+':'-'}${disp}</p>
+                            <div class="bbva-card border-l-4 border-cyan-400 p-5 flex justify-between items-center">
+                                <div><p class="font-black text-white">${g.concepto}</p><p class="text-[10px] text-slate-500">${g.fecha}</p></div>
+                                <p class="text-xl font-black ${esI ? 'text-cyan-400' : 'text-white'}">${esI ? '+' : '-'}${disp}</p>
                             </div>`);
                     }
                 });
-
-                document.getElementById('valReal').innerText = isPrivate ? "****€" : saldoReal.toFixed(2) + "€";
-                document.getElementById('valPend').innerText = isPrivate ? "****€" : "-" + gFuturos.toFixed(2) + "€";
-                document.getElementById('valProj').innerText = isPrivate ? "****€" : (saldoReal - gFuturos + iFuturos).toFixed(2) + "€";
+                document.getElementById('valReal').innerText = isPrivate ? "****€" : saldoReal.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
+                document.getElementById('valPend').innerText = isPrivate ? "****€" : "-" + gFuturos.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
+                document.getElementById('valProj').innerText = isPrivate ? "****€" : (saldoReal - gFuturos + iFuturos).toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
                 
                 renderRecurrentes();
+                procesarPagosAutomaticos();
                 updateChart();
             } catch (e) { console.error(e); }
         }
 
-        async function borrarRecurrente(id) {
-            if(!confirm("¿Borrar de fijos y del saldo final?")) return;
-            let recs = JSON.parse(localStorage.getItem('recurrentes') || "[]");
-            const p = recs.find(x => x.id === id);
-            if (p) {
-                const mes = new Date().toISOString().slice(0, 7);
-                const aBorrar = appData.filter(g => g.concepto === p.concepto && g.fecha.startsWith(mes));
-                for(let g of aBorrar) await fetch(`${API_URL}/${g._id}`, { method: 'DELETE' });
-            }
-            localStorage.setItem('recurrentes', JSON.stringify(recs.filter(x => x.id !== id)));
-            renderApp();
-        }
-
-        function renderRecurrentes() {
-            const recs = JSON.parse(localStorage.getItem('recurrentes') || "[]");
-            document.getElementById('listaRecurrentes').innerHTML = recs.map(p => `
-                <div class="bbva-card p-4 flex justify-between items-center border-l-4 border-purple-500 mb-2">
-                    <div><p class="font-bold">${p.concepto}</p><p class="text-[10px] text-slate-500">Día ${p.dia}</p></div>
-                    <button onclick="borrarRecurrente(${p.id})">🗑️</button>
-                </div>`).join('');
-        }
-
-        async function deleteGasto(id) { if(confirm("¿Eliminar?")) { await fetch(`${API_URL}/${id}`, {method:'DELETE'}); renderApp(); } }
-        function togglePrivacy() { isPrivate = !isPrivate; renderApp(); }
-
+        // LÓGICA FORMULARIO ÚNICO
         document.getElementById('mainForm').onsubmit = async (e) => {
             e.preventDefault();
-            const data = {
-                concepto: document.getElementById('in-concepto').value,
-                importe: parseFloat(document.getElementById('in-importe').value),
-                categoria: document.getElementById('in-categoria').value,
-                fecha: document.getElementById('in-fecha').value
-            };
-            await fetch(API_URL, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
-            if(document.getElementById('check-recurrente').checked) {
+            const concepto = document.getElementById('in-concepto').value;
+            const importe = parseFloat(document.getElementById('in-importe').value);
+            const categoria = document.getElementById('in-categoria').value;
+            const fecha = document.getElementById('in-fecha').value;
+            const esRecurrente = document.getElementById('check-recurrente').checked;
+
+            await fetch(API_URL, { 
+                method: 'POST', 
+                headers: {'Content-Type':'application/json'}, 
+                body: JSON.stringify({ concepto, importe, categoria, fecha }) 
+            });
+
+            if(esRecurrente) {
+                const diaPago = fecha.split('-')[2];
                 let recs = JSON.parse(localStorage.getItem('recurrentes') || "[]");
-                recs.push({...data, id: Date.now(), dia: data.fecha.split('-')[2]});
-                localStorage.setItem('recurrentes', JSON.stringify(recs));
+                if (!recs.some(p => p.concepto === concepto)) {
+                    recs.push({ concepto, importe, dia: diaPago, categoria, id: Date.now() });
+                    localStorage.setItem('recurrentes', JSON.stringify(recs));
+                }
             }
             e.target.reset(); renderApp(); goToTab(0);
         };
 
         function updateChart() {
-            const ctx = document.getElementById('gastosChart')?.getContext('2d');
-            if(!ctx) return;
-            const mes = new Date().toISOString().slice(0, 7);
-            const stats = {};
+            const canvas = document.getElementById('gastosChart');
+            if(!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const mesActual = new Date().toISOString().slice(0, 7);
+            const desglose = {};
             appData.forEach(g => {
-                if(g.fecha.startsWith(mes) && !categIngresos.includes(g.categoria)) {
-                    stats[g.categoria] = (stats[g.categoria] || 0) + Math.abs(g.importe);
+                if(g.fecha.startsWith(mesActual) && !categIngresos.includes(g.categoria) && g.fecha <= new Date().toISOString().split('T')[0]) {
+                    desglose[g.categoria] = (desglose[g.categoria] || 0) + Math.abs(parseFloat(g.importe));
                 }
-            });
-            if(gastosChart) gastosChart.destroy();
+            }); 
+            const labels = Object.keys(desglose), data = Object.values(desglose);
+            if (gastosChart) gastosChart.destroy();
             gastosChart = new Chart(ctx, {
                 type: 'doughnut',
-                data: {
-                    labels: Object.keys(stats),
-                    datasets: [{ data: Object.values(stats), backgroundColor: ['#00e5ff','#7c4dff','#ff4081','#ffee33'] }]
-                },
-                options: { plugins: { legend: { display: false } } }
+                data: { labels, datasets: [{ data, backgroundColor: ['#00e5ff','#7c4dff','#ff4081','#ffee33','#4caf50','#ff9800','#E0E0E0','#0091EA','#8D6E63','#26A69A'], borderColor: '#072146', borderWidth: 2 }] },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'right', labels: { color: 'white', font: { size: 10 }, boxWidth: 10 } } },
+                onClick: (e, i) => { if(i.length > 0) aplicarFiltroCategoria(labels[i[0].index]); } }
             });
         }
 
+        function aplicarFiltroCategoria(cat) {
+            const lista = document.getElementById('listaPasado');
+            const catLimpia = cat.replace(/[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF]/g, '').trim().toLowerCase();
+            goToTab(3); // Pestaña Movimientos
+            setTimeout(() => {
+                let encontrados = 0;
+                lista.querySelectorAll('.bbva-card').forEach(card => {
+                    const match = card.innerText.toLowerCase().includes(catLimpia);
+                    card.style.display = match ? 'flex' : 'none';
+                    if(match) encontrados++;
+                });
+                const oldBtn = document.getElementById('btn-quitar-filtro'); if (oldBtn) oldBtn.remove();
+                const btn = document.createElement('button');
+                btn.id = 'btn-quitar-filtro';
+                btn.className = "w-full mb-4 py-3 bg-cyan-400/10 text-cyan-400 text-[11px] font-black uppercase rounded-xl border border-cyan-400/20";
+                btn.innerHTML = `Filtrado: ${cat} (${encontrados}) ✕`;
+                btn.onclick = () => { renderApp(); btn.remove(); };
+                lista.prepend(btn);
+            }, 350);
+        }
+
+        function renderRecurrentes() {
+            const container = document.getElementById('listaRecurrentes');
+            let recs = JSON.parse(localStorage.getItem('recurrentes') || "[]");
+            container.innerHTML = recs.map(p => `
+                <div class="bbva-card p-4 flex justify-between items-center border-l-4 border-purple-500">
+                    <div><p class="font-bold text-white">${p.concepto}</p><p class="text-[10px] text-slate-500">Día ${p.dia} de cada mes</p></div>
+                    <div class="flex items-center gap-2"><p class="font-black text-rose-400">-${parseFloat(p.importe).toFixed(2)}€</p>
+                    <button onclick="borrarRecurrente(${p.id})" class="text-xs opacity-30">🗑️</button></div>
+                </div>`).join('');
+        }
+
+        async function procesarPagosAutomaticos() {
+            const hoy = new Date();
+            const diaHoy = hoy.getDate();
+            const mesActual = hoy.toISOString().slice(0, 7);
+            let recs = JSON.parse(localStorage.getItem('recurrentes') || "[]");
+            for (let p of recs) {
+                if (diaHoy >= parseInt(p.dia)) {
+                    const f = `${mesActual}-${p.dia.padStart(2, '0')}`;
+                    if (!appData.some(g => g.concepto === p.concepto && g.fecha === f)) {
+                        await fetch(API_URL, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ concepto: p.concepto, importe: p.importe, categoria: p.categoria, fecha: f }) });
+                    }
+                }
+            }
+        }
+                async function borrarRecurrente(id) {
+            if(!confirm("¿Borrar por completo de fijos, movimientos y saldo final?")) return;
+
+            let recs = JSON.parse(localStorage.getItem('recurrentes') || "[]");
+            const pagoFijo = recs.find(p => p.id === id);
+            
+            if (pagoFijo) {
+                const mesActual = new Date().toISOString().slice(0, 7);
+                
+                // 1. OBTENER los gastos antes de limpiar appData
+                const gastosABorrar = appData.filter(g => 
+                    g.concepto === pagoFijo.concepto && 
+                    g.fecha.startsWith(mesActual)
+                );
+
+                // 2. LIMPIEZA LOCAL INMEDIATA (Para que el saldo baje al instante)
+                appData = appData.filter(g => 
+                    !(g.concepto === pagoFijo.concepto && g.fecha.startsWith(mesActual))
+                );
+
+                // 3. BORRAR LA PLANTILLA DE FIJOS
+                recs = recs.filter(p => p.id !== id);
+                localStorage.setItem('recurrentes', JSON.stringify(recs));
+
+                // 4. ACTUALIZAR INTERFAZ (Sin llamar a la nube todavía)
+                // Usamos una versión local del render para que no descargue nada
+                actualizarPantallaSinDescargar();
+
+                // 5. SEGUNDO PLANO: Borrar de la nube (Render)
+                for (let gasto of gastosABorrar) {
+                    fetch(`${API_URL}/${gasto._id}`, { method: 'DELETE' })
+                        .then(() => console.log("Eliminado de la nube"))
+                        .catch(err => console.error("Error nube:", err));
+                }
+            }
+        }
+
+        // Nueva función auxiliar para que el saldo cambie al instante
+        function actualizarPantallaSinDescargar() {
+            const hoy = new Date().toISOString().split('T')[0];
+            const mesSel = document.getElementById('filtroMes').value;
+            let saldoReal = 0, gFuturos = 0, iFuturos = 0;
+
+            appData.forEach(g => {
+                const val = Math.abs(parseFloat(g.importe)), 
+                      esI = categIngresos.includes(g.categoria), 
+                      esP = g.fecha <= hoy;
+                if(esP) { esI ? saldoReal += val : saldoReal -= val; } 
+                else { esI ? iFuturos += val : gFuturos += val; }
+            });
+
+            document.getElementById('valReal').innerText = isPrivate ? "****€" : saldoReal.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
+            document.getElementById('valPend').innerText = isPrivate ? "****€" : "-" + gFuturos.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
+            document.getElementById('valProj').innerText = isPrivate ? "****€" : (saldoReal - gFuturos + iFuturos).toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
+            
+            renderRecurrentes();
+            updateChart();
+            // Refrescar las listas visuales
+            const currentTab = currentTabIndex;
+            goToTab(currentTab); 
+        }
+async function deleteGasto(id) { if(confirm("¿Eliminar?")) { await fetch(`${API_URL}/${id}`, {method:'DELETE'}); renderApp(); } } 
+        function togglePrivacy() { isPrivate = !isPrivate; renderApp(); }
+        
+        const vp = document.getElementById('viewport');
+        vp.addEventListener('touchstart', e => touchstartX = e.changedTouches[0].screenX, {passive:true});
+        vp.addEventListener('touchend', e => { 
+            touchendX = e.changedTouches[0].screenX; 
+            const dx = touchendX - touchstartX;
+            if(Math.abs(dx) > 80) dx < 0 ? (currentTabIndex < 4 && goToTab(currentTabIndex+1)) : (currentTabIndex > 0 && goToTab(currentTabIndex-1));
+        }, {passive:true});
+        
         document.getElementById('filtroMes').value = new Date().toISOString().slice(0, 7);
     </script>
 </body>
