@@ -206,7 +206,8 @@ input[type="month"]::-webkit-calendar-picker-indicator {
 function obtenerLogo(concepto) {
     const c = concepto.toLowerCase();
     // Definimos las reglas: [Palabra clave, Color Fondo, Letra/Icono]
-    const reglas = [
+        const reglas = [
+        ['nala', '#FFC0CB', '🐶'], // <-- La regla de Nala
         ['amazon', '#FF9900', 'A'],
         ['mercadona', '#00a650', 'M'],
         ['netflix', '#E50914', 'N'],
@@ -219,6 +220,7 @@ function obtenerLogo(concepto) {
         ['zara', '#000000', 'Z'],
         ['apple', '#555555', '']
     ];
+
 
     const match = reglas.find(r => c.includes(r[0]));
     if (match) {
