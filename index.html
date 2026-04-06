@@ -21,7 +21,24 @@
 
         .bbva-card { background: var(--bbva-navy); border-radius: 1.5rem; border: 1px solid rgba(255,255,255,0.05); transition: all 0.3s ease; }
         .bbva-gradient { background: linear-gradient(135deg, #072146 0%, #004481 100%); border-radius: 2rem; }
-        .bbva-input { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 1rem; padding: 1rem; width: 100%; color: white; outline: none; }
+      .bbva-input { 
+    background: #ffffff; 
+    border: none; 
+    border-radius: 1rem; 
+    padding: 1rem; 
+    width: 100%; 
+    color: #072146; 
+    font-weight: 800; 
+    outline: none;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+/* Añade esto justo debajo para que el icono del calendario sea oscuro */
+input[type="month"]::-webkit-calendar-picker-indicator {
+    filter: invert(0);
+    cursor: pointer;
+}
+  
         
         #viewport { width: 100%; height: calc(100% - 140px); overflow: hidden; position: relative; touch-action: pan-y; }
         #main-view { display: flex; width: 500%; height: 100%; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
@@ -92,12 +109,13 @@
                 </section> 
 
                 <section class="tab-content">
-    <input type="month" id="filtroMes" class="bbva-input mb-4" onchange="actualizarInterfaz()">
+    <input type="month" id="filtroMes" class="bbva-input mb-6" onchange="actualizarInterfaz()">
     
     <h3 class="text-xs font-bold text-cyan-400 uppercase mb-4 tracking-widest">Movimientos</h3>
     
     <div id="listaPasado" class="space-y-2 pb-20"></div>
 </section>
+
  <section class="tab-content">
                     <form id="mainForm" class="bbva-card p-6 space-y-4 shadow-xl">
                         <h2 class="text-xs font-black uppercase text-cyan-400 tracking-widest mb-2">Nueva Operación</h2>
