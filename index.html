@@ -203,6 +203,32 @@ input[type="month"]::-webkit-calendar-picker-indicator {
                 console.error("Sin conexión, usando datos guardados."); 
             }
         } 
+function obtenerLogo(concepto) {
+    const c = concepto.toLowerCase();
+    // Definimos las reglas: [Palabra clave, Color Fondo, Letra/Icono]
+    const reglas = [
+        ['amazon', '#FF9900', 'A'],
+        ['mercadona', '#00a650', 'M'],
+        ['netflix', '#E50914', 'N'],
+        ['spotify', '#1DB954', 'S'],
+        ['carrefour', '#0046BE', 'C'],
+        ['sueldo', '#22c55e', '€'],
+        ['nomina', '#22c55e', '€'],
+        ['gasolina', '#4b5563', '⛽'],
+        ['hbo', '#000000', 'H'],
+        ['zara', '#000000', 'Z'],
+        ['apple', '#555555', '']
+    ];
+
+    const match = reglas.find(r => c.includes(r[0]));
+    if (match) {
+        return `<div class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg" style="background:${match[1]}">${match[2]}</div>`;
+    }
+    
+    // Si no lo reconoce, usa la primera letra en gris
+    const inicial = concepto.charAt(0).toUpperCase();
+    return `<div class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg bg-slate-700 shadow-lg">${inicial}</div>`;
+}
 
                 function actualizarInterfaz() {
             const hoy = new Date().toISOString().split('T')[0];
@@ -226,15 +252,26 @@ input[type="month"]::-webkit-calendar-picker-indicator {
                 // Alerta visual: Borde derecho rojo si un gasto individual es > 100€
                 const alertaGastoPro = (val > 100 && !esI) ? 'border-r-4 border-rose-500/30' : '';
 
-                if(g.fecha.startsWith(mesSel)) {
+                                if(g.fecha.startsWith(mesSel)) {
+                    const logoHTML = obtenerLogo(g.concepto); // Esta línea llama al logo
                     document.getElementById('listaPasado').insertAdjacentHTML('beforeend', `
-                        <div class="bbva-card p-4 flex justify-between items-center ${alertaGastoPro} ${!esP ? 'opacity-40 border-l-4 border-cyan-400' : ''}">
-                            <div class="flex-1"><p class="text-sm font-bold text-white">${g.concepto}</p><p class="text-[9px] text-slate-500 uppercase mt-1">${g.fecha} • ${g.categoria}</p></div>
-                            <div class="flex items-center gap-3"><p class="font-black ${esI ? 'text-cyan-400' : (val > 100 ? 'text-rose-400' : 'text-white')}">${esI ? '+' : '-'}${disp}</p>
-                            <button onclick="event.stopPropagation(); deleteGasto('${g._id}')" class="btn-action text-rose-500">🗑️</button></div>
+                        <div class="bbva-card p-4 flex justify-between items-center gap-3 ${alertaGastoPro} ${!esP ? 'opacity-40 border-l-4 border-cyan-400' : ''}">
+                            <div class="flex items-center gap-3 flex-1 overflow-hidden">
+                                ${logoHTML}
+                                <div class="truncate">
+                                    <p class="text-sm font-bold text-white truncate">${g.concepto}</p>
+                                    <p class="text-[9px] text-slate-500 uppercase mt-1">${g.fecha} • ${g.categoria}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <p class="font-black whitespace-nowrap ${esI ? 'text-cyan-400' : (val > 100 ? 'text-rose-400' : 'text-white')}">
+                                    ${esI ? '+' : '-'}${disp}
+                                </p>
+                                <button onclick="event.stopPropagation(); deleteGasto('${g._id}')" class="btn-action text-rose-500">🗑️</button>
+                            </div>
                         </div>`);
                 }
-                if(!esP) {
+   if(!esP) {
                     document.getElementById('listaFuturo').insertAdjacentHTML('afterbegin', `
                         <div class="bbva-card border-l-4 border-cyan-400 p-5 flex justify-between items-center">
                             <div><p class="font-black text-white">${g.concepto}</p><p class="text-[10px] text-slate-500">${g.fecha}</p></div>
