@@ -232,7 +232,7 @@ function obtenerLogo(concepto) {
     return `<div class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg bg-slate-700 shadow-lg">${inicial}</div>`;
 }
 
-                function actualizarInterfaz() {
+                        function actualizarInterfaz() {
             const hoy = new Date().toISOString().split('T')[0];
             const mesSel = document.getElementById('filtroMes').value;
             let saldoReal = 0, gFuturos = 0, iFuturos = 0;
@@ -248,14 +248,17 @@ function obtenerLogo(concepto) {
 
             appData.forEach(g => {
                 const val = Math.abs(parseFloat(g.importe)), esI = categIngresos.includes(g.categoria), esP = g.fecha <= hoy;
-                if(esP) { esI ? saldoReal += val : saldoReal -= val; } else { esI ? iFuturos += val : gFuturos += val; }
-                const disp = isPrivate ? "****€" : val.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
                 
-                // Alerta visual: Borde derecho rojo si un gasto individual es > 100€
-                const alertaGastoPro = (val > 100 && !esI) ? 'border-r-4 border-rose-500/30' : '';
+                // Cálculo de saldos
+                if(esP) { esI ? saldoReal += val : saldoReal -= val; } 
+                else { esI ? iFuturos += val : gFuturos += val; }
+                
+                const disp = isPrivate ? "****€" : val.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
+                const alertaGastoPro = (val > 100 && !esI) ? 'border-r-4 border-rose-500/30' : ''; 
 
-                                if(g.fecha.startsWith(mesSel)) {
-                    const logoHTML = obtenerLogo(g.concepto); // Esta línea llama al logo
+                // LISTA DE MOVIMIENTOS (PASADO/PRESENTE)
+                if(g.fecha.startsWith(mesSel)) {
+                    const logoHTML = obtenerLogo(g.concepto); 
                     document.getElementById('listaPasado').insertAdjacentHTML('beforeend', `
                         <div class="bbva-card p-4 flex justify-between items-center gap-3 ${alertaGastoPro} ${!esP ? 'opacity-40 border-l-4 border-cyan-400' : ''}">
                             <div class="flex items-center gap-3 flex-1 overflow-hidden">
@@ -273,30 +276,26 @@ function obtenerLogo(concepto) {
                             </div>
                         </div>`);
                 }
-   if(!esP) {
+
+                // LISTA DE PREVISIÓN (FUTURO)
+                if(!esP) {
                     document.getElementById('listaFuturo').insertAdjacentHTML('afterbegin', `
                         <div class="bbva-card border-l-4 border-cyan-400 p-5 flex justify-between items-center">
                             <div><p class="font-black text-white">${g.concepto}</p><p class="text-[10px] text-slate-500">${g.fecha}</p></div>
                             <p class="text-xl font-black ${esI ? 'text-cyan-400' : 'text-white'}">${esI ? '+' : '-'}${disp}</p>
                         </div>`);
                 }
-            });
+            }); // Cierre del forEach
 
-            // --- LÓGICA DE ALERTAS DE COLOR ---
+            // ACTUALIZACIÓN DE SALDOS EN CABECERA
             const valRealElement = document.getElementById('valReal');
-            valRealElement.className = "text-5xl font-black tracking-tighter transition-colors duration-500"; // Reset base
+            valRealElement.className = "text-4xl font-black tracking-tighter transition-all duration-500"; 
 
-            if (saldoReal > 200) {
-                valRealElement.classList.add('text-cyan-400'); // GENIAL
-            } else if (saldoReal >= 100) {
-                valRealElement.classList.add('text-amber-400'); // CUIDADO
-            } else {
-                valRealElement.classList.add('text-rose-500'); // PELIGRO
-            }
+            if (saldoReal > 200) { valRealElement.classList.add('text-cyan-400'); }
+            else if (saldoReal >= 100) { valRealElement.classList.add('text-amber-400'); }
+            else { valRealElement.classList.add('text-rose-500'); }
 
             valRealElement.innerText = isPrivate ? "****€" : saldoReal.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
-            // --- FIN ALERTAS ---
-
             document.getElementById('valPend').innerText = isPrivate ? "****€" : "-" + gFuturos.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
             document.getElementById('valProj').innerText = isPrivate ? "****€" : (saldoReal - gFuturos + iFuturos).toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
             
@@ -304,6 +303,7 @@ function obtenerLogo(concepto) {
             procesarPagosAutomaticos();
             updateChart();
         }
+
    document.getElementById('mainForm').onsubmit = async (e) => {
             e.preventDefault();
             const concepto = document.getElementById('in-concepto').value;
