@@ -335,15 +335,25 @@ function obtenerLogo(concepto) {
             procesarPagosAutomaticos();
 // Añade esto dentro de actualizarInterfaz()
 let saldoAqua = 0, saldoExplora = 0;
-const mesActual = new Date().toISOString().slice(0, 7); // Cogemos "2026-04"
+const hoyDate = new Date();
+
+// Calculamos el mes que viene para buscar los gastos proyectados
+const mesQueVieneDate = new Date(hoyDate.getFullYear(), hoyDate.getMonth() + 1, 1);
+const mesQueVieneStr = mesQueVieneDate.toISOString().slice(0, 7);
 
 appData.forEach(g => {
-    // Ahora solo suma si es del mes actual y la fecha ya ha pasado (o es hoy)
-    if(g.fecha.startsWith(mesActual) && g.fecha <= hoy) {
-        if(g.categoria === "Tarjeta Aqua") saldoAqua += parseFloat(g.importe);
-        if(g.categoria === "Tarjeta Explora") saldoExplora += parseFloat(g.importe);
+    // Buscamos gastos que hayas puesto para el mes que viene (día 5)
+    if(g.fecha.startsWith(mesQueVieneStr)) {
+        if(g.categoria === "Tarjeta Aqua") {
+            saldoAqua += parseFloat(g.importe);
+        }
+        if(g.categoria === "Tarjeta Explora") {
+            saldoExplora += parseFloat(g.importe);
+        }
     }
 });
+
+// Mostramos los saldos acumulados en las tarjetas
 document.getElementById('card-aqua-val').innerText = isPrivate ? "****€" : Math.abs(saldoAqua).toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
 document.getElementById('card-explora-val').innerText = isPrivate ? "****€" : Math.abs(saldoExplora).toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
 
