@@ -1,3 +1,6 @@
+
+
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -41,8 +44,9 @@ input[type="month"]::-webkit-calendar-picker-indicator {
   
         
         #viewport { width: 100%; height: calc(100% - 140px); overflow: hidden; position: relative; touch-action: pan-y; background: #000;}
-        #main-view { display: flex; width: 500%; height: 100%; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .tab-content { width: 20%; height: 100%; overflow-y: auto; padding: 1.25rem; -webkit-overflow-scrolling: touch; }
+        #main-view { display: flex; width: 600%; height: 100%; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+.tab-content { width: 16.666%; height: 100%; overflow-y: auto; padding: 1.25rem; -webkit-overflow-scrolling: touch; }
+
         
         .active-tab { color: var(--bbva-cyan) !important; border-top: 3px solid var(--bbva-cyan); }
         .btn-action { z-index: 50; position: relative; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.1); border-radius: 0.8rem; }
@@ -51,6 +55,12 @@ input[type="month"]::-webkit-calendar-picker-indicator {
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+/* Estilos para las tarjetas físicas */
+.card-real { position: relative; height: 180px; border-radius: 1.2rem; padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 15px 35px rgba(0,0,0,0.5); overflow: hidden; }
+.card-aqua { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid rgba(255,255,255,0.1); }
+.card-explora { background: linear-gradient(135deg, #004481 0%, #072146 100%); border: 1px solid rgba(0,229,255,0.2); }
+.chip { width: 35px; height: 26px; background: linear-gradient(135deg, #ffd700 0%, #b8860b 100%); border-radius: 4px; opacity: 0.8; }
+
 
     </style>
 </head>
@@ -150,7 +160,20 @@ input[type="month"]::-webkit-calendar-picker-indicator {
 
                         <button type="submit" class="w-full bg-cyan-400 text-black font-black py-4 rounded-xl uppercase">Confirmar Operación</button>
                     </form>
+                </section>                <section class="tab-content space-y-6 pt-8">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase text-center tracking-widest">Mis Tarjetas Premium</h3>
+                    <div class="card-real card-explora">
+                        <div class="flex justify-between items-start"><div class="chip"></div><span class="italic font-black text-white">BBVA</span></div>
+                        <div><p class="text-blue-200/50 text-[10px] uppercase font-bold">Explora Crédito</p><h3 id="card-explora-val" class="text-white text-3xl font-light">0,00€</h3></div>
+                        <div class="flex justify-between items-end"><span class="text-white/30 text-xs font-mono">**** 8823</span><span class="text-white/20 text-xl font-black italic">VISA</span></div>
+                    </div>
+                    <div class="card-real card-aqua">
+                        <div class="flex justify-between items-start"><div class="chip" style="filter:grayscale(1)"></div><span class="italic font-black text-white">BBVA</span></div>
+                        <div><p class="text-slate-400 text-[10px] uppercase font-bold">Aqua Débito</p><h3 id="card-aqua-val" class="text-cyan-400 text-3xl font-light">0,00€</h3></div>
+                        <div class="flex justify-between items-end"><span class="text-white/30 text-xs font-mono">**** 4412</span><span class="text-white/10 text-xl font-black italic">Mastercard</span></div>
+                    </div>
                 </section>
+
             </div>
         </div> 
 
@@ -160,6 +183,8 @@ input[type="month"]::-webkit-calendar-picker-indicator {
             <button onclick="goToTab(2)" class="nav-btn text-slate-500 flex-1 flex flex-col items-center gap-1"><span class="text-xl">🔄</span><span class="text-[8px] uppercase">Fijos</span></button> 
             <button onclick="goToTab(3)" class="nav-btn text-slate-500 flex-1 flex flex-col items-center gap-1"><span class="text-xl">📋</span><span class="text-[8px] uppercase">Movs</span></button>
             <button onclick="goToTab(4)" class="nav-btn text-slate-500 flex-1 flex flex-col items-center gap-1"><span class="text-xl">➕</span><span class="text-[8px] uppercase">Operar</span></button>
+<button onclick="goToTab(5)" class="nav-btn text-slate-500 flex-1 flex flex-col items-center gap-1"><span class="text-xl">💳</span><span class="text-[8px] uppercase">Cards</span></button>
+
         </nav>
     </div> 
 
@@ -183,7 +208,8 @@ input[type="month"]::-webkit-calendar-picker-indicator {
 
         function goToTab(i) {
             currentTabIndex = i;
-            document.getElementById('main-view').style.transform = `translateX(-${i * 20}%)`;
+            document.getElementById('main-view').style.transform = `translateX(-${i * 16.666}%)`;
+
             document.querySelectorAll('.nav-btn').forEach((b, idx) => idx === i ? b.classList.add('active-tab') : b.classList.remove('active-tab'));
             if(i === 0) setTimeout(updateChart, 100);
         } 
@@ -310,6 +336,17 @@ function obtenerLogo(concepto) {
             
             renderRecurrentes();
             procesarPagosAutomaticos();
+// Añade esto dentro de actualizarInterfaz()
+let saldoAqua = 0, saldoExplora = 0;
+appData.forEach(g => {
+    if(g.fecha <= hoy) {
+        if(g.categoria === "Tarjeta Aqua") saldoAqua += parseFloat(g.importe);
+        if(g.categoria === "Tarjeta Explora") saldoExplora += parseFloat(g.importe);
+    }
+});
+document.getElementById('card-aqua-val').innerText = isPrivate ? "****€" : Math.abs(saldoAqua).toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
+document.getElementById('card-explora-val').innerText = isPrivate ? "****€" : Math.abs(saldoExplora).toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
+
             updateChart();
         }
 
@@ -434,7 +471,7 @@ function obtenerLogo(concepto) {
         vp.addEventListener('touchend', e => { 
             touchendX = e.changedTouches[0].screenX; 
             const dx = touchendX - touchstartX;
-            if(Math.abs(dx) > 80) dx < 0 ? (currentTabIndex < 4 && goToTab(currentTabIndex+1)) : (currentTabIndex > 0 && goToTab(currentTabIndex-1));
+            if(Math.abs(dx) > 80) dx < 0 ? (currentTabIndex < 5 && goToTab(currentTabIndex+1)) : (currentTabIndex > 0 && goToTab(currentTabIndex-1));
         }, {passive:true});
         
         document.getElementById('filtroMes').value = new Date().toISOString().slice(0, 7);
