@@ -335,8 +335,11 @@ function obtenerLogo(concepto) {
             procesarPagosAutomaticos();
 // Añade esto dentro de actualizarInterfaz()
 let saldoAqua = 0, saldoExplora = 0;
+const mesActual = new Date().toISOString().slice(0, 7); // Cogemos "2026-04"
+
 appData.forEach(g => {
-    if(g.fecha <= hoy) {
+    // Ahora solo suma si es del mes actual y la fecha ya ha pasado (o es hoy)
+    if(g.fecha.startsWith(mesActual) && g.fecha <= hoy) {
         if(g.categoria === "Tarjeta Aqua") saldoAqua += parseFloat(g.importe);
         if(g.categoria === "Tarjeta Explora") saldoExplora += parseFloat(g.importe);
     }
