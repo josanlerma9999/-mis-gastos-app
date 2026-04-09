@@ -191,6 +191,7 @@ input[type="month"]::-webkit-calendar-picker-indicator {
         let pin = "", isPrivate = false, appData = [];
         const categIngresos = ["Sueldo", "Otros Ingresos"];
         let gastosChart = null; 
+let pagosProcesados = false;
 
         // PIN PAD
         [1,2,3,4,5,6,7,8,9,'C',0,'DEL'].forEach(v => {
@@ -439,21 +440,32 @@ document.getElementById('card-explora-val').innerText = isPrivate ? "****€" : 
         } 
 
         async function procesarPagosAutomaticos() {
-            const hoy = new Date();
-            const diaHoy = hoy.getDate();
-            const mesActual = hoy.toISOString().slice(0, 7);
-            let recs = JSON.parse(localStorage.getItem('recurrentes') || "[]");
-            for (let p of recs) {
-                if (diaHoy >= parseInt(p.dia)) {
-                    const f = `${mesActual}-${p.dia.padStart(2, '0')}`;
-                    if (!appData.some(g => g.concepto === p.concepto && g.fecha === f)) {
-                        await fetch(API_URL, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ concepto: p.concepto, importe: p.importe, categoria: p.categoria, fecha: f }) });
-                    }
-                }
+    // Si ya se procesaron en esta sesión, no hace nada más
+    if (pagosProcesados) return; 
+
+    const hoy = new Date();
+    const diaHoy = hoy.getDate();
+    const mesActual = hoy.toISOString().slice(0, 7);
+    let recs = JSON.parse(localStorage.getItem('recurrentes') || "[]");
+
+    for (let p of recs) {
+        if (diaHoy >= parseInt(p.dia)) {
+            const f = `${mesActual}-${p.dia.padStart(2, '0')}`;
+            if (!appData.some(g => g.concepto === p.concepto && g.fecha === f)) {
+                await fetch(API_URL, { 
+                    method: 'POST', 
+                    headers: {'Content-Type':'application/json'}, 
+                    body: JSON.stringify({ concepto: p.concepto, importe: p.importe, categoria: p.categoria, fecha: f }) 
+                });
             }
         }
-
-        async function borrarRecurrente(id) {
+    }
+    
+    // Al terminar, activamos el interruptor para que no se repita
+    pagosProcesados = true;
+    console.log("Pagos automáticos revisados y bloqueados hasta el próximo reinicio.");
+}
+async function borrarRecurrente(id) {
             if(!confirm("¿Borrar por completo de fijos, movimientos y saldo final?")) return;
             let recs = JSON.parse(localStorage.getItem('recurrentes') || "[]");
             const pagoFijo = recs.find(p => p.id === id);
