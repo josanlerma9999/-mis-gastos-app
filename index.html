@@ -383,7 +383,8 @@ document.getElementById('card-explora-val').innerText = isPrivate ? "****€" : 
                     localStorage.setItem('recurrentes', JSON.stringify(recs));
                 }
             }
-            e.target.reset(); renderApp(); goToTab(0);
+            e.target.reset(); await renderApp(); goToTab(0);
+
         }; 
 
         function updateChart() {
