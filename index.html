@@ -4,9 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>BBVA Premium v16.6</title>
+
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#072146">
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js');
+      }
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
         :root { --bbva-navy: #072146; --bbva-blue: #004481; --bbva-cyan: #00e5ff; }
         html, body { height: 100%; margin: 0; padding: 0; background: #000; overflow: hidden; font-family: 'Inter', sans-serif; }
