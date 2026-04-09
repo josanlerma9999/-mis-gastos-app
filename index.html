@@ -396,26 +396,57 @@ document.getElementById('card-explora-val').innerText = isPrivate ? "****€" : 
 
         }; 
 
-        function updateChart() {
-            const canvas = document.getElementById('gastosChart');
-            if(!canvas) return;
-            const ctx = canvas.getContext('2d');
-            const mesActual = new Date().toISOString().slice(0, 7);
-            const desglose = {};
-            appData.forEach(g => {
-                if(g.fecha.startsWith(mesActual) && !categIngresos.includes(g.categoria) && g.fecha <= new Date().toISOString().split('T')[0]) {
-                    desglose[g.categoria] = (desglose[g.categoria] || 0) + Math.abs(parseFloat(g.importe));
-                }
-            }); 
-            const labels = Object.keys(desglose), data = Object.values(desglose);
-            if (gastosChart) gastosChart.destroy();
-            gastosChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: { labels, datasets: [{ data, backgroundColor: ['#00e5ff','#7c4dff','#ff4081','#ffee33','#4caf50','#ff9800','#E0E0E0','#0091EA','#8D6E63','#26A69A'], borderColor: '#072146', borderWidth: 2 }] },
-                options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'right', labels: { color: 'white', font: { size: 10 }, boxWidth: 10 } } },
-                onClick: (e, i) => { if(i.length > 0) aplicarFiltroCategoria(labels[i[0].index]); } }
-            });
-        } 
+       function updateChart() {
+    const canvas = document.getElementById('gastosChart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    
+    const mesActual = new Date().toISOString().slice(0, 7);
+    const desglose = {};
+    
+    appData.forEach(g => {
+        if(g.fecha.startsWith(mesActual) && !categIngresos.includes(g.categoria) && g.fecha <= new Date().toISOString().split('T')[0]) {
+            desglose[g.categoria] = (desglose[g.categoria] || 0) + Math.abs(parseFloat(g.importe));
+        }
+    });
+
+    const labels = Object.keys(desglose);
+    const data = Object.values(desglose);
+
+    if (!gastosChart) {
+        // CREACIÓN INICIAL (Solo se ejecuta la primera vez)
+        gastosChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: { 
+                labels, 
+                datasets: [{ 
+                    data, 
+                    backgroundColor: ['#00e5ff','#7c4dff','#ff4081','#ffee33','#4caf50','#ff9800','#E0E0E0','#0091EA','#8D6E63','#26A69A'], 
+                    borderColor: '#072146', 
+                    borderWidth: 2 
+                }] 
+            },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                cutout: '75%', 
+                plugins: { 
+                    legend: { 
+                        position: 'right', 
+                        labels: { color: 'white', font: { size: 10 }, boxWidth: 10 } 
+                    } 
+                },
+                onClick: (e, i) => { if(i.length > 0) aplicarFiltroCategoria(labels[i[0].index]); }
+            }
+        });
+    } else {
+        // ACTUALIZACIÓN FLUIDA (Para cambios de mes o nuevos gastos)
+        gastosChart.data.labels = labels;
+        gastosChart.data.datasets[0].data = data;
+        gastosChart.update('active'); // El modo 'active' asegura una animación suave
+    }
+}
+ 
 
         function aplicarFiltroCategoria(cat) {
             const lista = document.getElementById('listaPasado');
