@@ -11,7 +11,7 @@ app.use(express.json());
 app.use(express.static(__dirname)); 
 
 // Conexión MongoDB - TU BASE DE DATOS REAL
-const MONGO_URI = 'mongodb+srv://Josan77:Yakonala@cluster0.npzvokr.mongodb.net/bbva_db?retryWrites=true&w=majority'; 
+const MONGO_URI = 'mongodb+srv://Josan77:Yakonala@cluster0.npzvokr.mongodb.net/test?retryWrites=true&w=majority'; 
 mongoose.connect(MONGO_URI)
     .then(() => console.log('✅ DB Conectada'))
     .catch(err => console.error('❌ Error DB:', err));
