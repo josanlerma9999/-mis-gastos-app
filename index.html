@@ -8,9 +8,6 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#072146">
     <script>
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js');
-      }
     </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -282,102 +279,77 @@ function obtenerLogo(concepto) {
     const inicial = concepto.charAt(0).toUpperCase();
     return `<div class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg bg-slate-700 shadow-lg">${inicial}</div>`;
 }
+function actualizarInterfaz() {
+    const hoy = new Date().toISOString().split('T')[0];
+    const mesSel = document.getElementById('filtroMes').value;
+    let saldoReal = 0, gFuturos = 0, iFuturos = 0;
+    
+    document.getElementById('listaPasado').innerHTML = '';
+    document.getElementById('listaFuturo').innerHTML = ''; 
 
-                        function actualizarInterfaz() {
-            const hoy = new Date().toISOString().split('T')[0];
-            const mesSel = document.getElementById('filtroMes').value;
-            let saldoReal = 0, gFuturos = 0, iFuturos = 0;
-            
-            document.getElementById('listaPasado').innerHTML = '';
-            document.getElementById('listaFuturo').innerHTML = ''; 
+    // Ordenar: lo más nuevo primero
+    appData.sort((a, b) => b.fecha.localeCompare(a.fecha)); 
 
-            appData.sort((a, b) => {
-                const aF = a.fecha > hoy, bF = b.fecha > hoy;
-                if (aF && !bF) return 1; if (!aF && bF) return -1;
-                return b.fecha.localeCompare(a.fecha);
-            }); 
-
-            appData.forEach(g => {
-                const val = Math.abs(parseFloat(g.importe)), esI = categIngresos.includes(g.categoria), esP = g.fecha <= hoy;
-                
-                // Cálculo de saldos
-                if(esP) { esI ? saldoReal += val : saldoReal -= val; } 
-                else { esI ? iFuturos += val : gFuturos += val; }
-                
-                const disp = isPrivate ? "****€" : val.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
-                const alertaGastoPro = (val > 100 && !esI) ? 'border-r-4 border-rose-500/30' : ''; 
-
-                // LISTA DE MOVIMIENTOS (PASADO/PRESENTE)
-                if(g.fecha.startsWith(mesSel)) {
-                    const logoHTML = obtenerLogo(g.concepto); 
-                    document.getElementById('listaPasado').insertAdjacentHTML('beforeend', `
-                        <div class="bbva-card p-4 flex justify-between items-center gap-3 ${alertaGastoPro} ${!esP ? 'opacity-40 border-l-4 border-cyan-400' : ''}">
-                            <div class="flex items-center gap-3 flex-1 overflow-hidden">
-                                ${logoHTML}
-                                <div class="truncate">
-                                    <p class="text-sm font-bold text-white truncate">${g.concepto}</p>
-                                    <p class="text-[9px] text-slate-500 uppercase mt-1">${g.fecha} • ${g.categoria}</p>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-3">
-                                <p class="font-black whitespace-nowrap ${esI ? 'text-cyan-400' : (val > 100 ? 'text-rose-400' : 'text-white')}">
-                                    ${esI ? '+' : '-'}${disp}
-                                </p>
-                                <button onclick="event.stopPropagation(); deleteGasto('${g._id}')" class="btn-action text-rose-500">🗑️</button>
-                            </div>
-                        </div>`);
-                }
-
-                // LISTA DE PREVISIÓN (FUTURO)
-                if(!esP) {
-                    document.getElementById('listaFuturo').insertAdjacentHTML('afterbegin', `
-                        <div class="bbva-card border-l-4 border-cyan-400 p-5 flex justify-between items-center">
-                            <div><p class="font-black text-white">${g.concepto}</p><p class="text-[10px] text-slate-500">${g.fecha}</p></div>
-                            <p class="text-xl font-black ${esI ? 'text-cyan-400' : 'text-white'}">${esI ? '+' : '-'}${disp}</p>
-                        </div>`);
-                }
-            }); // Cierre del forEach
-
-            // ACTUALIZACIÓN DE SALDOS EN CABECERA
-            const valRealElement = document.getElementById('valReal');
-            valRealElement.className = "text-4xl font-black tracking-tighter transition-all duration-500"; 
-
-            if (saldoReal > 200) { valRealElement.classList.add('text-cyan-400'); }
-            else if (saldoReal >= 100) { valRealElement.classList.add('text-amber-400'); }
-            else { valRealElement.classList.add('text-rose-500'); }
-
-            valRealElement.innerText = isPrivate ? "****€" : saldoReal.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
-            document.getElementById('valPend').innerText = isPrivate ? "****€" : "-" + gFuturos.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
-            document.getElementById('valProj').innerText = isPrivate ? "****€" : (saldoReal - gFuturos + iFuturos).toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
-            
-            renderRecurrentes();
-            procesarPagosAutomaticos();
-// Añade esto dentro de actualizarInterfaz()
-let saldoAqua = 0, saldoExplora = 0;
-const hoyDate = new Date();
-
-// Calculamos el mes que viene para buscar los gastos proyectados
-const mesQueVieneDate = new Date(hoyDate.getFullYear(), hoyDate.getMonth() + 1, 1);
-const mesQueVieneStr = mesQueVieneDate.toISOString().slice(0, 7);
-
-appData.forEach(g => {
-    // Buscamos gastos que hayas puesto para el mes que viene (día 5)
-    if(g.fecha.startsWith(mesQueVieneStr)) {
-        if(g.categoria === "Tarjeta Aqua") {
-            saldoAqua += parseFloat(g.importe);
+    appData.forEach(g => {
+        const val = Math.abs(parseFloat(g.importe));
+        const esI = categIngresos.includes(g.categoria);
+        const esP = g.fecha <= hoy;
+        
+        // CÁLCULO DE SALDOS (Independiente del filtro visual)
+        if(esP) { 
+            esI ? saldoReal += val : saldoReal -= val; 
+        } else { 
+            esI ? iFuturos += val : gFuturos += val; 
         }
-        if(g.categoria === "Tarjeta Explora") {
-            saldoExplora += parseFloat(g.importe);
-        }
-    }
-});
+        
+        const disp = isPrivate ? "****€" : val.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
 
-// Mostramos los saldos acumulados en las tarjetas
-document.getElementById('card-aqua-val').innerText = isPrivate ? "****€" : Math.abs(saldoAqua).toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
-document.getElementById('card-explora-val').innerText = isPrivate ? "****€" : Math.abs(saldoExplora).toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
+        // VISUALIZACIÓN EN "MOVS" (Solo si coincide con el mes seleccionado)
+        if(g.fecha.startsWith(mesSel)) {
+            const logoHTML = obtenerLogo(g.concepto); 
+            document.getElementById('listaPasado').insertAdjacentHTML('beforeend', `
+                <div class="bbva-card p-4 flex justify-between items-center gap-3 ${val > 100 && !esI ? 'border-r-4 border-rose-500/30' : ''} ${!esP ? 'opacity-40 border-l-4 border-cyan-400' : ''}">
+                    <div class="flex items-center gap-3 flex-1 overflow-hidden">
+                        ${logoHTML}
+                        <div class="truncate">
+                            <p class="text-sm font-bold text-white truncate">${g.concepto}</p>
+                            <p class="text-[9px] text-slate-500 uppercase mt-1">${g.fecha} • ${g.categoria}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <p class="font-black whitespace-nowrap ${esI ? 'text-cyan-400' : (val > 100 ? 'text-rose-400' : 'text-white')}">
+                            ${esI ? '+' : '-'}${disp}
+                        </p>
+                        <button onclick="event.stopPropagation(); deleteGasto('${g._id}')" class="btn-action text-rose-500">🗑️</button>
+                    </div>
+                </div>`);
+        } 
 
-            updateChart();
+        // VISUALIZACIÓN EN "PREVISIÓN" (Solo futuro, no importa el mes)
+        if(!esP) {
+            document.getElementById('listaFuturo').insertAdjacentHTML('beforeend', `
+                <div class="bbva-card border-l-4 border-cyan-400 p-5 flex justify-between items-center">
+                    <div><p class="font-black text-white">${g.concepto}</p><p class="text-[10px] text-slate-500">${g.fecha}</p></div>
+                    <p class="text-xl font-black ${esI ? 'text-cyan-400' : 'text-white'}">${esI ? '+' : '-'}${disp}</p>
+                </div>`);
         }
+    });
+
+    // Actualizar números de la cabecera
+    const valRealElement = document.getElementById('valReal');
+    valRealElement.innerText = isPrivate ? "****€" : saldoReal.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
+    
+    // Cambiar color del saldo principal según estado
+    valRealElement.className = "text-4xl font-black tracking-tighter transition-all duration-500 " + 
+        (saldoReal > 200 ? 'text-cyan-400' : (saldoReal >= 100 ? 'text-amber-400' : 'text-rose-500'));
+
+    document.getElementById('valPend').innerText = isPrivate ? "****€" : "-" + gFuturos.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
+    document.getElementById('valProj').innerText = isPrivate ? "****€" : (saldoReal - gFuturos + iFuturos).toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
+    
+    renderRecurrentes();
+    updateChart();
+}
+
 
    document.getElementById('mainForm').onsubmit = async (e) => {
             e.preventDefault();
