@@ -589,7 +589,9 @@ async function borrarRecurrente(id) {
                 const reg = await navigator.serviceWorker.register('sw.js');
                 console.log('SW registrado');
                 
-                const permission = await Notification.requestPermission();
+                alert("Cargando sistema de notificaciones...");
+const permission = await Notification.requestPermission();
+
                 if (permission === 'granted') {
                     // Esperamos un segundo para que el SW se asiente antes de suscribir
                     setTimeout(() => configurarSuscripcion(reg), 1000);
@@ -600,24 +602,5 @@ async function borrarRecurrente(id) {
         });
     }
 </script>
-<button id="btn-test-notif" onclick="pedirPermisoManual()" 
-    style="position:fixed; top:20px; left:20px; z-index:10000; background:red; color:white; padding:10px; border-radius:10px;">
-    FORZAR NOTIFICACIONES
-</button>
-
-<script>
-async function pedirPermisoManual() {
-    const permission = await Notification.requestPermission();
-    if (permission === 'granted') {
-        alert('¡Permiso concedido! Ahora intentando suscribir...');
-        const reg = await navigator.serviceWorker.ready;
-        configurarSuscripcion(reg);
-    } else {
-        alert('El permiso es: ' + permission);
-    }
-}
-</script>
-
-
 </body>
 </html>
