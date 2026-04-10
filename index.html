@@ -547,7 +547,7 @@ async function borrarRecurrente(id) {
         document.getElementById('filtroMes').value = new Date().toISOString().slice(0, 7);
     </script>
 <script>
-    // 1. Convertidor de llave de seguridad
+    // 1. Convertidor de llave (Sin cambios)
     function urlBase64ToUint8Array(base64String) {
         const padding = '='.repeat((4 - base64String.length % 4) % 4);
         const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -559,48 +559,65 @@ async function borrarRecurrente(id) {
         return outputArray;
     }
 
-    // 2. Conexión con el servidor de Render
+    // 2. Suscripción al servidor
     async function configurarSuscripcion(reg) {
         const publicVapidKey = 'BOXvAuzEtZeLfjrb-naB5CufutD4qWBEO1zstHnQSuggfodPx8cxZQI1fNPSSLyKC1xJ5AatPATzYGvBd7YJVnM';
-        
         try {
-            // Aseguramos que el SW esté activo antes de suscribir
-            const serviceWorker = reg.active || reg.waiting || reg.installing;
             const subscription = await reg.pushManager.subscribe({
                 userVisibleOnly: true,
                 applicationServerKey: urlBase64ToUint8Array(publicVapidKey)
             });
-
-            await fetch('https://mis-gastos-app.onrender.com/api/subscribe', {
+            await fetch('/api/subscribe', {
                 method: 'POST',
                 body: JSON.stringify(subscription),
                 headers: { 'Content-Type': 'application/json' }
             });
-            console.log('✅ Notificaciones vinculadas con éxito');
+            console.log('✅ Notificaciones listas');
         } catch (error) {
-            console.error('❌ Error en suscripción:', error);
+            console.log('Error suscripción:', error);
         }
     }
 
-    // 3. Registro y Permisos
+    // 3. Registro SEGURO del Service Worker
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', async () => {
             try {
                 const reg = await navigator.serviceWorker.register('sw.js');
                 console.log('SW registrado');
-                
-                alert("Cargando sistema de notificaciones...");
-const permission = await Notification.requestPermission();
 
-                if (permission === 'granted') {
-                    // Esperamos un segundo para que el SW se asiente antes de suscribir
-                    setTimeout(() => configurarSuscripcion(reg), 1000);
-                }
+                // EN LUGAR DE ALERT: Escuchamos el primer toque en la pantalla para pedir permiso
+                // Esto evita que la pantalla se quede en blanco al cargar
+                document.body.addEventListener('click', async () => {
+                    if (Notification.permission === 'default') {
+                        const permission = await Notification.requestPermission();
+                        if (permission === 'granted') {
+                            configurarSuscripcion(reg);
+                        }
+                    }
+                }, { once: true });
+
             } catch (err) {
-                console.error('Error al registrar SW:', err);
+                console.error('Error SW:', err);
             }
         });
     }
 </script>
+
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
