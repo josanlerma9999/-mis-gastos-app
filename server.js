@@ -26,12 +26,15 @@ const Gasto = mongoose.model('Gasto', new mongoose.Schema({
 // API de Gastos (Lo que hace que veas tus datos)
 app.get('/api/gastos', async (req, res) => {
     try { 
-        const gastos = await Gasto.find().sort({fecha: -1}); 
+        // El 1 significa orden ascendente (de más antiguo a más futuro)
+        // Si quisieras los más nuevos primero, pondrías -1
+        const gastos = await Gasto.find().sort({ fecha: 1 }); 
         res.json(gastos); 
     } catch (e) { 
         res.status(500).json([]); 
     }
 });
+
 
 app.post('/api/gastos', async (req, res) => {
     try {
