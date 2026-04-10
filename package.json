@@ -1,7 +1,6 @@
 {
   "name": "mis-gastos-app",
   "version": "1.0.0",
-  "description": "",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
@@ -9,9 +8,6 @@
   "dependencies": {
     "express": "^4.18.2",
     "mongoose": "^7.0.0",
-    "cors": "^2.8.5",
-    "web-push": "^3.5.0",
-    "node-cron": "^3.0.2",
-    "path": "^0.12.7"
+    "cors": "^2.8.5"
   }
 }
