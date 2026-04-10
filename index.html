@@ -8,10 +8,11 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#072146">
     <script>
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js');
-      }
-    </script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js');
+  }
+</script>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -550,5 +551,54 @@ async function borrarRecurrente(id) {
         
         document.getElementById('filtroMes').value = new Date().toISOString().slice(0, 7);
     </script>
+<script>
+    // 1. Convertidor de llave (No tocar)
+    function urlBase64ToUint8Array(base64String) {
+        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+        const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+        for (let i = 0; i < rawData.length; ++i) {
+            outputArray[i] = rawData.charCodeAt(i);
+        }
+        return outputArray;
+    }
+
+    // 2. Función de suscripción vinculada a tu servidor
+    async function configurarSuscripcion(reg) {
+        // CAMBIA ESTO: Pega aquí la llave que sale en los LOGS negros de Render
+        const publicVapidKey = 'BOXvAuzEtZeLfjrb-naB5CufutD4qWBEO1zstHnQSuggfodPx8cxZQI1fNPSSLyKC1xJ5AatPATzYGvBd7YJVnM';
+        
+        try {
+            const subscription = await reg.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(publicVapidKey)
+            });
+
+            await fetch('https://mis-gastos-app.onrender.com/api/subscribe', {
+                method: 'POST',
+                body: JSON.stringify(subscription),
+                headers: { 'Content-Type': 'application/json' }
+            });
+            console.log('✅ Suscrito a notificaciones');
+        } catch (error) {
+            console.error('❌ Error suscripción:', error);
+        }
+    }
+
+    // 3. Registro y petición de permiso
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('sw.js').then(reg => {
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        configurarSuscripcion(reg);
+                    }
+                });
+            });
+        });
+    }
+</script>
+
 </body>
 </html>
