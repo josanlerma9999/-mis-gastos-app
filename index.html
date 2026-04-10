@@ -231,14 +231,22 @@ let pagosProcesados = false;
         const res = await fetch(API_URL);
         if (!res.ok) throw new Error("API error");
 
-        const dataFresh = await res.json();
+                const dataFresh = await res.json();
+        const hoy = new Date().toISOString().split('T')[0];
 
-        // Esta es la parte buena: asegura números y ordena por fecha
-        appData = dataFresh
-            .map(g => ({ ...g, importe: parseFloat(g.importe) }))
-            .sort((a, b) => b.fecha.localeCompare(a.fecha));
+        appData = dataFresh.map(g => ({ ...g, importe: parseFloat(g.importe) }));
 
-        localStorage.setItem('appData_cache', JSON.stringify(appData));
+        // NUEVO ORDEN: Pasado/Hoy arriba, Futuro al final
+        appData.sort((a, b) => {
+            if (a.fecha <= hoy && b.fecha > hoy) return -1; // a es pasado, b es futuro -> a va primero
+            if (a.fecha > hoy && b.fecha <= hoy) return 1;  // a es futuro, b es pasado -> b va primero
+            
+            // Si ambos son pasado o ambos son futuro, ordenamos por fecha normal (más reciente primero)
+            return b.fecha.localeCompare(a.fecha);
+        });
+
+
+    localStorage.setItem('appData_cache', JSON.stringify(appData));
         actualizarInterfaz();
 
     } catch (e) {
@@ -288,7 +296,7 @@ function actualizarInterfaz() {
     document.getElementById('listaFuturo').innerHTML = ''; 
 
     // Ordenar: lo más nuevo primero
-    appData.sort((a, b) => b.fecha.localeCompare(a.fecha)); 
+    
 
     appData.forEach(g => {
         const val = Math.abs(parseFloat(g.importe));
