@@ -1,7 +1,6 @@
 {
-  "name": "mis-gastos-app",
+  "name": "bbva-app",
   "version": "1.0.0",
-  "description": "Backend de Gastos",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
@@ -12,5 +11,8 @@
     "cors": "^2.8.5",
     "web-push": "^3.6.6",
     "node-cron": "^3.0.3"
+  },
+  "engines": {
+    "node": "20.x"
   }
 }
