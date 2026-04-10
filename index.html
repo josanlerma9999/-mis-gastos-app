@@ -285,23 +285,29 @@ function obtenerLogo(concepto) {
     const inicial = concepto.charAt(0).toUpperCase();
     return `<div class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg bg-slate-700 shadow-lg">${inicial}</div>`;
 }
-function actualizarInterfaz() {
+
+       function actualizarInterfaz() {
     const hoy = new Date().toISOString().split('T')[0];
     const mesSel = document.getElementById('filtroMes').value;
     let saldoReal = 0, gFuturos = 0, iFuturos = 0;
     
+    // Contadores para las tarjetas físicas
+    let deudaAqua = 0;
+    let deudaExplora = 0;
+
     document.getElementById('listaPasado').innerHTML = '';
     document.getElementById('listaFuturo').innerHTML = ''; 
-
-    // Ordenar: lo más nuevo primero
-    
 
     appData.forEach(g => {
         const val = Math.abs(parseFloat(g.importe));
         const esI = categIngresos.includes(g.categoria);
         const esP = g.fecha <= hoy;
         
-        // CÁLCULO DE SALDOS (Independiente del filtro visual)
+        // Lógica de Tarjetas: Suma todo lo asignado a esas categorías
+        if (g.categoria === "Tarjeta Aqua") deudaAqua += val;
+        if (g.categoria === "Tarjeta Explora") deudaExplora += val;
+
+        // Cálculo de Saldos: Solo resta del Real si ya ha pasado la fecha
         if(esP) { 
             esI ? saldoReal += val : saldoReal -= val; 
         } else { 
@@ -310,7 +316,7 @@ function actualizarInterfaz() {
         
         const disp = isPrivate ? "****€" : val.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
 
-        // VISUALIZACIÓN EN "MOVS" (Solo si coincide con el mes seleccionado)
+        // Mostrar en pestaña MOVIMIENTOS (Filtro por mes)
         if(g.fecha.startsWith(mesSel)) {
             const logoHTML = obtenerLogo(g.concepto); 
             document.getElementById('listaPasado').insertAdjacentHTML('beforeend', `
@@ -331,7 +337,7 @@ function actualizarInterfaz() {
                 </div>`);
         } 
 
-        // VISUALIZACIÓN EN "PREVISIÓN" (Solo futuro, no importa el mes)
+        // Mostrar en pestaña PREVISIÓN (Solo gastos futuros)
         if(!esP) {
             document.getElementById('listaFuturo').insertAdjacentHTML('beforeend', `
                 <div class="bbva-card border-l-4 border-cyan-400 p-5 flex justify-between items-center">
@@ -341,20 +347,23 @@ function actualizarInterfaz() {
         }
     });
 
-    // Actualizar números de la cabecera
+    // Actualizar cabecera de Inicio
     const valRealElement = document.getElementById('valReal');
     valRealElement.innerText = isPrivate ? "****€" : saldoReal.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
-    
-    // Cambiar color del saldo principal según estado
     valRealElement.className = "text-4xl font-black tracking-tighter transition-all duration-500 " + 
         (saldoReal > 200 ? 'text-cyan-400' : (saldoReal >= 100 ? 'text-amber-400' : 'text-rose-500'));
 
     document.getElementById('valPend').innerText = isPrivate ? "****€" : "-" + gFuturos.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
     document.getElementById('valProj').innerText = isPrivate ? "****€" : (saldoReal - gFuturos + iFuturos).toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
     
+    // Actualizar Saldo de las Tarjetas Físicas (Pestaña 4)
+    document.getElementById('card-aqua-val').innerText = isPrivate ? "****€" : deudaAqua.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
+    document.getElementById('card-explora-val').innerText = isPrivate ? "****€" : deudaExplora.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
+
     renderRecurrentes();
     updateChart();
 }
+
 
 
    document.getElementById('mainForm').onsubmit = async (e) => {
