@@ -600,6 +600,24 @@ async function borrarRecurrente(id) {
         });
     }
 </script>
+<button id="btn-test-notif" onclick="pedirPermisoManual()" 
+    style="position:fixed; top:20px; left:20px; z-index:10000; background:red; color:white; padding:10px; border-radius:10px;">
+    FORZAR NOTIFICACIONES
+</button>
+
+<script>
+async function pedirPermisoManual() {
+    const permission = await Notification.requestPermission();
+    if (permission === 'granted') {
+        alert('¡Permiso concedido! Ahora intentando suscribir...');
+        const reg = await navigator.serviceWorker.ready;
+        configurarSuscripcion(reg);
+    } else {
+        alert('El permiso es: ' + permission);
+    }
+}
+</script>
+
 
 </body>
 </html>
