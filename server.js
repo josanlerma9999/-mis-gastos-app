@@ -17,25 +17,30 @@ webpush.setVapidDetails(
     'w2R_Y9k8v7j6m5n4b3v2c1x0z9l8k7j6h5g4f3d2s1a'
 );
 
+// CONEXIÓN
 mongoose.connect('mongodb+srv://Josan77:Yakonala@cluster0.npzvokr.mongodb.net/?appName=Cluster0')
     .then(() => console.log('✅ MongoDB OK'))
-    .catch(err => console.log('❌ MongoDB Error'));
+    .catch(err => console.error('❌ MongoDB Error:', err));
 
 const Gasto = mongoose.model('Gasto', new mongoose.Schema({
     concepto: String, importe: Number, categoria: String, fecha: String
 }));
 
 app.get('/api/gastos', async (req, res) => {
-    const gastos = await Gasto.find();
-    res.json(gastos);
+    try {
+        const gastos = await Gasto.find();
+        res.json(gastos);
+    } catch (e) { res.status(500).json([]); }
 });
 
 app.post('/api/gastos', async (req, res) => {
-    const nuevo = new Gasto(req.body);
-    await nuevo.save();
-    res.json(nuevo);
+    try {
+        const nuevo = new Gasto(req.body);
+        await nuevo.save();
+        res.json(nuevo);
+    } catch (e) { res.status(500).json({error: e.message}); }
 });
 
 app.get('/', (req, res) => res.send('BBVA PREMIUM ONLINE 🚀'));
 
-app.listen(PORT, () => console.log('🚀 LISTO'));
+app.listen(PORT, () => console.log(`🚀 Servidor listo en puerto ${PORT}`));
