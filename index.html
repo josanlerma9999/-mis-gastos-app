@@ -594,7 +594,30 @@ async function borrarRecurrente(id) {
             renderApp();
         }
 
-        async function deleteGasto(id) { if(confirm("¿Eliminar?")) { await fetch(`${API_URL}/${id}`, {method:'DELETE'}); renderApp(); } } 
+        async function deleteGasto(id) {
+    if (confirm("¿Eliminar este movimiento?")) {
+        // 1. Borrado Optimista: Lo quitamos de la memoria local inmediatamente
+        appData = appData.filter(g => g._id !== id);
+        
+        // 2. Actualizamos la interfaz y la caché para que desaparezca de la vista YA
+        actualizarInterfaz();
+        localStorage.setItem('appData_cache', JSON.stringify(appData));
+
+        // 3. Avisamos al servidor por detrás
+        try {
+            const res = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+            if (!res.ok) throw new Error("Error al borrar en servidor");
+            
+            // Forzamos que la próxima carga de renderApp sí pida datos reales
+            lastFetch = 0; 
+            console.log("Eliminado correctamente del servidor");
+        } catch (err) {
+            console.error("Error al borrar:", err);
+            alert("No se pudo borrar en el servidor, refresca la app.");
+        }
+    }
+}
+ 
         function togglePrivacy() { isPrivate = !isPrivate; actualizarInterfaz(); } 
 
         const vp = document.getElementById('viewport');
