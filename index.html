@@ -53,6 +53,8 @@ input[type="month"]::-webkit-calendar-picker-indicator {
         
         .active-tab { color: var(--bbva-cyan) !important; border-top: 3px solid var(--bbva-cyan); }
         .btn-action { z-index: 50; position: relative; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.1); border-radius: 0.8rem; }
+nav { z-index: 100 !important; position: relative; }
+
         .chart-container { position: relative; height: 180px; width: 100%; margin-top: 0.5rem; }.truncate {
     overflow: hidden;
     text-overflow: ellipsis;
@@ -218,39 +220,30 @@ let pagosProcesados = false;
 
         async function renderApp() {
     const cache = localStorage.getItem('appData_cache');
-
-    // Usamos appData (tu variable real) en lugar de state.data
-    if (cache && appData.length === 0) {
+    if (cache) {
         appData = JSON.parse(cache);
         actualizarInterfaz();
     }
 
     try {
         const res = await fetch(API_URL);
-        if (!res.ok) throw new Error("API error");
-
-                const dataFresh = await res.json();
-        const hoy = new Date().toISOString().split('T')[0];
-
+        const dataFresh = await res.json();
+        // Actualizamos la variable global y el caché
         appData = dataFresh.map(g => ({ ...g, importe: parseFloat(g.importe) }));
+        
+        // ... aquí va tu código de appData.sort ...
 
-        // NUEVO ORDEN: Pasado/Hoy arriba, Futuro al final
-        appData.sort((a, b) => {
-            if (a.fecha <= hoy && b.fecha > hoy) return -1; // a es pasado, b es futuro -> a va primero
-            if (a.fecha > hoy && b.fecha <= hoy) return 1;  // a es futuro, b es pasado -> b va primero
-            
-            // Si ambos son pasado o ambos son futuro, ordenamos por fecha normal (más reciente primero)
-            return b.fecha.localeCompare(a.fecha);
-        });
+        localStorage.setItem('appData_cache', JSON.stringify(appData));
+actualizarInterfaz();
+procesarPagosAutomaticos(); // <-- Añade esta línea aquí
 
-
-    localStorage.setItem('appData_cache', JSON.stringify(appData));
-        actualizarInterfaz();
-
+        // NUEVO: Llamar a los pagos automáticos tras recibir los datos
+        procesarPagosAutomaticos(); 
     } catch (e) {
-        console.error("Sin conexión, usando cache local.");
+        console.error("Modo offline activado");
     }
 }
+
  
 function obtenerLogo(concepto) {
     const c = concepto.toLowerCase();
