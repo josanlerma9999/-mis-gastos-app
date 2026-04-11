@@ -219,11 +219,21 @@ let pagosProcesados = false;
         } 
 
                 async function renderApp() {
+    // Si no hay conexión, avisamos en el título y usamos caché
+    if (!navigator.onLine) {
+        document.title = "BBVA (Sin conexión) ⚠️";
+    } else {
+        document.title = "BBVA Premium v16.6";
+    }
+
     const cache = localStorage.getItem('appData_cache');
     if (cache) {
         appData = JSON.parse(cache);
         actualizarInterfaz();
     }
+    
+    // ... resto del bloque try/catch
+
 
     try {
         const res = await fetch(API_URL);
