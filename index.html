@@ -596,27 +596,38 @@ async function borrarRecurrente(id) {
 
         async function deleteGasto(id) {
     if (confirm("¿Eliminar este movimiento?")) {
-        // 1. Borrado Optimista: Lo quitamos de la memoria local inmediatamente
+        // 1. Lo quitamos de la pantalla inmediatamente
         appData = appData.filter(g => g._id !== id);
-        
-        // 2. Actualizamos la interfaz y la caché para que desaparezca de la vista YA
         actualizarInterfaz();
         localStorage.setItem('appData_cache', JSON.stringify(appData));
 
-        // 3. Avisamos al servidor por detrás
+        // 2. Si el ID es temporal (empieza por "temp-"), no llamamos al servidor
+        // porque ese gasto aún se está guardando o solo existe en tu móvil.
+        if (id.toString().startsWith('temp-')) {
+            console.log("Gasto temporal eliminado localmente.");
+            return; 
+        }
+
+        // 3. Si es un ID real, avisamos al servidor
         try {
-            const res = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
-            if (!res.ok) throw new Error("Error al borrar en servidor");
+            const res = await fetch(`${API_URL}/${id}`, { 
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' }
+            });
             
-            // Forzamos que la próxima carga de renderApp sí pida datos reales
+            if (!res.ok) throw new Error("Error en servidor");
+            
             lastFetch = 0; 
-            console.log("Eliminado correctamente del servidor");
+            console.log("Servidor actualizado: Gasto eliminado.");
         } catch (err) {
             console.error("Error al borrar:", err);
-            alert("No se pudo borrar en el servidor, refresca la app.");
+            // Si falla el servidor, no lanzamos el alert molesto, 
+            // solo lo registramos, ya que el usuario ya vio que se borró.
+            console.log("El servidor no respondió, pero el cambio se mantiene en local.");
         }
     }
 }
+
  
         function togglePrivacy() { isPrivate = !isPrivate; actualizarInterfaz(); } 
 
