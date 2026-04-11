@@ -232,45 +232,33 @@ let pagosProcesados = false;
         actualizarInterfaz();
     }
     
-    // ... resto del bloque try/catch
-
-
-    try {
+     try {
         const res = await fetch(API_URL);
-        
-        // --- AQUÍ PEGAS TU MEJORA ---
         if (!res.ok) throw new Error("API error");
-        // ---------------------------
 
         const dataFresh = await res.json();
         const hoy = new Date().toISOString().split('T')[0];
 
-        // Resto del código...
+        // Procesamos los datos
         appData = dataFresh.map(g => ({ ...g, importe: parseFloat(g.importe) }));
-        // ... (el resto sigue igual)
 
+        // Ordenamos
+        appData.sort((a, b) => {
+            if (a.fecha <= hoy && b.fecha > hoy) return -1;
+            if (a.fecha > hoy && b.fecha <= hoy) return 1;
+            return b.fecha.localeCompare(a.fecha);
+        });
 
-                // 2. Ordenamos: Pasado arriba, Futuro abajo
-                appData.sort((a, b) => {
-                    if (a.fecha <= hoy && b.fecha > hoy) return -1;
-                    if (a.fecha > hoy && b.fecha <= hoy) return 1;
-                    return b.fecha.localeCompare(a.fecha);
-                });
+        // Guardamos y pintamos
+        localStorage.setItem('appData_cache', JSON.stringify(appData));
+        actualizarInterfaz();
+        procesarPagosAutomaticos(); 
 
-                // 3. Guardamos y pintamos
-                localStorage.setItem('appData_cache', JSON.stringify(appData));
-                actualizarInterfaz();
-                
-                // 4. Ejecutamos la lógica de pagos fijos
-                procesarPagosAutomaticos(); 
+    } catch (e) {
+        console.error("Error cargando datos:", e);
+    }
+}
 
-            } catch (e) {
-                console.error("Modo offline: usando caché.");
-            }
-        }
-
-
- 
 function obtenerLogo(concepto) {
     const c = concepto.toLowerCase();
     // Definimos las reglas: [Palabra clave, Color Fondo, Letra/Icono]
@@ -289,8 +277,8 @@ function obtenerLogo(concepto) {
         ['gasolina', '#4b5563', '⛽'],
         ['hbo', '#000000', 'H'],
         ['zara', '#000000', 'Z'],
-        ['apple', '#555555', '']
-    ];
+        ['apple', '#000000', '🍎']
+];
 
 
 
@@ -459,16 +447,8 @@ function updateChart() {
         }
     });
 }
-else {
-        // ACTUALIZACIÓN FLUIDA (Para cambios de mes o nuevos gastos)
-        gastosChart.data.labels = labels;
-        gastosChart.data.datasets[0].data = data;
-        gastosChart.update('active'); // El modo 'active' asegura una animación suave
-    }
-}
  
-
-        function aplicarFiltroCategoria(cat) {
+function aplicarFiltroCategoria(cat) {
             const lista = document.getElementById('listaPasado');
             const catLimpia = cat.replace(/[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF]/g, '').trim().toLowerCase();
             goToTab(3); 
