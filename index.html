@@ -201,7 +201,8 @@ nav { z-index: 100 !important; position: relative; }
         let pin = "", isPrivate = false, appData = [];
         const categIngresos = ["Sueldo", "Otros Ingresos"];
         let gastosChart = null; 
-let pagosProcesados = false;
+let pagosProcesados = false; let lastFetch = 0; 
+
 
         // PIN PAD
         [1,2,3,4,5,6,7,8,9,'C',0,'DEL'].forEach(v => {
@@ -223,37 +224,44 @@ let pagosProcesados = false;
         } 
 
                 async function renderApp() {
-    // Si no hay conexión, avisamos en el título y usamos caché
+    // A. Gestión de títulos y conexión
     if (!navigator.onLine) {
         document.title = "BBVA (Sin conexión) ⚠️";
     } else {
         document.title = "BBVA Premium v16.6";
     }
 
+    // B. Cargar caché (Esto SIEMPRE se ejecuta para que la app sea instantánea)
     const cache = localStorage.getItem('appData_cache');
     if (cache) {
         appData = JSON.parse(cache);
         actualizarInterfaz();
     }
-    
-     try {
+
+    // C. CONTROL DE SPAM (NUEVO)
+    const now = Date.now();
+    if (now - lastFetch < 5000) { // Espera 5 segundos entre peticiones reales
+        console.log("Usando datos recientes, petición a API cancelada para ahorrar batería.");
+        return; 
+    }
+
+    try {
         const res = await fetch(API_URL);
         if (!res.ok) throw new Error("API error");
+
+        lastFetch = Date.now(); // Actualizamos el marcador si la petición fue un éxito
 
         const dataFresh = await res.json();
         const hoy = new Date().toISOString().split('T')[0];
 
-        // Procesamos los datos
         appData = dataFresh.map(g => ({ ...g, importe: parseFloat(g.importe) }));
 
-        // Ordenamos
         appData.sort((a, b) => {
             if (a.fecha <= hoy && b.fecha > hoy) return -1;
             if (a.fecha > hoy && b.fecha <= hoy) return 1;
             return b.fecha.localeCompare(a.fecha);
         });
 
-        // Guardamos y pintamos
         localStorage.setItem('appData_cache', JSON.stringify(appData));
         actualizarInterfaz();
         procesarPagosAutomaticos(); 
