@@ -491,19 +491,31 @@ function obtenerLogo(concepto) {
     for (let p of recs) {
         if (diaHoy >= parseInt(p.dia)) {
             const f = `${mesActual}-${p.dia.padStart(2, '0')}`;
-            if (!appData.some(g => g.concepto === p.concepto && g.fecha === f)) {
+            
+            // AQUÍ ESTÁ TU MEJORA: Comprobación triple (Concepto + Fecha + Categoría)
+            const yaExiste = appData.some(g => 
+                g.concepto === p.concepto && 
+                g.fecha === f &&
+                g.categoria === p.categoria
+            );
+
+            if (!yaExiste) {
                 await fetch(API_URL, { 
                     method: 'POST', 
                     headers: {'Content-Type':'application/json'}, 
-                    body: JSON.stringify({ concepto: p.concepto, importe: p.importe, categoria: p.categoria, fecha: f }) 
+                    body: JSON.stringify({ 
+                        concepto: p.concepto, 
+                        importe: p.importe, 
+                        categoria: p.categoria, 
+                        fecha: f 
+                    }) 
                 });
             }
         }
     }
     
-    // Al terminar, activamos el interruptor para que no se repita
     pagosProcesados = true;
-    console.log("Pagos automáticos revisados y bloqueados hasta el próximo reinicio.");
+    console.log("Pagos automáticos revisados con triple validación.");
 }
 async function borrarRecurrente(id) {
             if(!confirm("¿Borrar por completo de fijos, movimientos y saldo final?")) return;
