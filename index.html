@@ -349,11 +349,12 @@ function obtenerLogo(concepto) {
         }
     });
 
-    // Actualizar cabecera de Inicio
+        // Actualizar cabecera de Inicio (Saldo Real más grande)
     const valRealElement = document.getElementById('valReal');
     valRealElement.innerText = isPrivate ? "****€" : saldoReal.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
-    valRealElement.className = "text-4xl font-black tracking-tighter transition-all duration-500 " + 
+    valRealElement.className = "text-6xl font-black tracking-tighter leading-tight transition-all duration-500 " + 
         (saldoReal > 200 ? 'text-cyan-400' : (saldoReal >= 100 ? 'text-amber-400' : 'text-rose-500'));
+
 
     document.getElementById('valPend').innerText = isPrivate ? "****€" : "-" + gFuturos.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
     document.getElementById('valProj').innerText = isPrivate ? "****€" : (saldoReal - gFuturos + iFuturos).toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
