@@ -218,31 +218,40 @@ let pagosProcesados = false;
             if(i === 0) setTimeout(updateChart, 100);
         } 
 
-        async function renderApp() {
-    const cache = localStorage.getItem('appData_cache');
-    if (cache) {
-        appData = JSON.parse(cache);
-        actualizarInterfaz();
-    }
+                async function renderApp() {
+            const cache = localStorage.getItem('appData_cache');
+            if (cache) {
+                appData = JSON.parse(cache);
+                actualizarInterfaz();
+            }
 
-    try {
-        const res = await fetch(API_URL);
-        const dataFresh = await res.json();
-        // Actualizamos la variable global y el caché
-        appData = dataFresh.map(g => ({ ...g, importe: parseFloat(g.importe) }));
-        
-        // ... aquí va tu código de appData.sort ...
+            try {
+                const res = await fetch(API_URL);
+                const dataFresh = await res.json();
+                const hoy = new Date().toISOString().split('T')[0];
 
-        localStorage.setItem('appData_cache', JSON.stringify(appData));
-actualizarInterfaz();
-procesarPagosAutomaticos(); // <-- Añade esta línea aquí
+                // 1. Cargamos y formateamos
+                appData = dataFresh.map(g => ({ ...g, importe: parseFloat(g.importe) }));
 
-        // NUEVO: Llamar a los pagos automáticos tras recibir los datos
-        procesarPagosAutomaticos(); 
-    } catch (e) {
-        console.error("Modo offline activado");
-    }
-}
+                // 2. Ordenamos: Pasado arriba, Futuro abajo
+                appData.sort((a, b) => {
+                    if (a.fecha <= hoy && b.fecha > hoy) return -1;
+                    if (a.fecha > hoy && b.fecha <= hoy) return 1;
+                    return b.fecha.localeCompare(a.fecha);
+                });
+
+                // 3. Guardamos y pintamos
+                localStorage.setItem('appData_cache', JSON.stringify(appData));
+                actualizarInterfaz();
+                
+                // 4. Ejecutamos la lógica de pagos fijos
+                procesarPagosAutomaticos(); 
+
+            } catch (e) {
+                console.error("Modo offline: usando caché.");
+            }
+        }
+
 
  
 function obtenerLogo(concepto) {
