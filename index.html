@@ -219,19 +219,26 @@ let pagosProcesados = false;
         } 
 
                 async function renderApp() {
-            const cache = localStorage.getItem('appData_cache');
-            if (cache) {
-                appData = JSON.parse(cache);
-                actualizarInterfaz();
-            }
+    const cache = localStorage.getItem('appData_cache');
+    if (cache) {
+        appData = JSON.parse(cache);
+        actualizarInterfaz();
+    }
 
-            try {
-                const res = await fetch(API_URL);
-                const dataFresh = await res.json();
-                const hoy = new Date().toISOString().split('T')[0];
+    try {
+        const res = await fetch(API_URL);
+        
+        // --- AQUÍ PEGAS TU MEJORA ---
+        if (!res.ok) throw new Error("API error");
+        // ---------------------------
 
-                // 1. Cargamos y formateamos
-                appData = dataFresh.map(g => ({ ...g, importe: parseFloat(g.importe) }));
+        const dataFresh = await res.json();
+        const hoy = new Date().toISOString().split('T')[0];
+
+        // Resto del código...
+        appData = dataFresh.map(g => ({ ...g, importe: parseFloat(g.importe) }));
+        // ... (el resto sigue igual)
+
 
                 // 2. Ordenamos: Pasado arriba, Futuro abajo
                 appData.sort((a, b) => {
