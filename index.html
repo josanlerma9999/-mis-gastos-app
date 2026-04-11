@@ -21,7 +21,7 @@
             width: 72px; height: 72px; border-radius: 50%; 
             border: 1px solid rgba(255,255,255,0.15); font-size: 1.6rem; font-weight: 600; 
             display: flex; align-items: center; justify-content: center;
-            background: rgba(255,255,255,0.08); color: white; transition: all 0.1s ease;
+            background: rgba(255,255,255,0.08); color: white; transition: all 0.1s ease; touch-action: manipulation;
         }
         .num-btn:active { background: var(--bbva-cyan) !important; color: #000 !important; box-shadow: 0 0 30px var(--bbva-cyan); transform: scale(0.9); } 
 
@@ -65,6 +65,10 @@ nav { z-index: 100 !important; position: relative; }
 .card-aqua { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid rgba(255,255,255,0.1); }
 .card-explora { background: linear-gradient(135deg, #004481 0%, #072146 100%); border: 1px solid rgba(0,229,255,0.2); }
 .chip { width: 35px; height: 26px; background: linear-gradient(135deg, #ffd700 0%, #b8860b 100%); border-radius: 4px; opacity: 0.8; }
+.nav-btn {
+    touch-action: manipulation;
+}
+
 
 
     </style>
