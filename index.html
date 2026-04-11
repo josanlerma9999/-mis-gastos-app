@@ -399,30 +399,55 @@ function obtenerLogo(concepto) {
 
 
    document.getElementById('mainForm').onsubmit = async (e) => {
-            e.preventDefault();
-            const concepto = document.getElementById('in-concepto').value;
-            const importe = parseFloat(document.getElementById('in-importe').value);
-            const categoria = document.getElementById('in-categoria').value;
-            const fecha = document.getElementById('in-fecha').value;
-            const esRecurrente = document.getElementById('check-recurrente').checked; 
+    e.preventDefault();
+    const concepto = document.getElementById('in-concepto').value;
+    const importe = parseFloat(document.getElementById('in-importe').value);
+    const categoria = document.getElementById('in-categoria').value;
+    const fecha = document.getElementById('in-fecha').value;
+    const esRecurrente = document.getElementById('check-recurrente').checked; 
 
-            await fetch(API_URL, { 
-                method: 'POST', 
-                headers: {'Content-Type':'application/json'}, 
-                body: JSON.stringify({ concepto, importe, categoria, fecha }) 
-            }); 
+    // 1. ACTUALIZACIÓN OPTIMISTA (Inmediata)
+    const nuevoGastoLocal = {
+        _id: "temp-" + Date.now(), 
+        concepto,
+        importe,
+        categoria,
+        fecha
+    };
 
-            if(esRecurrente) {
-                const diaPago = fecha.split('-')[2];
-                let recs = JSON.parse(localStorage.getItem('recurrentes') || "[]");
-                if (!recs.some(p => p.concepto === concepto)) {
-                    recs.push({ concepto, importe, dia: diaPago, categoria, id: Date.now() });
-                    localStorage.setItem('recurrentes', JSON.stringify(recs));
-                }
+    // Añadimos al principio del array y refrescamos la pantalla ya mismo
+    appData.unshift(nuevoGastoLocal);
+    actualizarInterfaz();
+    goToTab(0); // Volvemos al inicio para ver el nuevo saldo
+    
+    // Limpiamos el formulario para que quede listo
+    e.target.reset();
+
+    // 2. ENVÍO REAL A LA API (Por detrás)
+    try {
+        await fetch(API_URL, { 
+            method: 'POST', 
+            headers: {'Content-Type':'application/json'}, 
+            body: JSON.stringify({ concepto, importe, categoria, fecha }) 
+        }); 
+
+        if(esRecurrente) {
+            const diaPago = fecha.split('-')[2];
+            let recs = JSON.parse(localStorage.getItem('recurrentes') || "[]");
+            if (!recs.some(p => p.concepto === concepto)) {
+                recs.push({ concepto, importe, dia: diaPago, categoria, id: Date.now() });
+                localStorage.setItem('recurrentes', JSON.stringify(recs));
             }
-            e.target.reset(); await renderApp(); goToTab(0);
+        }
+        
+        // Actualizamos la caché de fondo
+        localStorage.setItem('appData_cache', JSON.stringify(appData));
 
-        }; 
+    } catch (error) {
+        console.error("Error al guardar en el servidor:", error);
+    }
+}; 
+ 
 function updateChart() {
     const canvas = document.getElementById('gastosChart');
     if (!canvas) return;
