@@ -242,12 +242,7 @@ let lastFetch = 0;
         actualizarInterfaz();
     }
 
-    // BLOQUEO: Si lastFetch es una fecha futura, no descargamos nada
-    if (Date.now() < lastFetch) {
-        console.log("Servidor bloqueado temporalmente para evitar datos viejos");
-        return; 
-    }
-
+    // Eliminamos el IF del bloqueo para que siempre obedezca al botón de actualizar
     try {
         const res = await fetch(API_URL);
         const dataFresh = await res.json();
@@ -264,13 +259,8 @@ let lastFetch = 0;
         actualizarInterfaz();
         procesarPagosAutomaticos();
         
-        // Actualizamos lastFetch al presente para permitir la siguiente recarga normal
-         
     } catch (e) { console.error("Error:", e); }
 }
-
-
-
 
 function obtenerLogo(concepto) {
     const c = concepto.toLowerCase();
@@ -402,33 +392,25 @@ document.getElementById('mainForm').onsubmit = async (e) => {
     const fecha = document.getElementById('in-fecha').value;
     const esRecurrente = document.getElementById('check-recurrente').checked; 
 
+    // 1. Lo pintamos en pantalla rápido para que no haya espera
     const tempId = "temp-" + Date.now();
-    const nuevoGastoLocal = { _id: tempId, concepto, importe, categoria, fecha };
-
-    // 1. Añadimos a la vista
-    appData.unshift(nuevoGastoLocal);
+    appData.unshift({ _id: tempId, concepto, importe, categoria, fecha });
     actualizarInterfaz();
     goToTab(0);
     e.target.reset();
 
     try {
-        const res = await fetch(API_URL, { 
+        // 2. Lo enviamos al servidor
+        await fetch(API_URL, { 
             method: 'POST', 
             headers: {'Content-Type':'application/json'}, 
             body: JSON.stringify({ concepto, importe, categoria, fecha }) 
         }); 
 
-        const gastoGuardado = await res.json();
+        // 3. LA CLAVE: Esperamos 800ms y refrescamos para tener el ID REAL
+        setTimeout(() => renderApp(), 800);
 
-        // --- MEJORA AQUÍ: Sustituimos el ID temporal por el real del servidor ---
-        const index = appData.findIndex(g => g._id === tempId);
-        if (index !== -1 && gastoGuardado._id) {
-            appData[index]._id = gastoGuardado._id;
-            localStorage.setItem('appData_cache', JSON.stringify(appData));
-            console.log("ID temporal actualizado por ID real.");
-        }
-        // -----------------------------------------------------------------------
-
+        // 4. Guardar recurrente si hace falta
         if(esRecurrente) {
             const diaPago = fecha.split('-')[2];
             let recs = JSON.parse(localStorage.getItem('recurrentes') || "[]");
@@ -442,8 +424,6 @@ document.getElementById('mainForm').onsubmit = async (e) => {
         console.error("Error al guardar:", error);
     }
 };
- 
- 
 function updateChart() {
     const canvas = document.getElementById('gastosChart');
     if (!canvas) return;
@@ -585,25 +565,26 @@ async function borrarRecurrente(id) {
 async function deleteGasto(id) {
     if (!confirm("¿Eliminar este movimiento?")) return;
 
-    // 1. ESCUDO: Bloqueamos al servidor 15 segundos
-    lastFetch = Date.now() + 15000; 
-
-    // 2. LIMPIEZA INMEDIATA: Borramos del móvil
+    // 1. Borrado visual inmediato (para que no parezca que no hace nada)
     appData = appData.filter(g => g._id !== id);
     localStorage.setItem('appData_cache', JSON.stringify(appData));
-
-    // 3. DIBUJAR: Actualizamos la pantalla al instante
     actualizarInterfaz();
 
-    // 4. SERVIDOR: Borramos en la base de datos
+    // 2. Mandar orden al servidor
     try {
         await fetch(`${API_URL}/${id}`, { 
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' }
         });
-        console.log("Borrado confirmado en servidor");
+        
+        // 3. La clave: esperamos 800ms y refrescamos para confirmar
+        setTimeout(() => {
+            renderApp();
+            console.log("Sincronización post-borrado completada");
+        }, 800);
+
     } catch (error) {
-        console.error("Error de red, pero el escudo sigue activo");
+        console.error("Error al borrar:", error);
     }
 }
 
