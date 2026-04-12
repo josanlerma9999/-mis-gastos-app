@@ -236,53 +236,39 @@ let lastFetch = 0;
         } 
 
                 async function renderApp() {
-    // 1. Cargar caché inmediatamente para que no haya parpadeos
     const cache = localStorage.getItem('appData_cache');
     if (cache) {
         appData = JSON.parse(cache);
         actualizarInterfaz();
     }
 
-    // 2. BLOQUEO CRÍTICO: Si acabamos de borrar, NO descargamos del servidor
-    // Esto evita que el gasto "resucite" antes de que el servidor lo elimine
-    const now = Date.now();
-    if (now < lastFetch) { 
-        console.log("Pausa de seguridad: esperando a que el servidor borre...");
+    // BLOQUEO: Si lastFetch es una fecha futura, no descargamos nada
+    if (Date.now() < lastFetch) {
+        console.log("Servidor bloqueado temporalmente para evitar datos viejos");
         return; 
     }
 
-    // 3. Si los datos son muy recientes (menos de 10 seg), no hace falta descargar
-    if (now - lastFetch < 10000 && lastFetch !== 0) return;
-
     try {
         const res = await fetch(API_URL);
-        if (!res.ok) throw new Error("API error"); 
-
         const dataFresh = await res.json();
         const hoy = new Date().toISOString().split('T')[0]; 
 
-        // Actualizamos la variable global
         appData = dataFresh.map(g => ({ ...g, importe: parseFloat(g.importe) })); 
-
-        // Ordenamos
         appData.sort((a, b) => {
             if (a.fecha <= hoy && b.fecha > hoy) return -1;
             if (a.fecha > hoy && b.fecha <= hoy) return 1;
             return b.fecha.localeCompare(a.fecha);
         }); 
 
-        // Solo actualizamos si no estamos en medio de un borrado
-        if (Date.now() > lastFetch) {
-            localStorage.setItem('appData_cache', JSON.stringify(appData));
-            actualizarInterfaz();
-            procesarPagosAutomaticos();
-            lastFetch = Date.now(); 
-        }
-
-    } catch (e) {
-        console.error("Error cargando datos:", e);
-    }
+        localStorage.setItem('appData_cache', JSON.stringify(appData));
+        actualizarInterfaz();
+        procesarPagosAutomaticos();
+        
+        // Actualizamos lastFetch al presente para permitir la siguiente recarga normal
+        lastFetch = Date.now(); 
+    } catch (e) { console.error("Error:", e); }
 }
+
 
 
 
@@ -599,37 +585,23 @@ async function borrarRecurrente(id) {
 async function deleteGasto(id) {
     if (!confirm("¿Eliminar este movimiento?")) return;
 
+    // 1. Ponemos el candado al servidor por 10 segundos
+    lastFetch = Date.now() + 10000; 
+
+    // 2. Borramos de la vista del móvil YA
+    appData = appData.filter(g => g._id !== id);
+    localStorage.setItem('appData_cache', JSON.stringify(appData));
+    actualizarInterfaz();
+
+    // 3. Avisamos al servidor en silencio
     try {
-        // 1. BORRADO VISUAL INMEDIATO
-        appData = appData.filter(g => g._id !== id);
-        
-        // 2. GUARDAR EN EL MÓVIL YA
-        localStorage.setItem('appData_cache', JSON.stringify(appData));
-        
-        // 3. PINTAR LA PANTALLA
-        actualizarInterfaz();
-
-        // 4. BLOQUEO DE RESURRECCIÓN (10 segundos de margen)
-        lastFetch = Date.now() + 10000; 
-
-        // 5. AVISO AL SERVIDOR
-        if (id && !id.toString().startsWith('temp-')) {
-            fetch(`${API_URL}/${id}`, { 
-                method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' }
-            }).then(res => {
-                if(res.ok) {
-                    console.log("Servidor: Borrado con éxito");
-                    lastFetch = 0; 
-                }
-            }).catch(err => {
-                console.log("Servidor lento, el gasto sigue borrado en local.");
-            });
-        }
+        await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+        console.log("Borrado confirmado en servidor");
     } catch (error) {
-        console.error("Error crítico en el botón:", error);
+        console.error("El servidor no respondió, pero el bloqueo sigue activo");
     }
 }
+
 
 function togglePrivacy() { 
     isPrivate = !isPrivate; 
