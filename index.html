@@ -236,44 +236,47 @@ let lastFetch = 0;
         } 
 
                 async function renderApp() {
-    // A. Gestión de títulos y conexión
-    if (!navigator.onLine) {
-        document.title = "BBVA (Sin conexión) ⚠️";
-    } else {
-        document.title = "BBVA Premium v16.6";
-    }
-
-    // B. Cargar caché (Esto SIEMPRE se ejecuta para que la app sea instantánea)
+    // 1. PRIORIDAD ABSOLUTA: Cargar lo que el usuario ve en su móvil
     const cache = localStorage.getItem('appData_cache');
     if (cache) {
         appData = JSON.parse(cache);
         actualizarInterfaz();
     }
 
-    // C. CONTROL DE SPAM (NUEVO)
+    // 2. Gestión de títulos y conexión (Estético)
+    document.title = navigator.onLine ? "BBVA Premium v16.6" : "BBVA (Sin conexión) ⚠️";
+
+    // 3. CONTROL DE SEGURIDAD (Para evitar que el servidor "resucite" gastos borrados)
     const now = Date.now();
-    if (now - lastFetch < 5000) { // Espera 5 segundos entre peticiones reales
-        console.log("Usando datos recientes, petición a API cancelada para ahorrar batería.");
+    if (now < lastFetch) { 
+        console.log("Bloqueo de seguridad activo: Esperando al servidor...");
+        return; 
+    }
+    
+    if (now - lastFetch < 5000) {
+        console.log("Datos frescos en pantalla. No hace falta descargar.");
         return; 
     }
 
+    // 4. DESCARGA REAL DEL SERVIDOR
     try {
         const res = await fetch(API_URL);
-        if (!res.ok) throw new Error("API error");
+        if (!res.ok) throw new Error("API error"); 
 
-        lastFetch = Date.now(); // Actualizamos el marcador si la petición fue un éxito
-
+        lastFetch = Date.now(); 
         const dataFresh = await res.json();
-        const hoy = new Date().toISOString().split('T')[0];
+        const hoy = new Date().toISOString().split('T')[0]; 
 
-        appData = dataFresh.map(g => ({ ...g, importe: parseFloat(g.importe) }));
+        appData = dataFresh.map(g => ({ ...g, importe: parseFloat(g.importe) })); 
 
+        // Ordenación de la lista
         appData.sort((a, b) => {
             if (a.fecha <= hoy && b.fecha > hoy) return -1;
             if (a.fecha > hoy && b.fecha <= hoy) return 1;
             return b.fecha.localeCompare(a.fecha);
-        });
+        }); 
 
+        // Guardamos la verdad del servidor en la caché
         localStorage.setItem('appData_cache', JSON.stringify(appData));
         actualizarInterfaz();
         procesarPagosAutomaticos(); 
@@ -282,6 +285,7 @@ let lastFetch = 0;
         console.error("Error cargando datos:", e);
     }
 }
+
 
 function obtenerLogo(concepto) {
     const c = concepto.toLowerCase();
@@ -596,37 +600,39 @@ async function borrarRecurrente(id) {
 
         async function deleteGasto(id) {
     if (confirm("¿Eliminar este movimiento?")) {
-        // 1. Lo quitamos de la pantalla inmediatamente
+        // 1. ELIMINACIÓN LOCAL RADICAL
+        // Lo quitamos de appData y de la caché antes de hacer nada más
         appData = appData.filter(g => g._id !== id);
-        actualizarInterfaz();
         localStorage.setItem('appData_cache', JSON.stringify(appData));
+        
+        // 2. ACTUALIZAR PANTALLA YA
+        actualizarInterfaz();
 
-        // 2. Si el ID es temporal (empieza por "temp-"), no llamamos al servidor
-        // porque ese gasto aún se está guardando o solo existe en tu móvil.
-        if (id.toString().startsWith('temp-')) {
-            console.log("Gasto temporal eliminado localmente.");
-            return; 
-        }
+        // 3. BLOQUEAR QUE EL SERVIDOR LO RESUCITE
+        // Ponemos lastFetch con el tiempo actual para que renderApp 
+        // no pida datos al servidor en los próximos 10 segundos
+        lastFetch = Date.now() + 5000; 
 
-        // 3. Si es un ID real, avisamos al servidor
-        try {
-            const res = await fetch(`${API_URL}/${id}`, { 
-                method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' }
-            });
-            
-            if (!res.ok) throw new Error("Error en servidor");
-            
-            lastFetch = 0; 
-            console.log("Servidor actualizado: Gasto eliminado.");
-        } catch (err) {
-            console.error("Error al borrar:", err);
-            // Si falla el servidor, no lanzamos el alert molesto, 
-            // solo lo registramos, ya que el usuario ya vio que se borró.
-            console.log("El servidor no respondió, pero el cambio se mantiene en local.");
+        // 4. AVISO AL SERVIDOR EN SEGUNDO PLANO
+        if (!id.toString().startsWith('temp-')) {
+            try {
+                const res = await fetch(`${API_URL}/${id}`, { 
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                if (res.ok) {
+                    console.log("Servidor: Borrado confirmado.");
+                    // Solo después de que el servidor confirma, permitimos volver a pedir datos
+                    lastFetch = 0; 
+                }
+            } catch (err) {
+                console.error("Error de red, pero el gasto sigue borrado en tu móvil:", err);
+            }
         }
     }
 }
+
 
  
         function togglePrivacy() { isPrivate = !isPrivate; actualizarInterfaz(); } 
