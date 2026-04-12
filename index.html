@@ -236,55 +236,54 @@ let lastFetch = 0;
         } 
 
                 async function renderApp() {
-    // 1. PRIORIDAD ABSOLUTA: Cargar lo que el usuario ve en su móvil
+    // 1. Cargar caché inmediatamente para que no haya parpadeos
     const cache = localStorage.getItem('appData_cache');
     if (cache) {
         appData = JSON.parse(cache);
         actualizarInterfaz();
     }
 
-    // 2. Gestión de títulos y conexión (Estético)
-    document.title = navigator.onLine ? "BBVA Premium v16.6" : "BBVA (Sin conexión) ⚠️";
-
-    // 3. CONTROL DE SEGURIDAD (Para evitar que el servidor "resucite" gastos borrados)
+    // 2. BLOQUEO CRÍTICO: Si acabamos de borrar, NO descargamos del servidor
+    // Esto evita que el gasto "resucite" antes de que el servidor lo elimine
     const now = Date.now();
     if (now < lastFetch) { 
-        console.log("Bloqueo de seguridad activo: Esperando al servidor...");
-        return; 
-    }
-    
-    if (now - lastFetch < 5000) {
-        console.log("Datos frescos en pantalla. No hace falta descargar.");
+        console.log("Pausa de seguridad: esperando a que el servidor borre...");
         return; 
     }
 
-    // 4. DESCARGA REAL DEL SERVIDOR
+    // 3. Si los datos son muy recientes (menos de 10 seg), no hace falta descargar
+    if (now - lastFetch < 10000 && lastFetch !== 0) return;
+
     try {
         const res = await fetch(API_URL);
         if (!res.ok) throw new Error("API error"); 
 
-        lastFetch = Date.now(); 
         const dataFresh = await res.json();
         const hoy = new Date().toISOString().split('T')[0]; 
 
+        // Actualizamos la variable global
         appData = dataFresh.map(g => ({ ...g, importe: parseFloat(g.importe) })); 
 
-        // Ordenación de la lista
+        // Ordenamos
         appData.sort((a, b) => {
             if (a.fecha <= hoy && b.fecha > hoy) return -1;
             if (a.fecha > hoy && b.fecha <= hoy) return 1;
             return b.fecha.localeCompare(a.fecha);
         }); 
 
-        // Guardamos la verdad del servidor en la caché
-        localStorage.setItem('appData_cache', JSON.stringify(appData));
-        actualizarInterfaz();
-        procesarPagosAutomaticos(); 
+        // Solo actualizamos si no estamos en medio de un borrado
+        if (Date.now() > lastFetch) {
+            localStorage.setItem('appData_cache', JSON.stringify(appData));
+            actualizarInterfaz();
+            procesarPagosAutomaticos();
+            lastFetch = Date.now(); 
+        }
 
     } catch (e) {
         console.error("Error cargando datos:", e);
     }
 }
+
 
 
 function obtenerLogo(concepto) {
