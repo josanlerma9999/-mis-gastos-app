@@ -4,73 +4,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>BBVA Premium v16.6</title>
-
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#072146">
-    <script>
-    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
         :root { --bbva-navy: #072146; --bbva-blue: #004481; --bbva-cyan: #00e5ff; }
         html, body { height: 100%; margin: 0; padding: 0; background: #000; overflow: hidden; font-family: 'Inter', sans-serif; }
-        
-        .num-btn { 
-            width: 72px; height: 72px; border-radius: 50%; 
-            border: 1px solid rgba(255,255,255,0.15); font-size: 1.6rem; font-weight: 600; 
-            display: flex; align-items: center; justify-content: center;
-            background: rgba(255,255,255,0.08); color: white; transition: all 0.1s ease; touch-action: manipulation;
-        }
+        .num-btn { width: 72px; height: 72px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.15); font-size: 1.6rem; font-weight: 600; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.08); color: white; transition: all 0.1s ease; touch-action: manipulation; }
         .num-btn:active { background: var(--bbva-cyan) !important; color: #000 !important; box-shadow: 0 0 30px var(--bbva-cyan); transform: scale(0.9); } 
-
         .bbva-card { background: var(--bbva-navy); border-radius: 1.5rem; border: 1px solid rgba(255,255,255,0.05); transition: all 0.3s ease; }
         .bbva-gradient { background: linear-gradient(135deg, #072146 0%, #004481 100%); border-radius: 2rem; }
-      .bbva-input { 
-    background: #ffffff; 
-    border: none; 
-    border-radius: 1rem; 
-    padding: 1rem; 
-    width: 100%; 
-    color: #072146; 
-    font-weight: 800; 
-    outline: none;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-}
-
-/* Añade esto justo debajo para que el icono del calendario sea oscuro */
-input[type="month"]::-webkit-calendar-picker-indicator {
-    filter: invert(0);
-    cursor: pointer;
-}
-  
-        
+        .bbva-input { background: #ffffff; border: none; border-radius: 1rem; padding: 1rem; width: 100%; color: #072146; font-weight: 800; outline: none; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        input[type="month"]::-webkit-calendar-picker-indicator { filter: invert(0); cursor: pointer; }
         #viewport { width: 100%; height: calc(100% - 140px); overflow: hidden; position: relative; touch-action: pan-y; background: #000;}
         #main-view { display: flex; width: 600%; height: 100%; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-.tab-content { width: 16.666%; height: 100%; overflow-y: auto; padding: 1.25rem; -webkit-overflow-scrolling: touch; }
-
-        
+        .tab-content { width: 16.666%; height: 100%; overflow-y: auto; padding: 1.25rem; -webkit-overflow-scrolling: touch; }
         .active-tab { color: var(--bbva-cyan) !important; border-top: 3px solid var(--bbva-cyan); }
         .btn-action { z-index: 50; position: relative; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.1); border-radius: 0.8rem; }
-nav { z-index: 100 !important; position: relative; }
-
-        .chart-container { position: relative; height: 180px; width: 100%; margin-top: 0.5rem; }.truncate {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-/* Estilos para las tarjetas físicas */
-.card-real { position: relative; height: 180px; border-radius: 1.2rem; padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 15px 35px rgba(0,0,0,0.5); overflow: hidden; }
-.card-aqua { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid rgba(255,255,255,0.1); }
-.card-explora { background: linear-gradient(135deg, #004481 0%, #072146 100%); border: 1px solid rgba(0,229,255,0.2); }
-.chip { width: 35px; height: 26px; background: linear-gradient(135deg, #ffd700 0%, #b8860b 100%); border-radius: 4px; opacity: 0.8; }
-.nav-btn {
-    touch-action: manipulation;
-}
-
-
-
+        nav { z-index: 100 !important; position: relative; }
+        .chart-container { position: relative; height: 180px; width: 100%; margin-top: 0.5rem; }
+        .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .card-real { position: relative; height: 180px; border-radius: 1.2rem; padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 15px 35px rgba(0,0,0,0.5); overflow: hidden; }
+        .card-aqua { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid rgba(255,255,255,0.1); }
+        .card-explora { background: linear-gradient(135deg, #004481 0%, #072146 100%); border: 1px solid rgba(0,229,255,0.2); }
+        .chip { width: 35px; height: 26px; background: linear-gradient(135deg, #ffd700 0%, #b8860b 100%); border-radius: 4px; opacity: 0.8; }
+        .nav-btn { touch-action: manipulation; }
     </style>
 </head>
 <body> 
@@ -95,7 +55,7 @@ nav { z-index: 100 !important; position: relative; }
             </div>
         </header> 
 
-                <div id="viewport">
+        <div id="viewport">
             <div id="main-view">
                 <section class="tab-content space-y-5">
                     <div class="p-8 bbva-gradient text-center shadow-lg">
@@ -144,20 +104,10 @@ nav { z-index: 100 !important; position: relative; }
                         <div class="flex justify-between items-end"><span class="text-white/30 text-xs font-mono">**** 8823</span><span class="text-white/20 text-xl font-black italic">VISA</span></div>
                     </div>
                     <div class="card-real card-aqua">
-    <div class="flex justify-between items-start">
-        <div class="chip" style="filter:grayscale(1)"></div>
-        <span class="italic font-black text-white">BBVA</span>
-    </div>
-    <div>
-        <p class="text-slate-400 text-[10px] uppercase font-bold">Aqua Crédito</p>
-        <h3 id="card-aqua-val" class="text-cyan-400 text-3xl font-light">0,00€</h3>
-    </div>
-    <div class="flex justify-between items-end">
-        <span class="text-white/30 text-xs font-mono">**** 4412</span>
-        <span class="text-white/20 text-xl font-black italic">VISA</span>
-    </div>
-</div>
-
+                        <div class="flex justify-between items-start"><div class="chip" style="filter:grayscale(1)"></div><span class="italic font-black text-white">BBVA</span></div>
+                        <div><p class="text-slate-400 text-[10px] uppercase font-bold">Aqua Crédito</p><h3 id="card-aqua-val" class="text-cyan-400 text-3xl font-light">0,00€</h3></div>
+                        <div class="flex justify-between items-end"><span class="text-white/30 text-xs font-mono">**** 4412</span><span class="text-white/20 text-xl font-black italic">VISA</span></div>
+                    </div>
                 </section>
 
                 <section class="tab-content">
@@ -189,7 +139,6 @@ nav { z-index: 100 !important; position: relative; }
                         <button type="submit" class="w-full bg-cyan-400 text-black font-black py-4 rounded-xl uppercase">Confirmar Operación</button>
                     </form>
                 </section>
-
             </div>
         </div> 
 
@@ -201,8 +150,6 @@ nav { z-index: 100 !important; position: relative; }
             <button onclick="goToTab(4)" class="nav-btn text-slate-500 flex-1 flex flex-col items-center gap-1"><span class="text-xl">💳</span><span class="text-[8px] uppercase">Cards</span></button>
             <button onclick="goToTab(5)" class="nav-btn text-slate-500 flex-1 flex flex-col items-center gap-1"><span class="text-xl">➕</span><span class="text-[8px] uppercase">Operar</span></button>
         </nav>
-
-
     </div> 
 
     <script>
@@ -211,10 +158,7 @@ nav { z-index: 100 !important; position: relative; }
         let pin = "", isPrivate = false, appData = [];
         const categIngresos = ["Sueldo", "Otros Ingresos"];
         let gastosChart = null; 
-let pagosProcesados = false; 
-let lastFetch = 0; 
-
-
+        let pagosProcesados = false; 
 
         // PIN PAD
         [1,2,3,4,5,6,7,8,9,'C',0,'DEL'].forEach(v => {
@@ -229,270 +173,153 @@ let lastFetch = 0;
 
         function goToTab(i) {
             currentTabIndex = i;
-            document.getElementById('main-view').style.transform = `translateX(-${i * 16.666}%)`;
-
+            document.getElementById('main-view').style.transform = `translateX(-${i * 16.666}%)`; 
             document.querySelectorAll('.nav-btn').forEach((b, idx) => idx === i ? b.classList.add('active-tab') : b.classList.remove('active-tab'));
             if(i === 0) setTimeout(updateChart, 100);
         } 
 
-                async function renderApp() {
-    const cache = localStorage.getItem('appData_cache');
-    if (cache) {
-        appData = JSON.parse(cache);
-        actualizarInterfaz();
-    }
+        async function renderApp() {
+            const cache = localStorage.getItem('appData_cache');
+            if (cache) { appData = JSON.parse(cache); actualizarInterfaz(); } 
 
-    // Eliminamos el IF del bloqueo para que siempre obedezca al botón de actualizar
-    try {
-        const res = await fetch(API_URL);
-        const dataFresh = await res.json();
-        const hoy = new Date().toISOString().split('T')[0]; 
+            try {
+                const res = await fetch(API_URL);
+                const dataFresh = await res.json();
+                const hoy = new Date().toISOString().split('T')[0]; 
 
-        appData = dataFresh.map(g => ({ ...g, importe: parseFloat(g.importe) })); 
-        appData.sort((a, b) => {
-            if (a.fecha <= hoy && b.fecha > hoy) return -1;
-            if (a.fecha > hoy && b.fecha <= hoy) return 1;
-            return b.fecha.localeCompare(a.fecha);
-        }); 
+                appData = dataFresh.map(g => ({ ...g, importe: parseFloat(g.importe) })); 
+                appData.sort((a, b) => b.fecha.localeCompare(a.fecha)); 
 
-        localStorage.setItem('appData_cache', JSON.stringify(appData));
-        actualizarInterfaz();
-        procesarPagosAutomaticos();
-        
-    } catch (e) { console.error("Error:", e); }
-}
-
-function obtenerLogo(concepto) {
-    const c = concepto.toLowerCase();
-    // Definimos las reglas: [Palabra clave, Color Fondo, Letra/Icono]
-                const reglas = [
-        ['nala', '#FFC0CB', '🐶'],
-        ['portátil', '#475569', '💻'],
-        ['recarga', '#22c55e', '⚡️'],
-        ['tarjeta', '#00e5ff', '💳'], // <-- Nueva regla para cualquier concepto con "tarjeta"
-        ['amazon', '#FF9900', 'A'],
-        ['mercadona', '#00a650', 'M'],
-        ['netflix', '#E50914', 'N'],
-        ['spotify', '#1DB954', 'S'],
-        ['carrefour', '#0046BE', 'C'],
-        ['sueldo', '#22c55e', '€'],
-        ['nomina', '#22c55e', '€'],
-        ['gasolina', '#4b5563', '⛽'],
-        ['hbo', '#000000', 'H'],
-        ['zara', '#000000', 'Z'],
-        ['apple', '#000000', '🍎']
-];
-
-
-
-    const match = reglas.find(r => c.trim().includes(r[0]));
-
-    if (match) {
-        return `<div class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg" style="background:${match[1]}">${match[2]}</div>`;
-    }
-    
-    // Si no lo reconoce, usa la primera letra en gris
-    const inicial = concepto.charAt(0).toUpperCase();
-    return `<div class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg bg-slate-700 shadow-lg">${inicial}</div>`;
-}
-
-       function actualizarInterfaz() {
-    // 1. Definimos "HOY" al principio del día (00:00:00) para evitar problemas de horas
-    const ahora = new Date();
-    const hoyStr = ahora.getFullYear() + '-' + String(ahora.getMonth() + 1).padStart(2, '0') + '-' + String(ahora.getDate()).padStart(2, '0');
-    const hoyRef = new Date(hoyStr + "T00:00:00").getTime();
-    
-    const mesSel = document.getElementById('filtroMes').value;
-    let saldoReal = 0, gFuturos = 0, iFuturos = 0;
-    
-    let deudaAqua = 0;
-    let deudaExplora = 0; 
-
-    document.getElementById('listaPasado').innerHTML = '';
-    document.getElementById('listaFuturo').innerHTML = ''; 
-
-    appData.forEach(g => {
-        const val = Math.abs(parseFloat(g.importe));
-        const esI = categIngresos.includes(g.categoria);
-        
-        // 2. Convertimos la fecha del gasto también al inicio del día
-        const fechaGastoRef = new Date(g.fecha + "T00:00:00").getTime();
-        
-        // Si la fecha del gasto es MENOR O IGUAL a hoy, es PASADO (Saldo Real)
-        const esP = fechaGastoRef <= hoyRef; 
-        
-        if (g.categoria === "Tarjeta Aqua") deudaAqua += val;
-        if (g.categoria === "Tarjeta Explora") deudaExplora += val; 
-
-        if(esP) { 
-            esI ? saldoReal += val : saldoReal -= val; 
-        } else { 
-            esI ? iFuturos += val : gFuturos += val; 
-        }
-        
-        const disp = isPrivate ? "****€" : val.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€"; 
-
-        // RENDER LISTA MOVIMIENTOS
-        if(g.fecha.startsWith(mesSel)) {
-            const logoHTML = obtenerLogo(g.concepto); 
-            
-            // CLAVE: La opacidad y el borde azul SOLO si es estrictamente posterior a hoy (esP es falso)
-            const estiloFuturo = !esP ? 'opacity-40 border-l-4 border-cyan-400' : '';
-            
-            document.getElementById('listaPasado').insertAdjacentHTML('beforeend', `
-                <div class="bbva-card p-4 flex justify-between items-center gap-3 ${val > 100 && !esI ? 'border-r-4 border-rose-500/30' : ''} ${estiloFuturo}">
-                    <div class="flex items-center gap-3 flex-1 overflow-hidden">
-                        ${logoHTML}
-                        <div class="truncate">
-                            <p class="text-sm font-bold text-white truncate">${g.concepto}</p>
-                            <p class="text-[9px] text-slate-500 uppercase mt-1">${g.fecha} • ${g.categoria}</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-3">
-                        <p class="font-black whitespace-nowrap ${esI ? 'text-cyan-400' : (val > 100 ? 'text-rose-400' : 'text-white')}">
-                            ${esI ? '+' : '-'}${disp}
-                        </p>
-                        <button onclick="event.stopPropagation(); deleteGasto('${g._id}')" class="btn-action text-rose-500">🗑️</button>
-                    </div>
-                </div>`);
+                localStorage.setItem('appData_cache', JSON.stringify(appData));
+                actualizarInterfaz();
+                procesarPagosAutomaticos();
+            } catch (e) { console.error("Error cargando datos:", e); }
         } 
 
-        // RENDER LISTA PREVISIÓN (Solo si es futuro estricto)
-        if(!esP) {
-            document.getElementById('listaFuturo').insertAdjacentHTML('beforeend', `
-                <div class="bbva-card border-l-4 border-cyan-400 p-5 flex justify-between items-center">
-                    <div><p class="font-black text-white">${g.concepto}</p><p class="text-[10px] text-slate-500">${g.fecha}</p></div>
-                    <p class="text-xl font-black ${esI ? 'text-cyan-400' : 'text-white'}">${esI ? '+' : '-'}${disp}</p>
-                </div>`);
-        }
-    });
+        function obtenerLogo(concepto) {
+            const c = concepto.toLowerCase();
+            const reglas = [
+                ['nala', '#FFC0CB', '🐶'], ['portátil', '#475569', '💻'], ['recarga', '#22c55e', '⚡️'],
+                ['tarjeta', '#00e5ff', '💳'], ['amazon', '#FF9900', 'A'], ['mercadona', '#00a650', 'M'],
+                ['netflix', '#E50914', 'N'], ['spotify', '#1DB954', 'S'], ['carrefour', '#0046BE', 'C'],
+                ['sueldo', '#22c55e', '€'], ['nomina', '#22c55e', '€'], ['gasolina', '#4b5563', '⛽'],
+                ['hbo', '#000000', 'H'], ['zara', '#000000', 'Z'], ['apple', '#000000', '🍎']
+            ];
+            const match = reglas.find(r => c.includes(r[0]));
+            if (match) return `<div class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg" style="background:${match[1]}">${match[2]}</div>`;
+            return `<div class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg bg-slate-700 shadow-lg">${concepto.charAt(0).toUpperCase()}</div>`;
+        } 
 
-    // Actualización de textos de saldo...
-    const valRealElement = document.getElementById('valReal');
-    valRealElement.innerText = isPrivate ? "****€" : saldoReal.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
-    valRealElement.className = "text-6xl font-black tracking-tighter leading-tight transition-all duration-500 " + 
-        (saldoReal > 200 ? 'text-cyan-400' : (saldoReal >= 100 ? 'text-amber-400' : 'text-rose-500')); 
+        function actualizarInterfaz() {
+            const hoyRef = new Date(new Date().toISOString().split('T')[0] + "T00:00:00").getTime();
+            const mesSel = document.getElementById('filtroMes').value;
+            let saldoReal = 0, gFuturos = 0, iFuturos = 0, deudaAqua = 0, deudaExplora = 0; 
 
-    document.getElementById('valPend').innerText = isPrivate ? "****€" : "-" + gFuturos.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
-    document.getElementById('valProj').innerText = isPrivate ? "****€" : (saldoReal - gFuturos + iFuturos).toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
-    
-    document.getElementById('card-aqua-val').innerText = isPrivate ? "****€" : deudaAqua.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
-    document.getElementById('card-explora-val').innerText = isPrivate ? "****€" : deudaExplora.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€"; 
+            document.getElementById('listaPasado').innerHTML = '';
+            document.getElementById('listaFuturo').innerHTML = ''; 
 
-    renderRecurrentes();
-    updateChart();
-}
+            appData.forEach(g => {
+                const val = Math.abs(g.importe);
+                const esI = categIngresos.includes(g.categoria);
+                const fechaGRef = new Date(g.fecha + "T00:00:00").getTime();
+                const esP = fechaGRef <= hoyRef; 
 
+                if (g.categoria === "Tarjeta Aqua") deudaAqua += val;
+                if (g.categoria === "Tarjeta Explora") deudaExplora += val; 
 
-document.getElementById('mainForm').onsubmit = async (e) => {
-    e.preventDefault();
-    const concepto = document.getElementById('in-concepto').value;
-    const importe = parseFloat(document.getElementById('in-importe').value);
-    const categoria = document.getElementById('in-categoria').value;
-    const fecha = document.getElementById('in-fecha').value;
-    const esRecurrente = document.getElementById('check-recurrente').checked; 
+                if(esP) { esI ? saldoReal += val : saldoReal -= val; } 
+                else { esI ? iFuturos += val : gFuturos += val; }
+                
+                const disp = isPrivate ? "****€" : val.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€"; 
 
-    // 1. Lo pintamos en pantalla rápido para que no haya espera
-    const tempId = "temp-" + Date.now();
-    appData.unshift({ _id: tempId, concepto, importe, categoria, fecha });
-    actualizarInterfaz();
-    goToTab(0);
-    e.target.reset();
-
-    try {
-        // 2. Lo enviamos al servidor
-        await fetch(API_URL, { 
-            method: 'POST', 
-            headers: {'Content-Type':'application/json'}, 
-            body: JSON.stringify({ concepto, importe, categoria, fecha }) 
-        }); 
-
-        // 3. LA CLAVE: Esperamos 800ms y refrescamos para tener el ID REAL
-        setTimeout(() => renderApp(), 800);
-
-        // 4. Guardar recurrente si hace falta
-        if(esRecurrente) {
-            const diaPago = fecha.split('-')[2];
-            let recs = JSON.parse(localStorage.getItem('recurrentes') || "[]");
-            if (!recs.some(p => p.concepto === concepto)) {
-                recs.push({ concepto, importe, dia: diaPago, categoria, id: Date.now() });
-                localStorage.setItem('recurrentes', JSON.stringify(recs));
-            }
-        }
-        
-    } catch (error) {
-        console.error("Error al guardar:", error);
-    }
-};
-function updateChart() {
-    const canvas = document.getElementById('gastosChart');
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    
-    const mesActual = new Date().toISOString().slice(0, 7);
-    const desglose = {};
-    
-    appData.forEach(g => {
-        if(g.fecha.startsWith(mesActual) && !categIngresos.includes(g.categoria) && g.fecha <= new Date().toISOString().split('T')[0]) {
-            desglose[g.categoria] = (desglose[g.categoria] || 0) + Math.abs(parseFloat(g.importe));
-        }
-    });
-
-    const labels = Object.keys(desglose);
-    const data = Object.values(desglose);
-
-    // --- AQUÍ PEGAS TU MEJORA ---
-    if (gastosChart) {
-        gastosChart.destroy();
-    }
-    // ---------------------------
-
-    gastosChart = new Chart(ctx, {
-        type: 'doughnut',
-        data: { 
-            labels, 
-            datasets: [{ 
-                data, 
-                backgroundColor: ['#00e5ff','#7c4dff','#ff4081','#ffee33','#4caf50','#ff9800','#E0E0E0','#0091EA','#8D6E63','#26A69A'], 
-                borderColor: '#072146', 
-                borderWidth: 2 
-            }] 
-        },
-        options: { 
-            responsive: true, 
-            maintainAspectRatio: false, 
-            cutout: '75%', 
-            plugins: { 
-                legend: { 
-                    position: 'right', 
-                    labels: { color: 'white', font: { size: 10 }, boxWidth: 10 } 
+                if(g.fecha.startsWith(mesSel)) {
+                    const estiloFuturo = !esP ? 'opacity-40 border-l-4 border-cyan-400' : '';
+                    document.getElementById('listaPasado').insertAdjacentHTML('beforeend', `
+                        <div class="bbva-card p-4 flex justify-between items-center gap-3 ${val > 100 && !esI ? 'border-r-4 border-rose-500/30' : ''} ${estiloFuturo}">
+                            <div class="flex items-center gap-3 flex-1 overflow-hidden">
+                                ${obtenerLogo(g.concepto)}
+                                <div class="truncate">
+                                    <p class="text-sm font-bold text-white truncate">${g.concepto}</p>
+                                    <p class="text-[9px] text-slate-500 uppercase mt-1">${g.fecha} • ${g.categoria}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <p class="font-black whitespace-nowrap ${esI ? 'text-cyan-400' : (val > 100 ? 'text-rose-400' : 'text-white')}">${esI ? '+' : '-'}${disp}</p>
+                                <button onclick="deleteGasto('${g._id}')" class="btn-action text-rose-500">🗑️</button>
+                            </div>
+                        </div>`);
                 } 
-            },
-            onClick: (e, i) => { if(i.length > 0) aplicarFiltroCategoria(labels[i[0].index]); }
+
+                if(!esP) {
+                    document.getElementById('listaFuturo').insertAdjacentHTML('beforeend', `
+                        <div class="bbva-card border-l-4 border-cyan-400 p-5 flex justify-between items-center">
+                            <div><p class="font-black text-white">${g.concepto}</p><p class="text-[10px] text-slate-500">${g.fecha}</p></div>
+                            <p class="text-xl font-black ${esI ? 'text-cyan-400' : 'text-white'}">${esI ? '+' : '-'}${disp}</p>
+                        </div>`);
+                }
+            });
+
+            document.getElementById('valReal').innerText = isPrivate ? "****€" : saldoReal.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
+            document.getElementById('valReal').className = "text-6xl font-black tracking-tighter leading-tight " + (saldoReal > 200 ? 'text-cyan-400' : (saldoReal >= 100 ? 'text-amber-400' : 'text-rose-500')); 
+            document.getElementById('valPend').innerText = isPrivate ? "****€" : "-" + gFuturos.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
+            document.getElementById('valProj').innerText = isPrivate ? "****€" : (saldoReal - gFuturos + iFuturos).toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
+            document.getElementById('card-aqua-val').innerText = isPrivate ? "****€" : deudaAqua.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
+            document.getElementById('card-explora-val').innerText = isPrivate ? "****€" : deudaExplora.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€"; 
+
+            renderRecurrentes();
+            updateChart();
         }
-    });
-}
- 
-function aplicarFiltroCategoria(cat) {
-            const lista = document.getElementById('listaPasado');
-            const catLimpia = cat.replace(/[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF]/g, '').trim().toLowerCase();
-            goToTab(3); 
-            setTimeout(() => {
-                let encontrados = 0;
-                lista.querySelectorAll('.bbva-card').forEach(card => {
-                    const match = card.innerText.toLowerCase().includes(catLimpia);
-                    card.style.display = match ? 'flex' : 'none';
-                    if(match) encontrados++;
-                });
-                const oldBtn = document.getElementById('btn-quitar-filtro'); if (oldBtn) oldBtn.remove();
-                const btn = document.createElement('button');
-                btn.id = 'btn-quitar-filtro';
-                btn.className = "w-full mb-4 py-3 bg-cyan-400/10 text-cyan-400 text-[11px] font-black uppercase rounded-xl border border-cyan-400/20";
-                btn.innerHTML = `Filtrado: ${cat} (${encontrados}) ✕`;
-                btn.onclick = () => { renderApp(); btn.remove(); };
-                lista.prepend(btn);
-            }, 350);
-        } 
+
+        document.getElementById('mainForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const concepto = document.getElementById('in-concepto').value;
+            const importe = parseFloat(document.getElementById('in-importe').value);
+            const categoria = document.getElementById('in-categoria').value;
+            const fecha = document.getElementById('in-fecha').value;
+            const esRecurrente = document.getElementById('check-recurrente').checked; 
+
+            appData.unshift({ _id: "temp-" + Date.now(), concepto, importe, categoria, fecha });
+            actualizarInterfaz();
+            goToTab(0);
+            e.target.reset(); 
+
+            try {
+                await fetch(API_URL, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ concepto, importe, categoria, fecha }) }); 
+                setTimeout(renderApp, 800); 
+                if(esRecurrente) {
+                    const diaPago = fecha.split('-')[2];
+                    let recs = JSON.parse(localStorage.getItem('recurrentes') || "[]");
+                    if (!recs.some(p => p.concepto === concepto)) {
+                        recs.push({ concepto, importe, dia: diaPago, categoria, id: Date.now() });
+                        localStorage.setItem('recurrentes', JSON.stringify(recs));
+                    }
+                }
+            } catch (error) { console.error("Error guardando:", error); }
+        };
+
+        function updateChart() {
+            const canvas = document.getElementById('gastosChart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const mesActual = new Date().toISOString().slice(0, 7);
+            const desglose = {};
+            
+            appData.forEach(g => {
+                if(g.fecha.startsWith(mesActual) && !categIngresos.includes(g.categoria) && g.fecha <= new Date().toISOString().split('T')[0]) {
+                    desglose[g.categoria] = (desglose[g.categoria] || 0) + Math.abs(g.importe);
+                }
+            });
+
+            if (gastosChart) gastosChart.destroy();
+            gastosChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: { 
+                    labels: Object.keys(desglose), 
+                    datasets: [{ data: Object.values(desglose), backgroundColor: ['#00e5ff','#7c4dff','#ff4081','#ffee33','#4caf50','#ff9800','#E0E0E0','#0091EA','#8D6E63','#26A69A'], borderColor: '#072146', borderWidth: 2 }] 
+                },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'right', labels: { color: 'white', font: { size: 10 }, boxWidth: 10 } } } }
+            });
+        }
 
         function renderRecurrentes() {
             const container = document.getElementById('listaRecurrentes');
@@ -506,102 +333,45 @@ function aplicarFiltroCategoria(cat) {
         } 
 
         async function procesarPagosAutomaticos() {
-    // Si ya se procesaron en esta sesión, no hace nada más
-    if (pagosProcesados) return; 
+            if (pagosProcesados) return; 
+            const hoy = new Date();
+            const mesActual = hoy.toISOString().slice(0, 7);
+            let recs = JSON.parse(localStorage.getItem('recurrentes') || "[]"); 
 
-    const hoy = new Date();
-    const diaHoy = hoy.getDate();
-    const mesActual = hoy.toISOString().slice(0, 7);
-    let recs = JSON.parse(localStorage.getItem('recurrentes') || "[]");
-
-    for (let p of recs) {
-        if (diaHoy >= parseInt(p.dia)) {
-            const f = `${mesActual}-${p.dia.padStart(2, '0')}`;
-            
-            // AQUÍ ESTÁ TU MEJORA: Comprobación triple (Concepto + Fecha + Categoría)
-            const yaExiste = appData.some(g => 
-                g.concepto === p.concepto && 
-                g.fecha === f &&
-                g.categoria === p.categoria
-            );
-
-            if (!yaExiste) {
-                await fetch(API_URL, { 
-                    method: 'POST', 
-                    headers: {'Content-Type':'application/json'}, 
-                    body: JSON.stringify({ 
-                        concepto: p.concepto, 
-                        importe: p.importe, 
-                        categoria: p.categoria, 
-                        fecha: f 
-                    }) 
-                });
-            }
-        }
-    }
-    
-    pagosProcesados = true;
-    console.log("Pagos automáticos revisados con triple validación.");
-}
-async function borrarRecurrente(id) {
-            if(!confirm("¿Borrar por completo de fijos, movimientos y saldo final?")) return;
-            let recs = JSON.parse(localStorage.getItem('recurrentes') || "[]");
-            const pagoFijo = recs.find(p => p.id === id);
-            if (pagoFijo) {
-                const mesActual = new Date().toISOString().slice(0, 7);
-                const gastosABorrar = appData.filter(g => 
-                    g.concepto === pagoFijo.concepto && g.fecha.startsWith(mesActual)
-                );
-                for (let gasto of gastosABorrar) {
-                    try { await fetch(`${API_URL}/${gasto._id}`, { method: 'DELETE' }); } catch (err) { console.error("Error:", err); }
+            for (let p of recs) {
+                if (hoy.getDate() >= parseInt(p.dia)) {
+                    const f = `${mesActual}-${p.dia.padStart(2, '0')}`;
+                    if (!appData.some(g => g.concepto === p.concepto && g.fecha === f)) {
+                        await fetch(API_URL, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ concepto: p.concepto, importe: p.importe, categoria: p.categoria, fecha: f }) });
+                    }
                 }
-                appData = appData.filter(g => !(g.concepto === pagoFijo.concepto && g.fecha.startsWith(mesActual)));
             }
-            recs = recs.filter(p => p.id !== id);
-            localStorage.setItem('recurrentes', JSON.stringify(recs));
-            localStorage.removeItem('appData_cache');
-            renderApp();
+            pagosProcesados = true;
         }
-async function deleteGasto(id) {
-    if (!confirm("¿Eliminar este movimiento?")) return;
 
-    // 1. Borrado visual inmediato (para que no parezca que no hace nada)
-    appData = appData.filter(g => g._id !== id);
-    localStorage.setItem('appData_cache', JSON.stringify(appData));
-    actualizarInterfaz();
+        async function deleteGasto(id) {
+            if (!confirm("¿Eliminar este movimiento?")) return; 
+            appData = appData.filter(g => g._id !== id);
+            localStorage.setItem('appData_cache', JSON.stringify(appData));
+            actualizarInterfaz(); 
+            try {
+                await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+                setTimeout(renderApp, 800); 
+            } catch (error) { console.error("Error borrando:", error); }
+        } 
 
-    // 2. Mandar orden al servidor
-    try {
-        await fetch(`${API_URL}/${id}`, { 
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' }
-        });
-        
-        // 3. La clave: esperamos 800ms y refrescamos para confirmar
-        setTimeout(() => {
-            renderApp();
-            console.log("Sincronización post-borrado completada");
-        }, 800);
+        function togglePrivacy() { isPrivate = !isPrivate; actualizarInterfaz(); } 
 
-    } catch (error) {
-        console.error("Error al borrar:", error);
-    }
-}
+        const vp = document.getElementById('viewport');
+        vp.addEventListener('touchstart', e => touchstartX = e.changedTouches[0].screenX, {passive:true});
+        vp.addEventListener('touchend', e => { 
+            touchendX = e.changedTouches[0].screenX; 
+            const dx = touchendX - touchstartX;
+            if(Math.abs(dx) > 80) dx < 0 ? (currentTabIndex < 5 && goToTab(currentTabIndex+1)) : (currentTabIndex > 0 && goToTab(currentTabIndex-1));
+        }, {passive:true}); 
 
-function togglePrivacy() { 
-    isPrivate = !isPrivate; 
-    actualizarInterfaz(); 
-} 
-
-const vp = document.getElementById('viewport');
-vp.addEventListener('touchstart', e => touchstartX = e.changedTouches[0].screenX, {passive:true});
-vp.addEventListener('touchend', e => { 
-    touchendX = e.changedTouches[0].screenX; 
-    const dx = touchendX - touchstartX;
-    if(Math.abs(dx) > 80) dx < 0 ? (currentTabIndex < 5 && goToTab(currentTabIndex+1)) : (currentTabIndex > 0 && goToTab(currentTabIndex-1));
-}, {passive:true});
-
-document.getElementById('filtroMes').value = new Date().toISOString().slice(0, 7);
-</script>
+        document.getElementById('filtroMes').value = new Date().toISOString().slice(0, 7);
+        renderApp();
+    </script>
 </body>
 </html>
