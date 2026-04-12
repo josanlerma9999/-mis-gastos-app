@@ -585,22 +585,36 @@ async function borrarRecurrente(id) {
 async function deleteGasto(id) {
     if (!confirm("¿Eliminar este movimiento?")) return;
 
-    // 1. Ponemos el candado al servidor por 10 segundos
-    lastFetch = Date.now() + 10000; 
+    // 1. BLOQUEO: Impedimos que renderApp() descargue nada durante 8 segundos
+    lastFetch = Date.now() + 8000; 
 
-    // 2. Borramos de la vista del móvil YA
+    // 2. BORRADO MANUAL (Doble seguridad):
+    // Lo quitamos de la variable que usa la pantalla
     appData = appData.filter(g => g._id !== id);
+    
+    // Lo quitamos de la memoria del móvil (caché)
     localStorage.setItem('appData_cache', JSON.stringify(appData));
+
+    // 3. ACTUALIZAR PANTALLA YA (Para que desaparezca al instante)
     actualizarInterfaz();
 
-    // 3. Avisamos al servidor en silencio
+    // 4. AVISO AL SERVIDOR (Lo que tú escribiste)
     try {
-        await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
-        console.log("Borrado confirmado en servidor");
+        const res = await fetch(`${API_URL}/${id}`, { 
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+        if (!res.ok) {
+            console.error("Error en servidor");
+        } else {
+            console.log("Servidor OK");
+        }
     } catch (error) {
-        console.error("El servidor no respondió, pero el bloqueo sigue activo");
+        console.error("Error de red, pero el gasto ya no volverá a aparecer en pantalla.");
     }
 }
+
 
 
 function togglePrivacy() { 
