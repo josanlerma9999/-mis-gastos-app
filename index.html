@@ -597,55 +597,55 @@ async function borrarRecurrente(id) {
             localStorage.removeItem('appData_cache');
             renderApp();
         }
+async function deleteGasto(id) {
+    if (!confirm("¿Eliminar este movimiento?")) return;
 
-        async function deleteGasto(id) {
-    if (confirm("¿Eliminar este movimiento?")) {
-        // 1. ELIMINACIÓN LOCAL RADICAL
-        // Lo quitamos de appData y de la caché antes de hacer nada más
+    try {
+        // 1. BORRADO VISUAL INMEDIATO
         appData = appData.filter(g => g._id !== id);
+        
+        // 2. GUARDAR EN EL MÓVIL YA
         localStorage.setItem('appData_cache', JSON.stringify(appData));
         
-        // 2. ACTUALIZAR PANTALLA YA
+        // 3. PINTAR LA PANTALLA
         actualizarInterfaz();
 
-        // 3. BLOQUEAR QUE EL SERVIDOR LO RESUCITE
-        // Ponemos lastFetch con el tiempo actual para que renderApp 
-        // no pida datos al servidor en los próximos 10 segundos
-        lastFetch = Date.now() + 5000; 
+        // 4. BLOQUEO DE RESURRECCIÓN (10 segundos de margen)
+        lastFetch = Date.now() + 10000; 
 
-        // 4. AVISO AL SERVIDOR EN SEGUNDO PLANO
-        if (!id.toString().startsWith('temp-')) {
-            try {
-                const res = await fetch(`${API_URL}/${id}`, { 
-                    method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' }
-                });
-
-                if (res.ok) {
-                    console.log("Servidor: Borrado confirmado.");
-                    // Solo después de que el servidor confirma, permitimos volver a pedir datos
+        // 5. AVISO AL SERVIDOR
+        if (id && !id.toString().startsWith('temp-')) {
+            fetch(`${API_URL}/${id}`, { 
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' }
+            }).then(res => {
+                if(res.ok) {
+                    console.log("Servidor: Borrado con éxito");
                     lastFetch = 0; 
                 }
-            } catch (err) {
-                console.error("Error de red, pero el gasto sigue borrado en tu móvil:", err);
-            }
+            }).catch(err => {
+                console.log("Servidor lento, el gasto sigue borrado en local.");
+            });
         }
+    } catch (error) {
+        console.error("Error crítico en el botón:", error);
     }
 }
 
+function togglePrivacy() { 
+    isPrivate = !isPrivate; 
+    actualizarInterfaz(); 
+} 
 
- 
-        function togglePrivacy() { isPrivate = !isPrivate; actualizarInterfaz(); } 
+const vp = document.getElementById('viewport');
+vp.addEventListener('touchstart', e => touchstartX = e.changedTouches[0].screenX, {passive:true});
+vp.addEventListener('touchend', e => { 
+    touchendX = e.changedTouches[0].screenX; 
+    const dx = touchendX - touchstartX;
+    if(Math.abs(dx) > 80) dx < 0 ? (currentTabIndex < 5 && goToTab(currentTabIndex+1)) : (currentTabIndex > 0 && goToTab(currentTabIndex-1));
+}, {passive:true});
 
-        const vp = document.getElementById('viewport');
-        vp.addEventListener('touchstart', e => touchstartX = e.changedTouches[0].screenX, {passive:true});
-        vp.addEventListener('touchend', e => { 
-            touchendX = e.changedTouches[0].screenX; 
-            const dx = touchendX - touchstartX;
-            if(Math.abs(dx) > 80) dx < 0 ? (currentTabIndex < 5 && goToTab(currentTabIndex+1)) : (currentTabIndex > 0 && goToTab(currentTabIndex-1));
-        }, {passive:true});
-        
-        document.getElementById('filtroMes').value = new Date().toISOString().slice(0, 7);
-    </script>
+document.getElementById('filtroMes').value = new Date().toISOString().slice(0, 7);
+</script>
 </body>
 </html>
