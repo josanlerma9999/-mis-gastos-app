@@ -417,30 +417,32 @@ document.getElementById('mainForm').onsubmit = async (e) => {
     const fecha = document.getElementById('in-fecha').value;
     const esRecurrente = document.getElementById('check-recurrente').checked; 
 
-    // 1. ACTUALIZACIÓN OPTIMISTA (Inmediata)
-    const nuevoGastoLocal = {
-        _id: "temp-" + Date.now(), 
-        concepto,
-        importe,
-        categoria,
-        fecha
-    };
+    const tempId = "temp-" + Date.now();
+    const nuevoGastoLocal = { _id: tempId, concepto, importe, categoria, fecha };
 
-    // Añadimos al principio del array y refrescamos la pantalla ya mismo
+    // 1. Añadimos a la vista
     appData.unshift(nuevoGastoLocal);
     actualizarInterfaz();
-    goToTab(0); // Volvemos al inicio para ver el nuevo saldo
-    
-    // Limpiamos el formulario para que quede listo
+    goToTab(0);
     e.target.reset();
 
-    // 2. ENVÍO REAL A LA API (Por detrás)
     try {
-        await fetch(API_URL, { 
+        const res = await fetch(API_URL, { 
             method: 'POST', 
             headers: {'Content-Type':'application/json'}, 
             body: JSON.stringify({ concepto, importe, categoria, fecha }) 
         }); 
+
+        const gastoGuardado = await res.json();
+
+        // --- MEJORA AQUÍ: Sustituimos el ID temporal por el real del servidor ---
+        const index = appData.findIndex(g => g._id === tempId);
+        if (index !== -1 && gastoGuardado._id) {
+            appData[index]._id = gastoGuardado._id;
+            localStorage.setItem('appData_cache', JSON.stringify(appData));
+            console.log("ID temporal actualizado por ID real.");
+        }
+        // -----------------------------------------------------------------------
 
         if(esRecurrente) {
             const diaPago = fecha.split('-')[2];
@@ -451,13 +453,11 @@ document.getElementById('mainForm').onsubmit = async (e) => {
             }
         }
         
-        // Actualizamos la caché de fondo
-        localStorage.setItem('appData_cache', JSON.stringify(appData));
-
     } catch (error) {
-        console.error("Error al guardar en el servidor:", error);
+        console.error("Error al guardar:", error);
     }
-}; 
+};
+ 
  
 function updateChart() {
     const canvas = document.getElementById('gastosChart');
