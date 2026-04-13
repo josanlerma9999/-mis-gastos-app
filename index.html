@@ -228,16 +228,16 @@ const dataFresh = await res.json();
     const c = concepto.toLowerCase();
     const reglas = [
         // Añadimos esta línea para captar cualquier ingreso
-        ['sueldo', '#22c55e', '💵'], 
+      ['nala', '#FFC0CB', '🐶'],
+  ['sueldo', '#22c55e', '💵'], 
         ['nomina', '#22c55e', '💵'],
         ['ingreso', '#22c55e', '💵'],
         ['extra', '#22c55e', '💵'],
         ['gasolina', '#4b5563', '⛽'],
 ['recarga', '#0070f3', '⚡'],
+['portátil', '#475569', '💻'], 
+        ['tarjeta', '#00e5ff', '💳'], ['amazon', '#FF9900', 'A'],
 ['gasto', '#ef4444', '💸'],
-['nala', '#FFC0CB', '🐶'],
- ['portátil', '#475569', '💻'], 
-        ['tarjeta', '#00e5ff', '💳'], ['amazon', '#FF9900', 'A']
     ];
     
     const match = reglas.find(r => c.includes(r[0]));
