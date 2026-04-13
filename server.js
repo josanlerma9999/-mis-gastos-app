@@ -1,3 +1,4 @@
+
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -10,8 +11,9 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(__dirname)); 
 
-// Conexión MongoDB - TU BASE DE DATOS REAL
-const MONGO_URI = 'mongodb+srv://Josan77:Yakonala@cluster0.npzvokr.mongodb.net/test?retryWrites=true&w=majority'; 
+// 1. CONEXIÓN SEGURA A MONGODB (Usando la variable de Render)
+const MONGO_URI = process.env.MONGO_URI; 
+
 mongoose.connect(MONGO_URI)
     .then(() => console.log('✅ DB Conectada'))
     .catch(err => console.error('❌ Error DB:', err));
@@ -23,17 +25,30 @@ const Gasto = mongoose.model('Gasto', new mongoose.Schema({
     fecha: String
 }));
 
-// API de Gastos (Lo que hace que veas tus datos)
+// 2. EL PORTERO (SEGURIDAD API KEY)
+// Este bloque protege todas las rutas que vienen después
+app.use((req, res, next) => {
+    const MI_CLAVE_MAESTRA = process.env.MI_LLAVE_SECRETA;
+    const llaveEnviada = req.headers['x-api-key'];
+
+    if (llaveEnviada && llaveEnviada === MI_CLAVE_MAESTRA) {
+        next(); // Si la llave es correcta, adelante
+    } else {
+        console.log("❌ Intento de acceso bloqueado");
+        res.status(403).json({ error: "Acceso denegado. Se requiere API Key válida." });
+    }
+});
+
+// --- RUTAS DE LA API (Ahora todas están protegidas por el portero) ---
+
 app.get('/api/gastos', async (req, res) => {
     try { 
-        const gastos = await Gasto.find(); // Los traemos todos
+        const gastos = await Gasto.find();
         res.json(gastos); 
     } catch (e) { 
         res.status(500).json([]); 
     }
 });
-
-
 
 app.post('/api/gastos', async (req, res) => {
     try {
@@ -54,7 +69,7 @@ app.delete('/api/gastos/:id', async (req, res) => {
     }
 });
 
-// Ruta para cargar la web
+// Ruta para cargar la web (Esta no necesita protección porque es lo que carga el navegador)
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
