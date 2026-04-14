@@ -235,17 +235,15 @@
             }, 3000);
         }
 
-        async function renderApp() {
+                async function renderApp() {
             const cache = localStorage.getItem('appData_cache');
             if (cache) { appData = JSON.parse(cache); actualizarInterfaz(); } 
 
             try {
                 const res = await fetch(API_URL, {
-    headers: {
-        'x-api-key': SECURE_KEY
-    }
-});
-const dataFresh = await res.json();
+                    headers: { 'x-api-key': SECURE_KEY }
+                });
+                const dataFresh = await res.json(); 
 
                 const hoyStr = new Date().toISOString().split('T')[0]; 
 
@@ -261,8 +259,11 @@ const dataFresh = await res.json();
                 localStorage.setItem('appData_cache', JSON.stringify(appData));
                 actualizarInterfaz();
                 procesarPagosAutomaticos();
-            } catch (e) { console.error("Error cargando datos:", e); }
-        } 
+            } catch (e) { 
+                console.error("Error cargando datos:", e); 
+            }
+        } // <--- Esta es la llave que faltaba cerrar bien
+
 
         function obtenerLogo(concepto) {
     const c = concepto.toLowerCase();
