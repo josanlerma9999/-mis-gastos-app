@@ -262,10 +262,9 @@
             } catch (e) { 
                 console.error("Error cargando datos:", e); 
             }
-        } // <--- Esta es la llave que faltaba cerrar bien
+        } 
 
-
-        function obtenerLogo(concepto) {
+function obtenerLogo(concepto) {
     const c = concepto.toLowerCase();
     const reglas = [
         // Añadimos esta línea para captar cualquier ingreso
@@ -293,15 +292,14 @@
 }
  
 
-        function actualizarInterfaz() {
-    const mesSel = document.getElementById('filtroMes').value;
-    // GUARDAR EL MES SELECCIONADO
-    localStorage.setItem('ultimo_mes_consultado', mesSel); 
-    
-    const hoyStr = new Date().toISOString().split('T')[0];
-   
-  const hoyRef = new Date(hoyStr + "T00:00:00").getTime();
+                function actualizarInterfaz() {
             const mesSel = document.getElementById('filtroMes').value;
+            // MEMORIA: Guardamos el mes cada vez que cambia
+            localStorage.setItem('ultimo_mes_consultado', mesSel); 
+            
+            const hoyStr = new Date().toISOString().split('T')[0];
+            const hoyRef = new Date(hoyStr + "T00:00:00").getTime();
+            
             let saldoReal = 0, gFuturos = 0, iFuturos = 0, deudaAqua = 0, deudaExplora = 0; 
 
             document.getElementById('listaPasado').innerHTML = '';
@@ -348,18 +346,15 @@
                 }
             });
 
-            document.getElementById('valReal').innerText = isPrivate ? "****€" : saldoReal.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
-                        // Detalle Pro: Color dinámico con transición suave y ajuste de tamaño
-            // Localiza donde pones el saldo y cámbialo por esto:
-const elReal = document.getElementById('valReal');
-const saldoTexto = isPrivate ? "****€" : saldoReal.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
-elReal.innerText = saldoTexto;
+            // Actualización visual del saldo con efecto dinámico
+            const elReal = document.getElementById('valReal');
+            const saldoTexto = isPrivate ? "****€" : saldoReal.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
+            elReal.innerText = saldoTexto;
 
-const fontSize = saldoTexto.length > 8 ? 'text-5xl' : 'text-6xl';
-elReal.className = `${fontSize} font-black tracking-tighter leading-tight transition-all duration-700 ease-in-out ` + 
-    (saldoReal > 200 ? 'text-cyan-400' : (saldoReal >= 100 ? 'text-amber-400' : 'text-rose-500'));
+            const fontSize = saldoTexto.length > 8 ? 'text-5xl' : 'text-6xl';
+            elReal.className = `${fontSize} font-black tracking-tighter leading-tight transition-all duration-700 ease-in-out ` + 
+                (saldoReal > 200 ? 'text-cyan-400' : (saldoReal >= 100 ? 'text-amber-400' : 'text-rose-500'));
 
- 
             document.getElementById('valPend').innerText = isPrivate ? "****€" : "-" + gFuturos.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
             document.getElementById('valProj').innerText = isPrivate ? "****€" : (saldoReal - gFuturos + iFuturos).toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
             document.getElementById('card-aqua-val').innerText = isPrivate ? "****€" : deudaAqua.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
@@ -368,6 +363,7 @@ elReal.className = `${fontSize} font-black tracking-tighter leading-tight transi
             renderRecurrentes();
             updateChart();
         }
+
 
         document.getElementById('mainForm').onsubmit = async (e) => {
             e.preventDefault();
@@ -521,11 +517,10 @@ setTimeout(renderApp, 800);
             if(Math.abs(dx) > 80) dx < 0 ? (currentTabIndex < 5 && goToTab(currentTabIndex+1)) : (currentTabIndex > 0 && goToTab(currentTabIndex-1));
         }, {passive:true}); 
 
-                          
-const fMes = document.getElementById('filtroMes');
-const mesGuardado = localStorage.getItem('ultimo_mes_consultado');
-fMes.value = mesGuardado || new Date().toISOString().slice(0, 7);
-
+        // ESTO ES LO QUE ESTABA DESORDENADO:
+        const fMes = document.getElementById('filtroMes');
+        const mesGuardado = localStorage.getItem('ultimo_mes_consultado');
+        fMes.value = mesGuardado || new Date().toISOString().slice(0, 7);
     </script>
 <div id="toast-container" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-[10000] flex flex-col gap-2 w-64"></div>
 </body>
