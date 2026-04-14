@@ -386,31 +386,49 @@ const dataFresh = await res.json();
 
         async function procesarPagosAutomaticos() {
     if (pagosProcesados) return; 
+    
     const hoy = new Date();
     const mesActual = hoy.toISOString().slice(0, 7);
     let recs = JSON.parse(localStorage.getItem('recurrentes') || "[]"); 
 
-    for (let p of recs) {
-        if (hoy.getDate() >= parseInt(p.dia)) {
-            const f = `${mesActual}-${p.dia.padStart(2, '0')}`;
-            if (!appData.some(g => g.concepto === p.concepto && g.fecha === f)) {
-                // AQUÍ HE AÑADIDO LA LLAVE SECRETA
-                await fetch(API_URL, { 
-                    method: 'POST', 
-                    headers: {
-                        'Content-Type':'application/json',
-                        'x-api-key': SECURE_KEY // <--- Imprescindible para pagos fijos
-                    }, 
-                    body: JSON.stringify({ concepto: p.concepto, importe: p.importe, categoria: p.categoria, fecha: f }) 
-                });
-            }
-        }
+    // 1. Filtramos qué pagos faltan por registrar este mes
+    const pagosPendientes = recs.filter(p => {
+        const fechaPago = `${mesActual}-${p.dia.padStart(2, '0')}`;
+        return hoy.getDate() >= parseInt(p.dia) && 
+               !appData.some(g => g.concepto === p.concepto && g.fecha === fechaPago);
+    });
+
+    if (pagosPendientes.length === 0) {
+        pagosProcesados = true;
+        return;
     }
-    pagosProcesados = true;
+
+    // 2. Ejecutamos todos los pagos pendientes en paralelo (Batch)
+    try {
+        const promesas = pagosPendientes.map(p => {
+            const f = `${mesActual}-${p.dia.padStart(2, '0')}`;
+            return fetch(API_URL, { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json', 'x-api-key': SECURE_KEY }, 
+                body: JSON.stringify({ 
+                    concepto: p.concepto, 
+                    importe: p.importe, 
+                    categoria: p.categoria, 
+                    fecha: f 
+                }) 
+            });
+        });
+
+        await Promise.all(promesas); 
+        pagosProcesados = true;
+        // Refrescamos los datos una sola vez para ver los nuevos gastos fijos
+        renderApp(); 
+    } catch (e) {
+        console.error("Error en pagos automáticos:", e);
+    }
 }
 
-
-        async function borrarRecurrente(id) {
+ async function borrarRecurrente(id) {
             if(!confirm("¿Borrar de fijos y movimientos de este mes?")) return;
             let recs = JSON.parse(localStorage.getItem('recurrentes') || "[]");
             recs = recs.filter(p => p.id !== id);
