@@ -84,7 +84,8 @@
                 <section class="tab-content space-y-5">
                     <div class="p-8 bbva-gradient text-center shadow-lg">
                         <p class="text-[10px] font-bold uppercase tracking-widest text-cyan-300/60 mb-2">Saldo Real Hoy</p>
-                        <h2 id="valReal" class="text-4xl font-black tracking-tighter transition-all duration-500">0.00€</h2>
+                        <h2 id="valReal" class="text-6xl font-black tracking-tighter transition-all duration-500">0.00€</h2>
+
                     </div>
                     <div class="grid grid-cols-2 gap-3">
                         <div class="bbva-card p-5 text-center">
@@ -211,29 +212,7 @@
             document.querySelectorAll('.nav-btn').forEach((b, idx) => idx === i ? b.classList.add('active-tab') : b.classList.remove('active-tab'));
             if(i === 0) setTimeout(updateChart, 100);
         } 
-        function showToast(msj, tipo = 'success') {
-            const container = document.getElementById('toast-container');
-            if (!container) return;
-            
-            const toast = document.createElement('div');
-            const colorBorder = tipo === 'success' ? 'border-cyan-400' : 'border-rose-500';
-            const icono = tipo === 'success' ? '✅' : '🗑️';
-            
-            toast.className = `bg-black/80 backdrop-blur-md border-l-4 ${colorBorder} text-white text-[10px] font-bold uppercase tracking-widest p-4 rounded-r-xl shadow-2xl transform translate-y-10 opacity-0 transition-all duration-500 flex items-center gap-3`;
-            toast.innerHTML = `<span>${icono}</span> <span>${msj}</span>`;
-            
-            container.appendChild(toast);
-
-            setTimeout(() => {
-                toast.classList.remove('translate-y-10', 'opacity-0');
-            }, 100);
-
-            setTimeout(() => {
-                toast.classList.add('translate-y-[-20px]', 'opacity-0');
-                setTimeout(() => toast.remove(), 500);
-            }, 3000);
-        }
-        function showToast(msj, tipo = 'success') {
+         function showToast(msj, tipo = 'success') {
             const container = document.getElementById('toast-container');
             if (!container) return;
             
@@ -535,8 +514,9 @@ setTimeout(renderApp, 800);
             if(Math.abs(dx) > 80) dx < 0 ? (currentTabIndex < 5 && goToTab(currentTabIndex+1)) : (currentTabIndex > 0 && goToTab(currentTabIndex-1));
         }, {passive:true}); 
 
-                        const fMes = document.getElementById('filtroMes');
+                                const fMes = document.getElementById('filtroMes');
         fMes.value = new Date().toISOString().slice(0, 7);
- </script    <div id="toast-container" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-[10000] flex flex-col gap-2 w-64"></div>
+    </script>
+<div id="toast-container" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-[10000] flex flex-col gap-2 w-64"></div>
 </body>
 </html>
