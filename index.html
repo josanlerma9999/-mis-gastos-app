@@ -108,8 +108,18 @@
                 </section> 
 
                 <section class="tab-content">
-                    <input type="month" id="filtroMes" class="bbva-input mb-6" onchange="actualizarInterfaz()">
-                    <h3 class="text-xs font-bold text-cyan-400 uppercase mb-4 tracking-widest">Movimientos</h3>
+                    <div class="relative mb-6">
+    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none opacity-60">
+        <span class="text-sm">📅</span>
+    </div>
+    <input type="month" id="filtroMes" 
+           class="w-full bg-white/5 border border-white/10 rounded-xl p-4 pl-12 text-white font-bold outline-none focus:border-cyan-400 transition-all" 
+           style="color-scheme: dark;"
+           onchange="actualizarInterfaz()">
+</div>
+
+<h3 class="text-[10px] font-bold text-cyan-400 uppercase mb-4 tracking-widest text-center">Historial de Movimientos</h3>
+
                     <div id="listaPasado" class="space-y-2 pb-20"></div>
                 </section> 
 
@@ -463,7 +473,10 @@ setTimeout(renderApp, 800);
             if(Math.abs(dx) > 80) dx < 0 ? (currentTabIndex < 5 && goToTab(currentTabIndex+1)) : (currentTabIndex > 0 && goToTab(currentTabIndex-1));
         }, {passive:true}); 
 
-        document.getElementById('filtroMes').value = new Date().toISOString().slice(0, 7);
+                        const fMes = document.getElementById('filtroMes');
+        fMes.value = new Date().toISOString().slice(0, 7);
+
+
     </script>
 </body>
 </html>
