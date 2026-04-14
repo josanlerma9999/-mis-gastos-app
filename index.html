@@ -26,7 +26,8 @@
         .bbva-gradient { background: linear-gradient(135deg, #072146 0%, #004481 100%); border-radius: 2rem; }
         .bbva-input { background: #ffffff; border: none; border-radius: 1rem; padding: 1rem; width: 100%; color: #072146; font-weight: 800; outline: none; box-shadow: 0 4px 15px rgba(0,0,0,0.2); } 
 
-        input[type="month"]::-webkit-calendar-picker-indicator { filter: invert(0); cursor: pointer; }
+        input[type="month"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; opacity: 0.7; }
+
         
         #viewport { width: 100%; height: calc(100% - 140px); overflow: hidden; position: relative; touch-action: pan-y; background: #000;}
         #main-view { display: flex; width: 600%; height: 100%; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
@@ -46,8 +47,14 @@
     box-shadow: inset 0 0 20px rgba(0,0,0,0.3);
 }
         .card-explora { background: linear-gradient(150deg, #072146 0%, #040c1d 100%); border: 1px solid rgba(0,229,255,0.25); box-shadow: 0 0 15px rgba(0,229,255,0.1); }
-        .chip { width: 35px; height: 26px; background: linear-gradient(135deg, #ffd700 0%, #b8860b 100%); border-radius: 4px; opacity: 0.8; }
+                .chip { width: 35px; height: 26px; background: linear-gradient(135deg, #ffd700 0%, #b8860b 100%); border-radius: 4px; opacity: 0.8; }
         .nav-btn { touch-action: manipulation; }
+
+        /* Detalle Pro: Brillo y suavidad en el saldo */
+        #valReal {
+            text-shadow: 0 0 20px rgba(0,229,255,0.1);
+            will-change: color, transform;
+        }
     </style>
 </head>
 <body> 
@@ -204,6 +211,50 @@
             document.querySelectorAll('.nav-btn').forEach((b, idx) => idx === i ? b.classList.add('active-tab') : b.classList.remove('active-tab'));
             if(i === 0) setTimeout(updateChart, 100);
         } 
+        function showToast(msj, tipo = 'success') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            
+            const toast = document.createElement('div');
+            const colorBorder = tipo === 'success' ? 'border-cyan-400' : 'border-rose-500';
+            const icono = tipo === 'success' ? '✅' : '🗑️';
+            
+            toast.className = `bg-black/80 backdrop-blur-md border-l-4 ${colorBorder} text-white text-[10px] font-bold uppercase tracking-widest p-4 rounded-r-xl shadow-2xl transform translate-y-10 opacity-0 transition-all duration-500 flex items-center gap-3`;
+            toast.innerHTML = `<span>${icono}</span> <span>${msj}</span>`;
+            
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-10', 'opacity-0');
+            }, 100);
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-[-20px]', 'opacity-0');
+                setTimeout(() => toast.remove(), 500);
+            }, 3000);
+        }
+        function showToast(msj, tipo = 'success') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            
+            const toast = document.createElement('div');
+            const colorBorder = tipo === 'success' ? 'border-cyan-400' : 'border-rose-500';
+            const icono = tipo === 'success' ? '✅' : '🗑️';
+            
+            toast.className = `bg-black/80 backdrop-blur-md border-l-4 ${colorBorder} text-white text-[10px] font-bold uppercase tracking-widest p-4 rounded-r-xl shadow-2xl transform translate-y-10 opacity-0 transition-all duration-500 flex items-center gap-3`;
+            toast.innerHTML = `<span>${icono}</span> <span>${msj}</span>`;
+            
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-10', 'opacity-0');
+            }, 100);
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-[-20px]', 'opacity-0');
+                setTimeout(() => toast.remove(), 500);
+            }, 3000);
+        }
 
         async function renderApp() {
             const cache = localStorage.getItem('appData_cache');
@@ -313,7 +364,16 @@ const dataFresh = await res.json();
             });
 
             document.getElementById('valReal').innerText = isPrivate ? "****€" : saldoReal.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
-            document.getElementById('valReal').className = "text-6xl font-black tracking-tighter leading-tight transition-all duration-500 " + (saldoReal > 200 ? 'text-cyan-400' : (saldoReal >= 100 ? 'text-amber-400' : 'text-rose-500')); 
+                        // Detalle Pro: Color dinámico con transición suave y ajuste de tamaño
+            const elReal = document.getElementById('valReal');
+            elReal.innerText = isPrivate ? "****€" : saldoReal.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
+            
+            // Si el saldo es muy largo (ej. +10.000€), bajamos un pelín el tamaño para que no desborde
+            const fontSize = saldoReal.toString().length > 7 ? 'text-5xl' : 'text-6xl';
+            
+            elReal.className = `${fontSize} font-black tracking-tighter leading-tight transition-all duration-700 ease-in-out ` + 
+                (saldoReal > 200 ? 'text-cyan-400' : (saldoReal >= 100 ? 'text-amber-400' : 'text-rose-500'));
+ 
             document.getElementById('valPend').innerText = isPrivate ? "****€" : "-" + gFuturos.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
             document.getElementById('valProj').innerText = isPrivate ? "****€" : (saldoReal - gFuturos + iFuturos).toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
             document.getElementById('card-aqua-val').innerText = isPrivate ? "****€" : deudaAqua.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
@@ -338,15 +398,17 @@ const dataFresh = await res.json();
             e.target.reset(); 
 
             try {
-    await fetch(API_URL, { 
+        await fetch(API_URL, { 
         method: 'POST', 
         headers: {
             'Content-Type': 'application/json',
-            'x-api-key': SECURE_KEY // <--- Añadido aquí
+            'x-api-key': SECURE_KEY 
         }, 
         body: JSON.stringify({ concepto, importe, categoria, fecha }) 
     }); 
+    showToast("Operación confirmada"); // <--- PEGAR ESTO
     setTimeout(renderApp, 800);
+
  
                 if(esRecurrente) {
                     const diaPago = fecha.split('-')[2];
@@ -452,15 +514,15 @@ const dataFresh = await res.json();
             localStorage.setItem('appData_cache', JSON.stringify(appData));
             actualizarInterfaz(); 
             try {
-                await fetch(`${API_URL}/${id}`, { 
+                   await fetch(`${API_URL}/${id}`, { 
     method: 'DELETE', 
     headers: { 
         'x-api-key': SECURE_KEY 
     } 
 });
+showToast("Movimiento eliminado", "delete"); // <--- PEGAR ESTO
 setTimeout(renderApp, 800);
- 
-            } catch (error) { console.error("Error borrando:", error); }
+   } catch (error) { console.error("Error borrando:", error); }
         } 
 
         function togglePrivacy() { isPrivate = !isPrivate; actualizarInterfaz(); } 
@@ -475,8 +537,6 @@ setTimeout(renderApp, 800);
 
                         const fMes = document.getElementById('filtroMes');
         fMes.value = new Date().toISOString().slice(0, 7);
-
-
-    </script>
+ </script    <div id="toast-container" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-[10000] flex flex-col gap-2 w-64"></div>
 </body>
 </html>
