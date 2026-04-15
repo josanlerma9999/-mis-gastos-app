@@ -601,37 +601,46 @@ function flipCard(el, categoria) {
     }
 }
 
+}
 function renderCardChart(cat) {
     const canvasId = cat === 'Tarjeta Explora' ? 'chart-Explora' : 'chart-Aqua';
-    const ctx = document.getElementById(canvasId).getContext('2d');
+    const canvasEl = document.getElementById(canvasId);
+    if (!canvasEl) return;
+    const ctx = canvasEl.getContext('2d');
     
     // 1. Obtener meses (hoy y los 3 anteriores)
-    const labels = [];
+    const labelsRaw = [];
     const hoy = new Date();
     for(let i=3; i>=0; i--) {
         const d = new Date(hoy.getFullYear(), hoy.getMonth() - i, 1);
-        labels.push(d.toISOString().slice(0, 7)); // Formato YYYY-MM
+        labelsRaw.push(d.toISOString().slice(0, 7)); 
     }
 
-    // 2. Filtrar gastos de ESA tarjeta en ESOS meses
-    const datos = labels.map(mes => {
+    // 2. Filtrar gastos de ESA tarjeta
+    const datos = labelsRaw.map(mes => {
         return appData
             .filter(g => g.categoria === cat && g.fecha.startsWith(mes))
             .reduce((sum, g) => sum + Math.abs(g.importe), 0);
     });
 
-    // 3. Crear o actualizar la gráfica
+    // 3. Traductor de números a nombres de meses
+    const nombresMeses = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+    const etiquetasFinales = labelsRaw.map(m => {
+        const numeroMes = parseInt(m.split('-')[1]); // Saca el "03" y lo hace 3
+        return nombresMeses[numeroMes - 1]; // Busca en el array (Ene es 0)
+    });
+
     if (cardCharts[cat]) cardCharts[cat].destroy();
     
     cardCharts[cat] = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: labels.map(m => m.split('-')[1]), // Solo el número del mes
+            labels: etiquetasFinales, // <--- Aquí ya salen los nombres
             datasets: [{
                 data: datos,
-                backgroundColor: cat === 'Tarjeta Explora' ? '#ffffff' : '#00e5ff',
+                backgroundColor: cat === 'Tarjeta Explora' ? 'rgba(255,255,255,0.9)' : '#00e5ff',
                 borderRadius: 4,
-                barThickness: 20
+                barThickness: 15
             }]
         },
         options: {
@@ -640,7 +649,10 @@ function renderCardChart(cat) {
             plugins: { legend: { display: false } },
             scales: {
                 y: { display: false },
-                x: { ticks: { color: 'rgba(255,255,255,0.5)', font: { size: 10 } }, grid: { display: false } }
+                x: { 
+                    ticks: { color: 'rgba(255,255,255,0.6)', font: { size: 10, weight: 'bold' } }, 
+                    grid: { display: false } 
+                }
             }
         }
     });
