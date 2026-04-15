@@ -158,13 +158,24 @@
     </div>
 
     <div class="grid grid-cols-5 gap-3">
-        <div class="col-span-3 bbva-card p-4 flex flex-col justify-center items-center relative" style="height: 200px;">
-            <h3 class="text-[8px] font-bold text-slate-500 uppercase tracking-widest mb-2">Gastos Mes</h3>
-            <div class="chart-container" style="height: 140px; width: 140px; position: relative;">
-                <canvas id="gastosChart"></canvas>
-                <div id="chart-icon" style="position: absolute; top: 52%; left: 50%; transform: translate(-50%, -50%); font-size: 1.8rem; filter: drop-shadow(0 0 8px rgba(0,229,255,0.3));">🏦</div>
+        
+<div class="col-span-3 bbva-card p-4 flex flex-col justify-center items-center relative" style="height: 240px; min-height: 240px;">
+    <h3 class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-3 w-full text-center">Gastos Mes (Sincronizado)</h3>
+    
+    <div class="flex items-center justify-center w-full h-full gap-4">
+        
+        <div id="gastosChartWrapper" class="relative flex justify-center items-center" style="width: 140px; height: 140px; flex-shrink: 0;">
+            <canvas id="gastosChart"></canvas>
+            
+            <div id="chart-icon-container" class="absolute flex justify-center items-center" style="top: 50%; left: 50%; transform: translate(-50%, -50%); width: 70px; height: 70px;">
+                <div id="chart-icon" class="text-3xl" style="font-size: 2.2rem; filter: drop-shadow(0 0 10px rgba(0,229,255,0.25)); transition: all 0.3s ease;">🏦</div>
             </div>
         </div>
+        
+        <div id="gastosLegend" class="flex-1 space-y-2 overflow-y-auto pr-1" style="max-height: 180px;">
+            </div>
+    </div>
+</div>
 
         <div class="col-span-2 flex flex-col gap-3">
             <div class="bbva-card p-3 flex flex-col justify-center items-center flex-1 border-r-2 border-cyan-400/30">
@@ -506,87 +517,85 @@ if(elExploraHome) elExploraHome.innerText = isPrivate ? "****€" : deudaExplora
             } catch (error) { console.error("Error guardando:", error); }
         };
 
-                      function updateChart() {
+                      // NUEVA FUNCIÓN JAVASCRIPT (Lógica Premium)
+function dibujarDonut(datos) {
     const canvas = document.getElementById('gastosChart');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    const mesActual = document.getElementById('filtroMes').value; 
-    const desglose = {};
-    
-    appData.forEach(g => {
-        if(g.fecha.startsWith(mesActual) && !categIngresos.includes(g.categoria)) {
-            desglose[g.categoria] = (desglose[g.categoria] || 0) + Math.abs(g.importe);
-        }
-    });
+    const legendEl = document.getElementById('gastosLegend');
+    const iconEl = document.getElementById('chart-icon');
 
-    if (gastosChart) gastosChart.destroy();
-    gastosChart = new Chart(ctx, {
+    // 1. Manejo del Icono Central Dinámico
+    if(iconEl) {
+        if(Object.keys(datos).length > 0) {
+            const catMas = Object.keys(datos).reduce((a, b) => datos[a] > datos[b] ? a : b);
+            const emojis = { "Gasolina": "⛽", "Amazon": "📦", "Tarjeta Aqua": "🟦", "Tarjeta Explora": "💳", "PayPal": "💙", "Varios": "🛍️", "Imagine": "Imagine", "Cuenta BE": "🏦" };
+            iconEl.innerText = emojis[catMas] || "💸";
+        } else {
+            iconEl.innerText = "🏦";
+        }
+    }
+
+    // 2. Destruir gráfico previo
+    if (window.gastosChart) window.gastosChart.destroy();
+
+    // Configuración de Colores Premium
+    const colors = ['#00e5ff', '#7c4dff', '#ff4081', '#ffee33', '#4caf50', '#ff9800', '#E0E0E0', '#0091EA', '#8D6E63'];
+
+    // 3. Crear el nuevo gráfico
+    window.gastosChart = new Chart(ctx, {
         type: 'doughnut',
         data: { 
-            labels: Object.keys(desglose), 
+            labels: Object.keys(datos), 
             datasets: [{ 
-                data: Object.values(desglose), 
-                backgroundColor: ['#00e5ff','#7c4dff','#ff4081','#ffee33','#4caf50','#ff9800','#E0E0E0','#0091EA','#8D6E63','#26A69A'], 
-                borderColor: '#072146', 
-                borderWidth: 2 
+                data: Object.values(datos), 
+                backgroundColor: colors, 
+                borderColor: '#072146', // Color de fondo del card
+                borderWidth: 3, 
+                hoverOffset: 10 // Efecto pro al pasar el ratón
             }] 
         },
         options: { 
             responsive: true, 
             maintainAspectRatio: false, 
-            cutout: '75%', 
+            cutout: '82%', // Anillo equilibrado
             plugins: { 
-                legend: { position: 'right', labels: { color: 'white', font: { size: 10 }, boxWidth: 10 } } 
-            },
-            onClick: (evt, item) => {
-                if (item.length > 0) {
-                    const index = item[0].index;
-                    const categoriaPulsada = gastosChart.data.labels[index];
-                    
-                    goToTab(3); // Pestaña de Movimientos
-                    
-                    setTimeout(() => {
-                        const elementos = document.querySelectorAll('#listaPasado .bbva-card');
-                        let encontrados = 0;
-
-                        elementos.forEach(el => {
-                            // Filtro exacto por el atributo data-cat que añadimos antes
-                            if (el.getAttribute('data-cat') === categoriaPulsada) {
-                                el.style.display = 'flex';
-                                el.style.borderLeft = "4px solid #00e5ff";
-                                encontrados++;
-                            } else {
-                                el.style.display = 'none';
-                            }
-                        });
-
-                        // Botón para limpiar filtro
-                        if(!document.getElementById('btn-quitar-filtro')) {
-                            const btn = document.createElement('button');
-                            btn.id = 'btn-quitar-filtro';
-                            btn.innerHTML = `Limpiar filtro: ${categoriaPulsada} (X)`;
-                            btn.className = "fixed bottom-24 left-1/2 -translate-x-1/2 bg-white text-navy-900 px-6 py-3 rounded-full font-black text-[10px] uppercase shadow-2xl z-[50] border-2 border-cyan-400";
-                            btn.style.color = "#072146";
-                            btn.onclick = () => {
-                                elementos.forEach(el => {
-                                    el.style.display = 'flex';
-                                    el.style.borderLeft = "none";
-                                });
-                                btn.remove();
-                            };
-                            document.body.appendChild(btn);
+                legend: { display: false }, // OCULTAR LEYENDA NATIVA
+                tooltip: {
+                    callbacks: {
+                        label: (context) => {
+                            const val = context.parsed;
+                            return ` ${context.label}: ${isPrivate ? "****€" : val.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€"}`;
                         }
-                    }, 400);
+                    }
                 }
-            }
+            } 
         }
     });
+
+    // 4. CREAR LEYENDA MANUAL (Esto arregla el subrayador)
+    if(legendEl && Object.keys(datos).length > 0) {
+        legendEl.innerHTML = ''; // Limpiar previo
+        
+        Object.keys(datos).forEach((key, index) => {
+            const color = colors[index % colors.length];
+            const val = datos[key];
+            
+            legendEl.insertAdjacentHTML('beforeend', `
+                <div class="flex justify-between items-center gap-2">
+                    <div class="flex items-center gap-1.5 flex-1 overflow-hidden">
+                        <div class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background:${color};"></div>
+                        <p class="text-[9px] text-white/70 font-bold truncate">${key}</p>
+                    </div>
+                    <p class="text-[9px] text-white font-black whitespace-nowrap">${isPrivate ? "****€" : val.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€"}</p>
+                </div>
+            `);
+        });
+    } else if(legendEl) {
+        legendEl.innerHTML = '<div class="text-[9px] text-slate-600 text-center pt-10">Sin gastos este mes</div>';
+    }
 }
-
-  
-
-
-        function renderRecurrentes() {
+   function renderRecurrentes() {
             const container = document.getElementById('listaRecurrentes');
             let recs = JSON.parse(localStorage.getItem('recurrentes') || "[]");
             container.innerHTML = recs.map(p => `
