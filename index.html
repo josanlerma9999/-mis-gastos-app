@@ -27,44 +27,6 @@
         .bbva-input { background: #ffffff; border: none; border-radius: 1rem; padding: 1rem; width: 100%; color: #072146; font-weight: 800; outline: none; box-shadow: 0 4px 15px rgba(0,0,0,0.2); } 
 
         input[type="month"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; opacity: 0.7; }
-/* --- AJUSTE QUIRÚRGICO INICIO --- */
-.grid-cols-5 {
-    display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 0.75rem;
-}
-
-/* Donut mucho más grande */
-.col-span-3.bbva-card { 
-    height: 240px !important; 
-}
-
-/* Cuadros de saldo laterales alineados */
-.col-span-2.flex.flex-col .bbva-card {
-    height: 114px !important; 
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: 1rem !important;
-}
-
-
-#valProj, #valPend {
-    font-size: 1.4rem !important; 
-    line-height: 1.2;
-}
-
-/* Tarjetas con más cuerpo */
-.card-mini { 
-    height: 150px !important; 
-    padding: 1.25rem !important;
-}
-
-#card-aqua-val, #card-explora-val {
-    font-size: 1.6rem !important; 
-    margin-top: 0.6rem;
-}
-/* --- FIN AJUSTE QUIRÚRGICO --- */
 
         
         #viewport { width: 100%; height: calc(100% - 140px); overflow: hidden; position: relative; touch-action: pan-y; background: #000;}
@@ -171,40 +133,22 @@
                         <h2 id="valReal" class="text-6xl font-black tracking-tighter transition-all duration-500">0.00€</h2>
 
                     </div>
-                    <div class="grid grid-cols-5 gap-3">
-    <div class="col-span-3 bbva-card p-4 flex flex-col justify-center items-center relative" style="height: 240px;">
-        <h3 class="text-[8px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-2">Distribución</h3>
-        <div class="chart-container" style="height: 170px; width: 170px; position: relative;">
-            <canvas id="gastosChart"></canvas>
-            <div id="chart-icon" style="position: absolute; top: 52%; left: 50%; transform: translate(-50%, -50%); font-size: 2.2rem; filter: drop-shadow(0 0 10px rgba(0,229,255,0.2));">🏦</div>
-        </div>
-    </div>
-
-    <div class="col-span-2 flex flex-col gap-3">
-        <div class="bbva-card p-4 flex flex-col justify-center items-center flex-1">
-            <p class="text-[8px] text-slate-400 uppercase tracking-widest">Saldo Final</p>
-            <p id="valProj" class="text-lg font-black text-cyan-400 mt-1">0.00€</p>
-        </div>
-        <div class="bbva-card p-4 flex flex-col justify-center items-center flex-1">
-            <p class="text-[8px] text-slate-400 uppercase tracking-widest">Previsión</p>
-            <p id="valPend" class="text-lg font-black text-rose-500 mt-1">0.00€</p>
-        </div>
-    </div>
-</div>
-
-<div class="flex justify-between gap-3 mt-4 mb-6">
-    <div class="card-mini bbva-card border-l-4 border-cyan-400">
-        <div class="flex justify-between items-start"><div class="chip" style="width:25px; height:18px;"></div><span class="italic font-black text-[10px]">Aqua</span></div>
-        <h3 id="card-aqua-val-home" class="text-cyan-400 font-bold" style="font-size: 1.6rem;">0,00€</h3>
-        <span class="text-white/20 text-[10px] font-mono">**** 4412</span>
-    </div>
-    <div class="card-mini bbva-card border-l-4 border-white/20">
-        <div class="flex justify-between items-start"><div class="chip" style="width:25px; height:18px; filter:grayscale(1)"></div><span class="italic font-black text-[10px]">Explora</span></div>
-        <h3 id="card-explora-val-home" class="text-white font-bold" style="font-size: 1.6rem;">0,00€</h3>
-        <span class="text-white/20 text-[10px] font-mono">**** 8823</span>
-    </div>
-</div>
-
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="bbva-card p-5 text-center">
+                            <p class="text-[9px] text-slate-400 uppercase tracking-widest">Saldo Final</p>
+                            <p id="valProj" class="text-xl font-bold text-cyan-400 mt-1">0.00€</p>
+                        </div>
+                        <div class="bbva-card p-5 text-center">
+                            <p class="text-[9px] text-slate-400 uppercase tracking-widest">Próximos Pagos</p>
+                            <p id="valPend" class="text-xl font-bold text-rose-400 mt-1">0.00€</p>
+                        </div>
+                    </div>
+                    <div class="bbva-card p-4 shadow-xl">
+                        <h3 class="text-[10px] font-bold text-white uppercase tracking-widest mb-1">Distribución</h3>
+                        <div class="chart-container">
+                            <canvas id="gastosChart"></canvas>
+                        </div>
+                    </div>
                 </section> 
 
                 <section class="tab-content">
@@ -416,8 +360,9 @@ function obtenerLogo(concepto) {
 }
  
 
-                        function actualizarInterfaz() {
+                function actualizarInterfaz() {
             const mesSel = document.getElementById('filtroMes').value;
+            // MEMORIA: Guardamos el mes cada vez que cambia
             localStorage.setItem('ultimo_mes_consultado', mesSel); 
             
             const hoyStr = new Date().toISOString().split('T')[0];
@@ -444,9 +389,8 @@ function obtenerLogo(concepto) {
 
                 if(g.fecha.startsWith(mesSel)) {
                     const estiloFuturo = !esP ? 'opacity-40 border-l-4 border-cyan-400' : '';
-                    // AQUÍ ESTABA EL ERROR, AHORA ESTÁ LIMPIO:
                     document.getElementById('listaPasado').insertAdjacentHTML('beforeend', `
-                        <div class="bbva-card p-4 flex justify-between items-center gap-3 ${val > 100 && !esI ? 'border-r-4 border-rose-500/30' : ''} ${estiloFuturo}" data-cat="${g.categoria}">
+                        <div class="bbva-card p-4 flex justify-between items-center gap-3 ${val > 100 && !esI ? 'border-r-4 border-rose-500/30' : ''} ${estiloFuturo}">
                             <div class="flex items-center gap-3 flex-1 overflow-hidden">
                                 ${obtenerLogo(g.concepto)}
                                 <div class="truncate">
@@ -470,6 +414,7 @@ function obtenerLogo(concepto) {
                 }
             });
 
+            // Actualización visual del saldo con efecto dinámico
             const elReal = document.getElementById('valReal');
             const saldoTexto = isPrivate ? "****€" : saldoReal.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
             elReal.innerText = saldoTexto;
@@ -482,19 +427,10 @@ function obtenerLogo(concepto) {
             document.getElementById('valProj').innerText = isPrivate ? "****€" : (saldoReal - gFuturos + iFuturos).toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
             document.getElementById('card-aqua-val').innerText = isPrivate ? "****€" : deudaAqua.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
             document.getElementById('card-explora-val').innerText = isPrivate ? "****€" : deudaExplora.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€"; 
-            // ACTUALIZAR TARJETAS DEL HOME (LAS NUEVAS)
-            if(document.getElementById('card-aqua-val-home')) {
-                document.getElementById('card-aqua-val-home').innerText = isPrivate ? "****€" : deudaAqua.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
-            }
-            if(document.getElementById('card-explora-val-home')) {
-                document.getElementById('card-explora-val-home').innerText = isPrivate ? "****€" : deudaExplora.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
-            }
-
 
             renderRecurrentes();
             updateChart();
         }
-
 
 
         document.getElementById('mainForm').onsubmit = async (e) => {
@@ -535,51 +471,29 @@ function obtenerLogo(concepto) {
             } catch (error) { console.error("Error guardando:", error); }
         };
 
-                      function updateChart() {
-    const canvas = document.getElementById('gastosChart');
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    const mesActual = document.getElementById('filtroMes').value; 
-    const desglose = {};
-    
-    appData.forEach(g => {
-        if(g.fecha.startsWith(mesActual) && !categIngresos.includes(g.categoria)) {
-            desglose[g.categoria] = (desglose[g.categoria] || 0) + Math.abs(g.importe);
+        function updateChart() {
+            const canvas = document.getElementById('gastosChart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const mesActual = new Date().toISOString().slice(0, 7);
+            const desglose = {};
+            
+            appData.forEach(g => {
+                if(g.fecha.startsWith(mesActual) && !categIngresos.includes(g.categoria) && g.fecha <= new Date().toISOString().split('T')[0]) {
+                    desglose[g.categoria] = (desglose[g.categoria] || 0) + Math.abs(g.importe);
+                }
+            });
+
+            if (gastosChart) gastosChart.destroy();
+            gastosChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: { 
+                    labels: Object.keys(desglose), 
+                    datasets: [{ data: Object.values(desglose), backgroundColor: ['#00e5ff','#7c4dff','#ff4081','#ffee33','#4caf50','#ff9800','#E0E0E0','#0091EA','#8D6E63','#26A69A'], borderColor: '#072146', borderWidth: 2 }] 
+                },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'right', labels: { color: 'white', font: { size: 10 }, boxWidth: 10 } } } }
+            });
         }
-    });
-
-    // Actualizar el emoji central
-    const iconEl = document.getElementById('chart-icon');
-    if(iconEl && Object.keys(desglose).length > 0) {
-        const catMas = Object.keys(desglose).reduce((a, b) => desglose[a] > desglose[b] ? a : b);
-        const emojis = { "Gasolina": "⛽", "Amazon": "📦", "Tarjeta Aqua": "🟦", "Tarjeta Explora": "💳", "PayPal": "💙", "Varios": "🛍️", "Cuenta BBVA": "🏦" };
-        iconEl.innerText = emojis[catMas] || "💸";
-    }
-
-    if (gastosChart) gastosChart.destroy();
-    gastosChart = new Chart(ctx, {
-        type: 'doughnut',
-        data: { 
-            labels: Object.keys(desglose), 
-            datasets: [{ 
-                data: Object.values(desglose), 
-                backgroundColor: ['#00e5ff','#7c4dff','#ff4081','#ffee33','#4caf50','#ff9800','#E0E0E0','#0091EA','#8D6E63','#26A69A'], 
-                borderColor: '#072146', 
-                borderWidth: 3 
-            }] 
-        },
-        options: { 
-            responsive: true, 
-            maintainAspectRatio: false, 
-            cutout: '82%', 
-            plugins: { legend: { display: false } } 
-        }
-    });
-}
-
-
-  
-
 
         function renderRecurrentes() {
             const container = document.getElementById('listaRecurrentes');
