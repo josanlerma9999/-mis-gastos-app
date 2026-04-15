@@ -390,17 +390,20 @@ function obtenerLogo(concepto) {
                 if(g.fecha.startsWith(mesSel)) {
                     const estiloFuturo = !esP ? 'opacity-40 border-l-4 border-cyan-400' : '';
                     document.getElementById('listaPasado').insertAdjacentHTML('beforeend', `
-                        <div class="bbva-card p-4 flex justify-between items-center gap-3 ${val > 100 && !esI ? 'border-r-4 border-rose-500/30' : ''} ${estiloFuturo}">
-                            <div class="flex items-center gap-3 flex-1 overflow-hidden">
-                                ${obtenerLogo(g.concepto)}
-                                <div class="truncate">
-                                    <p class="text-sm font-bold text-white truncate">${g.concepto}</p>
-                                    <p class="text-[9px] text-slate-500 uppercase mt-1">${g.fecha} • ${g.categoria}</p>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-3">
-                                <p class="font-black whitespace-nowrap ${esI ? 'text-cyan-400' : (val > 100 ? 'text-rose-400' : 'text-white')}">${esI ? '+' : '-'}${disp}</p>
-                                <button onclick="deleteGasto('${g._id}')" class="btn-action text-rose-500">🗑️</button>
+    <div class="bbva-card p-4 flex justify-between items-center gap-3 ${val > 100 && !esI ? 'border-r-4 border-rose-500/30' : ''} ${estiloFuturo}" data-cat="${g.categoria}">
+        <div class="flex items-center gap-3 flex-1 overflow-hidden">
+            ${obtenerLogo(g.concepto)}
+            <div class="truncate">
+                <p class="text-sm font-bold text-white truncate">${g.concepto}</p>
+                <p class="text-[9px] text-slate-500 uppercase mt-1">${g.fecha} • ${g.categoria}</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-3">
+            <p class="font-black whitespace-nowrap ${esI ? 'text-cyan-400' : (val > 100 ? 'text-rose-400' : 'text-white')}">${esI ? '+' : '-'}${disp}</p>
+            <button onclick="deleteGasto('${g._id}')" class="btn-action text-rose-500">🗑️</button>
+        </div>
+    </div>`);
+
                             </div>
                         </div>`);
                 } 
@@ -472,78 +475,82 @@ function obtenerLogo(concepto) {
         };
 
                       function updateChart() {
-            const canvas = document.getElementById('gastosChart');
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
-            const mesActual = document.getElementById('filtroMes').value; 
-            const desglose = {};
-            
-            appData.forEach(g => {
-                if(g.fecha.startsWith(mesActual) && !categIngresos.includes(g.categoria)) {
-                    desglose[g.categoria] = (desglose[g.categoria] || 0) + Math.abs(g.importe);
-                }
-            });
-
-            if (gastosChart) gastosChart.destroy();
-            gastosChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: { 
-                    labels: Object.keys(desglose), 
-                    datasets: [{ 
-                        data: Object.values(desglose), 
-                        backgroundColor: ['#00e5ff','#7c4dff','#ff4081','#ffee33','#4caf50','#ff9800','#E0E0E0','#0091EA','#8D6E63','#26A69A'], 
-                        borderColor: '#072146', 
-                        borderWidth: 2 
-                    }] 
-                },
-                options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false, 
-                    cutout: '75%', 
-                    plugins: { 
-                        legend: { position: 'right', labels: { color: 'white', font: { size: 10 }, boxWidth: 10 } } 
-                    },
-                    onClick: (evt, item) => {
-                        if (item.length > 0) {
-                            const index = item[0].index;
-                            const categoriaPulsada = gastosChart.data.labels[index];
-                            
-                            // 1. Ir a la pestaña de movimientos
-                            goToTab(3);
-                            
-                            // 2. Filtrar visualmente la lista
-                            setTimeout(() => {
-                                const elementos = document.querySelectorAll('#listaPasado .bbva-card');
-                                elementos.forEach(el => {
-                                    if (el.innerText.includes(categoriaPulsada)) {
-                                        el.style.display = 'flex'; // Mostrar
-                                        el.style.borderLeft = "4px solid #00e5ff";
-                                    } else {
-                                        el.style.display = 'none'; // Ocultar los demás
-                                    }
-                                });
-
-                                // Añadir un botón flotante para quitar el filtro
-                                if(!document.getElementById('btn-quitar-filtro')) {
-                                    const btn = document.createElement('button');
-                                    btn.id = 'btn-quitar-filtro';
-                                    btn.innerHTML = `Ver todos los movimientos 👁️‍🗨️`;
-                                    btn.className = "fixed bottom-24 left-1/2 -translate-x-1/2 bg-cyan-400 text-black px-6 py-3 rounded-full font-black text-[10px] uppercase shadow-2xl z-[50]";
-                                    btn.onclick = () => {
-                                        elementos.forEach(el => {
-                                            el.style.display = 'flex';
-                                            el.style.borderLeft = "none";
-                                        });
-                                        btn.remove();
-                                    };
-                                    document.body.appendChild(btn);
-                                }
-                            }, 400);
-                        }
-                    }
-                }
-            });
+    const canvas = document.getElementById('gastosChart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const mesActual = document.getElementById('filtroMes').value; 
+    const desglose = {};
+    
+    appData.forEach(g => {
+        if(g.fecha.startsWith(mesActual) && !categIngresos.includes(g.categoria)) {
+            desglose[g.categoria] = (desglose[g.categoria] || 0) + Math.abs(g.importe);
         }
+    });
+
+    if (gastosChart) gastosChart.destroy();
+    gastosChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: { 
+            labels: Object.keys(desglose), 
+            datasets: [{ 
+                data: Object.values(desglose), 
+                backgroundColor: ['#00e5ff','#7c4dff','#ff4081','#ffee33','#4caf50','#ff9800','#E0E0E0','#0091EA','#8D6E63','#26A69A'], 
+                borderColor: '#072146', 
+                borderWidth: 2 
+            }] 
+        },
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false, 
+            cutout: '75%', 
+            plugins: { 
+                legend: { position: 'right', labels: { color: 'white', font: { size: 10 }, boxWidth: 10 } } 
+            },
+            onClick: (evt, item) => {
+                if (item.length > 0) {
+                    const index = item[0].index;
+                    const categoriaPulsada = gastosChart.data.labels[index];
+                    
+                    goToTab(3); // Pestaña de Movimientos
+                    
+                    setTimeout(() => {
+                        const elementos = document.querySelectorAll('#listaPasado .bbva-card');
+                        let encontrados = 0;
+
+                        elementos.forEach(el => {
+                            // Filtro exacto por el atributo data-cat que añadimos antes
+                            if (el.getAttribute('data-cat') === categoriaPulsada) {
+                                el.style.display = 'flex';
+                                el.style.borderLeft = "4px solid #00e5ff";
+                                encontrados++;
+                            } else {
+                                el.style.display = 'none';
+                            }
+                        });
+
+                        // Botón para limpiar filtro
+                        if(!document.getElementById('btn-quitar-filtro')) {
+                            const btn = document.createElement('button');
+                            btn.id = 'btn-quitar-filtro';
+                            btn.innerHTML = `Limpiar filtro: ${categoriaPulsada} (X)`;
+                            btn.className = "fixed bottom-24 left-1/2 -translate-x-1/2 bg-white text-navy-900 px-6 py-3 rounded-full font-black text-[10px] uppercase shadow-2xl z-[50] border-2 border-cyan-400";
+                            btn.style.color = "#072146";
+                            btn.onclick = () => {
+                                elementos.forEach(el => {
+                                    el.style.display = 'flex';
+                                    el.style.borderLeft = "none";
+                                });
+                                btn.remove();
+                            };
+                            document.body.appendChild(btn);
+                        }
+                    }, 400);
+                }
+            }
+        }
+    });
+}
+
   
 
 
