@@ -471,15 +471,16 @@ function obtenerLogo(concepto) {
             } catch (error) { console.error("Error guardando:", error); }
         };
 
-        function updateChart() {
+                function updateChart() {
             const canvas = document.getElementById('gastosChart');
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
-            const mesActual = new Date().toISOString().slice(0, 7);
+            // Ahora lee el mes que tengas puesto en el calendario
+            const mesActual = document.getElementById('filtroMes').value; 
             const desglose = {};
             
             appData.forEach(g => {
-                if(g.fecha.startsWith(mesActual) && !categIngresos.includes(g.categoria) && g.fecha <= new Date().toISOString().split('T')[0]) {
+                if(g.fecha.startsWith(mesActual) && !categIngresos.includes(g.categoria)) {
                     desglose[g.categoria] = (desglose[g.categoria] || 0) + Math.abs(g.importe);
                 }
             });
@@ -489,11 +490,42 @@ function obtenerLogo(concepto) {
                 type: 'doughnut',
                 data: { 
                     labels: Object.keys(desglose), 
-                    datasets: [{ data: Object.values(desglose), backgroundColor: ['#00e5ff','#7c4dff','#ff4081','#ffee33','#4caf50','#ff9800','#E0E0E0','#0091EA','#8D6E63','#26A69A'], borderColor: '#072146', borderWidth: 2 }] 
+                    datasets: [{ 
+                        data: Object.values(desglose), 
+                        backgroundColor: ['#00e5ff','#7c4dff','#ff4081','#ffee33','#4caf50','#ff9800','#E0E0E0','#0091EA','#8D6E63','#26A69A'], 
+                        borderColor: '#072146', 
+                        borderWidth: 2 
+                    }] 
                 },
-                options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'right', labels: { color: 'white', font: { size: 10 }, boxWidth: 10 } } } }
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    cutout: '75%', 
+                    plugins: { 
+                        legend: { position: 'right', labels: { color: 'white', font: { size: 10 }, boxWidth: 10 } } 
+                    },
+                    onClick: (evt, item) => {
+                        if (item.length > 0) {
+                            const index = item[0].index;
+                            const categoriaPulsada = gastosChart.data.labels[index];
+                            goToTab(3); // Te lleva a Movimientos
+                            setTimeout(() => {
+                                const elementos = document.querySelectorAll('#listaPasado .bbva-card');
+                                for (let el of elementos) {
+                                    if (el.innerText.includes(categoriaPulsada)) {
+                                        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                        el.style.boxShadow = "0 0 20px #00e5ff"; 
+                                        setTimeout(() => el.style.boxShadow = "", 2000);
+                                        break;
+                                    }
+                                }
+                            }, 400);
+                        }
+                    }
+                }
             });
         }
+
 
         function renderRecurrentes() {
             const container = document.getElementById('listaRecurrentes');
