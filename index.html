@@ -360,9 +360,8 @@ function obtenerLogo(concepto) {
 }
  
 
-                function actualizarInterfaz() {
+                        function actualizarInterfaz() {
             const mesSel = document.getElementById('filtroMes').value;
-            // MEMORIA: Guardamos el mes cada vez que cambia
             localStorage.setItem('ultimo_mes_consultado', mesSel); 
             
             const hoyStr = new Date().toISOString().split('T')[0];
@@ -389,21 +388,19 @@ function obtenerLogo(concepto) {
 
                 if(g.fecha.startsWith(mesSel)) {
                     const estiloFuturo = !esP ? 'opacity-40 border-l-4 border-cyan-400' : '';
+                    // AQUÍ ESTABA EL ERROR, AHORA ESTÁ LIMPIO:
                     document.getElementById('listaPasado').insertAdjacentHTML('beforeend', `
-    <div class="bbva-card p-4 flex justify-between items-center gap-3 ${val > 100 && !esI ? 'border-r-4 border-rose-500/30' : ''} ${estiloFuturo}" data-cat="${g.categoria}">
-        <div class="flex items-center gap-3 flex-1 overflow-hidden">
-            ${obtenerLogo(g.concepto)}
-            <div class="truncate">
-                <p class="text-sm font-bold text-white truncate">${g.concepto}</p>
-                <p class="text-[9px] text-slate-500 uppercase mt-1">${g.fecha} • ${g.categoria}</p>
-            </div>
-        </div>
-        <div class="flex items-center gap-3">
-            <p class="font-black whitespace-nowrap ${esI ? 'text-cyan-400' : (val > 100 ? 'text-rose-400' : 'text-white')}">${esI ? '+' : '-'}${disp}</p>
-            <button onclick="deleteGasto('${g._id}')" class="btn-action text-rose-500">🗑️</button>
-        </div>
-    </div>`);
-
+                        <div class="bbva-card p-4 flex justify-between items-center gap-3 ${val > 100 && !esI ? 'border-r-4 border-rose-500/30' : ''} ${estiloFuturo}" data-cat="${g.categoria}">
+                            <div class="flex items-center gap-3 flex-1 overflow-hidden">
+                                ${obtenerLogo(g.concepto)}
+                                <div class="truncate">
+                                    <p class="text-sm font-bold text-white truncate">${g.concepto}</p>
+                                    <p class="text-[9px] text-slate-500 uppercase mt-1">${g.fecha} • ${g.categoria}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <p class="font-black whitespace-nowrap ${esI ? 'text-cyan-400' : (val > 100 ? 'text-rose-400' : 'text-white')}">${esI ? '+' : '-'}${disp}</p>
+                                <button onclick="deleteGasto('${g._id}')" class="btn-action text-rose-500">🗑️</button>
                             </div>
                         </div>`);
                 } 
@@ -417,7 +414,6 @@ function obtenerLogo(concepto) {
                 }
             });
 
-            // Actualización visual del saldo con efecto dinámico
             const elReal = document.getElementById('valReal');
             const saldoTexto = isPrivate ? "****€" : saldoReal.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
             elReal.innerText = saldoTexto;
@@ -434,6 +430,7 @@ function obtenerLogo(concepto) {
             renderRecurrentes();
             updateChart();
         }
+
 
 
         document.getElementById('mainForm').onsubmit = async (e) => {
