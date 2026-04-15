@@ -360,9 +360,8 @@ function obtenerLogo(concepto) {
 }
  
 
-                function actualizarInterfaz() {
+                        function actualizarInterfaz() {
             const mesSel = document.getElementById('filtroMes').value;
-            // MEMORIA: Guardamos el mes cada vez que cambia
             localStorage.setItem('ultimo_mes_consultado', mesSel); 
             
             const hoyStr = new Date().toISOString().split('T')[0];
@@ -389,8 +388,9 @@ function obtenerLogo(concepto) {
 
                 if(g.fecha.startsWith(mesSel)) {
                     const estiloFuturo = !esP ? 'opacity-40 border-l-4 border-cyan-400' : '';
+                    // AQUÍ ESTABA EL ERROR, AHORA ESTÁ LIMPIO:
                     document.getElementById('listaPasado').insertAdjacentHTML('beforeend', `
-                        <div class="bbva-card p-4 flex justify-between items-center gap-3 ${val > 100 && !esI ? 'border-r-4 border-rose-500/30' : ''} ${estiloFuturo}">
+                        <div class="bbva-card p-4 flex justify-between items-center gap-3 ${val > 100 && !esI ? 'border-r-4 border-rose-500/30' : ''} ${estiloFuturo}" data-cat="${g.categoria}">
                             <div class="flex items-center gap-3 flex-1 overflow-hidden">
                                 ${obtenerLogo(g.concepto)}
                                 <div class="truncate">
@@ -414,7 +414,6 @@ function obtenerLogo(concepto) {
                 }
             });
 
-            // Actualización visual del saldo con efecto dinámico
             const elReal = document.getElementById('valReal');
             const saldoTexto = isPrivate ? "****€" : saldoReal.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
             elReal.innerText = saldoTexto;
@@ -431,6 +430,7 @@ function obtenerLogo(concepto) {
             renderRecurrentes();
             updateChart();
         }
+
 
 
         document.getElementById('mainForm').onsubmit = async (e) => {
@@ -471,29 +471,85 @@ function obtenerLogo(concepto) {
             } catch (error) { console.error("Error guardando:", error); }
         };
 
-        function updateChart() {
-            const canvas = document.getElementById('gastosChart');
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
-            const mesActual = new Date().toISOString().slice(0, 7);
-            const desglose = {};
-            
-            appData.forEach(g => {
-                if(g.fecha.startsWith(mesActual) && !categIngresos.includes(g.categoria) && g.fecha <= new Date().toISOString().split('T')[0]) {
-                    desglose[g.categoria] = (desglose[g.categoria] || 0) + Math.abs(g.importe);
-                }
-            });
-
-            if (gastosChart) gastosChart.destroy();
-            gastosChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: { 
-                    labels: Object.keys(desglose), 
-                    datasets: [{ data: Object.values(desglose), backgroundColor: ['#00e5ff','#7c4dff','#ff4081','#ffee33','#4caf50','#ff9800','#E0E0E0','#0091EA','#8D6E63','#26A69A'], borderColor: '#072146', borderWidth: 2 }] 
-                },
-                options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'right', labels: { color: 'white', font: { size: 10 }, boxWidth: 10 } } } }
-            });
+                      function updateChart() {
+    const canvas = document.getElementById('gastosChart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const mesActual = document.getElementById('filtroMes').value; 
+    const desglose = {};
+    
+    appData.forEach(g => {
+        if(g.fecha.startsWith(mesActual) && !categIngresos.includes(g.categoria)) {
+            desglose[g.categoria] = (desglose[g.categoria] || 0) + Math.abs(g.importe);
         }
+    });
+
+    if (gastosChart) gastosChart.destroy();
+    gastosChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: { 
+            labels: Object.keys(desglose), 
+            datasets: [{ 
+                data: Object.values(desglose), 
+                backgroundColor: ['#00e5ff','#7c4dff','#ff4081','#ffee33','#4caf50','#ff9800','#E0E0E0','#0091EA','#8D6E63','#26A69A'], 
+                borderColor: '#072146', 
+                borderWidth: 2 
+            }] 
+        },
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false, 
+            cutout: '75%', 
+            plugins: { 
+                legend: { position: 'right', labels: { color: 'white', font: { size: 10 }, boxWidth: 10 } } 
+            },
+            onClick: (evt, item) => {
+                if (item.length > 0) {
+                    const index = item[0].index;
+                    const categoriaPulsada = gastosChart.data.labels[index];
+                    
+                    goToTab(3); // Pestaña de Movimientos
+                    
+                    setTimeout(() => {
+                        const elementos = document.querySelectorAll('#listaPasado .bbva-card');
+                        let encontrados = 0;
+
+                        elementos.forEach(el => {
+                            // Filtro exacto por el atributo data-cat que añadimos antes
+                            if (el.getAttribute('data-cat') === categoriaPulsada) {
+                                el.style.display = 'flex';
+                                el.style.borderLeft = "4px solid #00e5ff";
+                                encontrados++;
+                            } else {
+                                el.style.display = 'none';
+                            }
+                        });
+
+                        // Botón para limpiar filtro
+                        if(!document.getElementById('btn-quitar-filtro')) {
+                            const btn = document.createElement('button');
+                            btn.id = 'btn-quitar-filtro';
+                            btn.innerHTML = `Limpiar filtro: ${categoriaPulsada} (X)`;
+                            btn.className = "fixed bottom-24 left-1/2 -translate-x-1/2 bg-white text-navy-900 px-6 py-3 rounded-full font-black text-[10px] uppercase shadow-2xl z-[50] border-2 border-cyan-400";
+                            btn.style.color = "#072146";
+                            btn.onclick = () => {
+                                elementos.forEach(el => {
+                                    el.style.display = 'flex';
+                                    el.style.borderLeft = "none";
+                                });
+                                btn.remove();
+                            };
+                            document.body.appendChild(btn);
+                        }
+                    }, 400);
+                }
+            }
+        }
+    });
+}
+
+  
+
 
         function renderRecurrentes() {
             const container = document.getElementById('listaRecurrentes');
