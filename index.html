@@ -120,16 +120,6 @@
         <span id="txt-progreso">0%</span>
     </div>
     <div class="w-full h-1.5 bg-black/30 rounded-full overflow-hidden border border-white/5">
-        <div id="bar-progreso" class="h-full bg-cyan-400 transition-all duration-1000" style="width: 0%"></div>
-    </div>
-</div>
-
-<div class="mt-4 px-2">
-    <div class="flex justify-between text-[9px] uppercase font-black tracking-widest text-cyan-300/40 mb-1">
-        <span>Gasto mensual</span>
-        <span id="txt-progreso">0%</span>
-    </div>
-    <div class="w-full h-1.5 bg-black/30 rounded-full overflow-hidden border border-white/5">
         <div id="bar-progreso" class="h-full bg-cyan-400 shadow-[0_0_10px_#00e5ff] transition-all duration-1000 ease-out" style="width: 0%"></div>
     </div>
 </div>
@@ -288,7 +278,7 @@
                 toast.classList.add('translate-y-[-20px]', 'opacity-0');
                 setTimeout(() => toast.remove(), 500);
             }, 3000);
-             async function renderApp() {
+        async function renderApp() {
             const cache = localStorage.getItem('appData_cache');
             if (cache) { appData = JSON.parse(cache); actualizarInterfaz(); } 
             try {
@@ -476,9 +466,6 @@ function obtenerLogo(concepto) {
             barra.className = "h-full bg-cyan-400 shadow-[0_0_10px_#00e5ff] transition-all duration-1000 ease-out";
         }
     }, 500);
-if(typeof refrescarBarraPresupuesto === 'function') refrescarBarraPresupuesto();
-
-}
 document.getElementById('mainForm').onsubmit = async (e) => {
             e.preventDefault();
             const concepto = document.getElementById('in-concepto').value;
@@ -739,65 +726,6 @@ function renderCardChart(cat) {
         }
     });
 }
-// Esta función se encarga SOLO de mover la barra
-function refrescarBarraPresupuesto() {
-    const mesActual = document.getElementById('filtroMes').value;
-    const LIMITE = 1200; // Tu presupuesto
-    
-    // Sumamos gastos del mes
-    const totalMes = appData
-        .filter(g => g.fecha.startsWith(mesActual) && !categIngresos.includes(g.categoria))
-        .reduce((sum, g) => sum + Math.abs(g.importe), 0);
-
-    const porc = Math.min((totalMes / LIMITE) * 100, 100);
-    
-    const b = document.getElementById('bar-progreso');
-    const t = document.getElementById('txt-progreso');
-
-    if(b && t) {
-        b.style.width = porc + "%";
-        t.innerText = Math.round(porc) + "%";
-        
-        // Colores según gasto
-        if(porc > 85) b.style.backgroundColor = "#f43f5e";
-        else if(porc > 60) b.style.backgroundColor = "#fbbf24";
-        else b.style.backgroundColor = "#00e5ff";
-    }
-}
-// --- FUNCIÓN PARA MOVER LA BARRA DE PRESUPUESTO ---
-function refrescarBarraPresupuesto() {
-    const mesSel = document.getElementById('filtroMes').value;
-    const LIMITE = 1200; // Puedes cambiar este número por tu presupuesto mensual
-    
-    // Sumamos solo los gastos del mes que no sean ingresos
-    const totalGastosMes = appData
-        .filter(g => g.fecha.startsWith(mesSel) && !categIngresos.includes(g.categoria))
-        .reduce((sum, g) => sum + Math.abs(g.importe), 0);
-
-    const porcentaje = Math.min((totalGastosMes / LIMITE) * 100, 100);
-    
-    const barra = document.getElementById('bar-progreso');
-    const texto = document.getElementById('txt-progreso');
-
-    if (barra && texto) {
-        barra.style.width = porcentaje + "%";
-        texto.innerText = Math.round(porcentaje) + "%";
-        
-        // Cambiamos el color según el nivel de gasto
-        if (porcentaje > 85) {
-            barra.style.backgroundColor = '#f43f5e'; // Rojo
-            barra.style.boxShadow = "0 0 10px #f43f5e";
-        } else if (porcentaje > 60) {
-            barra.style.backgroundColor = '#fbbf24'; // Amarillo
-            barra.style.boxShadow = "0 0 10px #fbbf24";
-        } else {
-            barra.style.backgroundColor = '#00e5ff'; // Cian original
-            barra.style.boxShadow = "0 0 10px #00e5ff";
-        }
-    }
-}
-
-
     </script>
 <div id="toast-container" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-[10000] flex flex-col gap-2 w-64"></div>
 </body>
