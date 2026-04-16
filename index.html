@@ -256,7 +256,7 @@
     </div> 
 
     <script>
-        const API_URL = 'https://mis-gastos-app.onrender.com/api/gastos'; const SECURE_KEY = 'YakoNala99'; 
+        const API_URL = 'https://mis-gastos-app.onrender.com/api/gastos'; const SECURE_KEY = 'Yakonala'; 
         let touchstartX = 0, touchendX = 0, currentTabIndex = 0;
         let pin = "", isPrivate = false, appData = [];
         const categIngresos = ["Sueldo", "Otros Ingresos"];
@@ -372,7 +372,6 @@ function obtenerLogo(concepto) {
     document.getElementById('listaPasado').innerHTML = '';
     document.getElementById('listaFuturo').innerHTML = ''; 
 
-    // Variable para controlar el cambio de día
     let fechaUltimoGrupo = "";
 
     appData.forEach(g => {
@@ -390,31 +389,19 @@ function obtenerLogo(concepto) {
         const disp = isPrivate ? "****€" : val.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€"; 
 
         if(g.fecha.startsWith(mesSel)) {
-            // --- LÓGICA DE AGRUPACIÓN POR DÍAS ---
-                        // --- ESTE ES EL APARTADO UNO ---
             if (g.fecha !== fechaUltimoGrupo) {
-                let labelFecha = "";
-                if (g.fecha === hoyStr) {
-                    labelFecha = "HOY";
-                } else {
-                    // Esto convierte 2026-04-15 en "15 de abril"
-                    const opciones = { day: 'numeric', month: 'long' };
-                    labelFecha = new Date(g.fecha + "T00:00:00").toLocaleDateString('es-ES', opciones);
-                }
+                let labelFecha = (g.fecha === hoyStr) ? "HOY" : new Date(g.fecha + "T00:00:00").toLocaleDateString('es-ES', { day: 'numeric', month: 'long' });
                 
-                // Añadimos 'fecha-separador' para poder ocultarlo al filtrar
                 document.getElementById('listaPasado').insertAdjacentHTML('beforeend', `
-                    <div class="pt-6 pb-2 px-2 fecha-separador">
-                        <p class="text-[10px] font-black text-cyan-400/80 tracking-[0.2em] uppercase">${labelFecha}</p>
+                    <div class="pt-8 pb-2 px-2 fecha-separador flex items-center gap-3">
+                        <p class="text-[10px] font-black text-[#00e5ff] tracking-[0.2em] uppercase whitespace-nowrap">${labelFecha}</p>
+                        <div class="h-[1px] w-full bg-[#00e5ff]/20"></div>
                     </div>
                 `);
                 fechaUltimoGrupo = g.fecha;
             }
 
-            // -------------------------------------
-
             const estiloFuturo = !esP ? 'opacity-40 border-l-4 border-cyan-400' : '';
-            
             document.getElementById('listaPasado').insertAdjacentHTML('beforeend', `
                 <div class="bbva-card p-4 flex justify-between items-center gap-3 ${val > 100 && !esI ? 'border-r-4 border-rose-500/30' : ''} ${estiloFuturo}" data-cat="${g.categoria}">
                     <div class="flex items-center gap-3 flex-1 overflow-hidden">
@@ -434,51 +421,39 @@ function obtenerLogo(concepto) {
         if(!esP) {
             document.getElementById('listaFuturo').insertAdjacentHTML('beforeend', `
                 <div class="bbva-card border-l-4 border-cyan-400 p-5 flex justify-between items-center">
-                    <div><p class="font-black text-white">${g.concepto}</p><p class="text-[10px] text-slate-500">${g.fecha}</p></div>
+                    <div><p class="font-black text-white">${p.concepto}</p><p class="text-[10px] text-slate-500">${g.fecha}</p></div>
                     <p class="text-xl font-black ${esI ? 'text-cyan-400' : 'text-white'}">${esI ? '+' : '-'}${disp}</p>
                 </div>`);
         }
     });
 
-        // --- EFECTO CONTADOR PRO ---
+    // --- CONTADOR ANIMADO ---
     const elReal = document.getElementById('valReal');
-    
     if (isPrivate) {
         elReal.innerText = "****€";
     } else {
         const saldoFinal = saldoReal;
         let inicio = 0;
-        // Si el saldo es muy grande, empezamos más cerca del final para que no tarde mucho
         if (saldoFinal > 1000) inicio = saldoFinal - 500;
         if (saldoFinal < 0) inicio = saldoFinal + 500;
 
-        const duracion = 1000; // 1 segundo
+        const duracion = 1000;
         const pasos = 60; 
         const incremento = (saldoFinal - inicio) / pasos;
 
         const timer = setInterval(() => {
             inicio += incremento;
-            // Detener el contador cuando lleguemos al final
             if ((incremento > 0 && inicio >= saldoFinal) || (incremento < 0 && inicio <= saldoFinal)) {
                 inicio = saldoFinal;
                 clearInterval(timer);
             }
-            elReal.innerText = inicio.toLocaleString('de-DE', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            }) + "€";
+            elReal.innerText = inicio.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "€";
         }, 1000 / pasos);
     }
-    // --- FIN EFECTO CONTADOR ---
+
+    // --- ACTUALIZAR ESTILOS Y OTROS VALORES ---
     const saldoTextoFormateado = isPrivate ? "****€" : saldoReal.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
     const fontSize = saldoTextoFormateado.length > 8 ? 'text-5xl' : 'text-6xl';
-    elReal.className = `${fontSize} font-black tracking-tighter leading-tight transition-all duration-700 ease-in-out ` + 
-        (saldoReal > 200 ? 'text-cyan-400' : (saldoReal >= 100 ? 'text-amber-400' : 'text-rose-500'));
-
-    document.getElementById('valPend').innerText = isPrivate ? "****€" : "-" + gFuturos.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
-    // ... resto del código
-
-    const fontSize = saldoTexto.length > 8 ? 'text-5xl' : 'text-6xl';
     elReal.className = `${fontSize} font-black tracking-tighter leading-tight transition-all duration-700 ease-in-out ` + 
         (saldoReal > 200 ? 'text-cyan-400' : (saldoReal >= 100 ? 'text-amber-400' : 'text-rose-500'));
 
@@ -487,14 +462,10 @@ function obtenerLogo(concepto) {
     document.getElementById('card-aqua-val').innerText = isPrivate ? "****€" : deudaAqua.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
     document.getElementById('card-explora-val').innerText = isPrivate ? "****€" : deudaExplora.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€"; 
 
-    const elAquaHome = document.getElementById('card-aqua-val-home');
-    const elExploraHome = document.getElementById('card-explora-val-home');
-    if(elAquaHome) elAquaHome.innerText = isPrivate ? "****€" : deudaAqua.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
-    if(elExploraHome) elExploraHome.innerText = isPrivate ? "****€" : deudaExplora.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
-
     renderRecurrentes();
     if(typeof updateChart === 'function') updateChart();
 }
+
 
 
 
