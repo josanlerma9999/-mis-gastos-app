@@ -403,14 +403,11 @@ function obtenerLogo(concepto) {
                 }
                 
                 // Añadimos 'fecha-separador' para poder ocultarlo al filtrar
-                // --- APARTADO UNO: COLOR CIAN INTENSO ---
-document.getElementById('listaPasado').insertAdjacentHTML('beforeend', `
-    <div class="pt-8 pb-2 px-2 fecha-separador flex items-center gap-3">
-        <p class="text-[10px] font-black text-[#00e5ff] tracking-[0.2em] uppercase whitespace-nowrap">${labelFecha}</p>
-        <div class="h-[1px] w-full bg-[#00e5ff]/20"></div>
-    </div>
-`);
-
+                document.getElementById('listaPasado').insertAdjacentHTML('beforeend', `
+                    <div class="pt-6 pb-2 px-2 fecha-separador">
+                        <p class="text-[10px] font-black text-cyan-400/60 tracking-[0.2em] uppercase">${labelFecha}</p>
+                    </div>
+                `);
                 fechaUltimoGrupo = g.fecha;
             }
 
@@ -553,7 +550,7 @@ document.getElementById('listaPasado').insertAdjacentHTML('beforeend', `
 
                         // OCULTAR FECHAS
                         const fechas = document.querySelectorAll('.fecha-separador');
-                       
+                        fechas.forEach(f => f.style.display = 'none');
 
                         // FILTRAR MOVIMIENTOS
                         const elementos = document.querySelectorAll('#listaPasado .bbva-card');
@@ -578,8 +575,7 @@ document.getElementById('listaPasado').insertAdjacentHTML('beforeend', `
                                     el.style.display = 'flex';
                                     el.style.borderLeft = "none";
                                 });
-                               fechas.forEach(f => f.style.display = 'flex');
- // Vuelven las fechas
+                                fechas.forEach(f => f.style.display = 'block'); // Vuelven las fechas
                                 btn.remove();
                             };
                             document.body.appendChild(btn);
