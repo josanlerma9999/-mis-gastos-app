@@ -256,7 +256,7 @@
     </div> 
 
     <script>
-        const API_URL = 'https://mis-gastos-app.onrender.com/api/gastos'; const SECURE_KEY = 'Yakonala'; 
+        const API_URL = 'https://mis-gastos-app.onrender.com/api/gastos'; const SECURE_KEY = 'YakoNala99'; 
         let touchstartX = 0, touchendX = 0, currentTabIndex = 0;
         let pin = "", isPrivate = false, appData = [];
         const categIngresos = ["Sueldo", "Otros Ingresos"];
@@ -391,11 +391,9 @@ function obtenerLogo(concepto) {
         if(g.fecha.startsWith(mesSel)) {
             if (g.fecha !== fechaUltimoGrupo) {
                 let labelFecha = (g.fecha === hoyStr) ? "HOY" : new Date(g.fecha + "T00:00:00").toLocaleDateString('es-ES', { day: 'numeric', month: 'long' });
-                
                 document.getElementById('listaPasado').insertAdjacentHTML('beforeend', `
-                    <div class="pt-8 pb-2 px-2 fecha-separador flex items-center gap-3">
-                        <p class="text-[10px] font-black text-[#00e5ff] tracking-[0.2em] uppercase whitespace-nowrap">${labelFecha}</p>
-                        <div class="h-[1px] w-full bg-[#00e5ff]/20"></div>
+                    <div class="pt-6 pb-2 px-2 fecha-separador">
+                        <p class="text-[10px] font-black text-cyan-400/80 tracking-[0.2em] uppercase">${labelFecha}</p>
                     </div>
                 `);
                 fechaUltimoGrupo = g.fecha;
@@ -421,13 +419,13 @@ function obtenerLogo(concepto) {
         if(!esP) {
             document.getElementById('listaFuturo').insertAdjacentHTML('beforeend', `
                 <div class="bbva-card border-l-4 border-cyan-400 p-5 flex justify-between items-center">
-                    <div><p class="font-black text-white">${p.concepto}</p><p class="text-[10px] text-slate-500">${g.fecha}</p></div>
+                    <div><p class="font-black text-white">${g.concepto}</p><p class="text-[10px] text-slate-500">${g.fecha}</p></div>
                     <p class="text-xl font-black ${esI ? 'text-cyan-400' : 'text-white'}">${esI ? '+' : '-'}${disp}</p>
                 </div>`);
         }
     });
 
-    // --- CONTADOR ANIMADO ---
+    // --- 1. CONTADOR ANIMADO ---
     const elReal = document.getElementById('valReal');
     if (isPrivate) {
         elReal.innerText = "****€";
@@ -451,12 +449,13 @@ function obtenerLogo(concepto) {
         }, 1000 / pasos);
     }
 
-    // --- ACTUALIZAR ESTILOS Y OTROS VALORES ---
+    // --- 2. ESTILOS DINÁMICOS ---
     const saldoTextoFormateado = isPrivate ? "****€" : saldoReal.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
     const fontSize = saldoTextoFormateado.length > 8 ? 'text-5xl' : 'text-6xl';
     elReal.className = `${fontSize} font-black tracking-tighter leading-tight transition-all duration-700 ease-in-out ` + 
         (saldoReal > 200 ? 'text-cyan-400' : (saldoReal >= 100 ? 'text-amber-400' : 'text-rose-500'));
 
+    // --- 3. RESTO DE VALORES ---
     document.getElementById('valPend').innerText = isPrivate ? "****€" : "-" + gFuturos.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
     document.getElementById('valProj').innerText = isPrivate ? "****€" : (saldoReal - gFuturos + iFuturos).toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
     document.getElementById('card-aqua-val').innerText = isPrivate ? "****€" : deudaAqua.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
@@ -467,10 +466,7 @@ function obtenerLogo(concepto) {
 }
 
 
-
-
-
-        document.getElementById('mainForm').onsubmit = async (e) => {
+document.getElementById('mainForm').onsubmit = async (e) => {
             e.preventDefault();
             const concepto = document.getElementById('in-concepto').value;
             const importe = parseFloat(document.getElementById('in-importe').value);
