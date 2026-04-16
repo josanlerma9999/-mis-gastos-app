@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -393,15 +391,26 @@ function obtenerLogo(concepto) {
 
         if(g.fecha.startsWith(mesSel)) {
             // --- LÓGICA DE AGRUPACIÓN POR DÍAS ---
+                        // --- ESTE ES EL APARTADO UNO ---
             if (g.fecha !== fechaUltimoGrupo) {
-                const labelFecha = (g.fecha === hoyStr) ? "HOY" : g.fecha;
+                let labelFecha = "";
+                if (g.fecha === hoyStr) {
+                    labelFecha = "HOY";
+                } else {
+                    // Esto convierte 2026-04-15 en "15 de abril"
+                    const opciones = { day: 'numeric', month: 'long' };
+                    labelFecha = new Date(g.fecha + "T00:00:00").toLocaleDateString('es-ES', opciones);
+                }
+                
+                // Añadimos 'fecha-separador' para poder ocultarlo al filtrar
                 document.getElementById('listaPasado').insertAdjacentHTML('beforeend', `
-                    <div class="pt-6 pb-2 px-2">
-                        <p class="text-[10px] font-black text-slate-500 tracking-[0.2em] uppercase">${labelFecha}</p>
+                    <div class="pt-6 pb-2 px-2 fecha-separador">
+                        <p class="text-[10px] font-black text-cyan-400/60 tracking-[0.2em] uppercase">${labelFecha}</p>
                     </div>
                 `);
                 fechaUltimoGrupo = g.fecha;
             }
+
             // -------------------------------------
 
             const estiloFuturo = !esP ? 'opacity-40 border-l-4 border-cyan-400' : '';
@@ -526,33 +535,39 @@ function obtenerLogo(concepto) {
             plugins: { 
                 legend: { position: 'right', labels: { color: 'white', font: { size: 10 }, boxWidth: 10 } } 
             },
+                        // --- ESTE ES EL APARTADO DOS ---
             onClick: (evt, item) => {
                 if (item.length > 0) {
                     const index = item[0].index;
                     const categoriaPulsada = gastosChart.data.labels[index];
                     
-                    goToTab(3); // Pestaña de Movimientos
+                    goToTab(3); // Salta a la pestaña de Movimientos
                     
                     setTimeout(() => {
-                        const elementos = document.querySelectorAll('#listaPasado .bbva-card');
-                        let encontrados = 0;
+                        // SUBIR EL SCROLL AL INICIO
+                        const tabMovs = document.querySelectorAll('.tab-content')[3];
+                        if(tabMovs) tabMovs.scrollTop = 0;
 
+                        // OCULTAR FECHAS
+                        const fechas = document.querySelectorAll('.fecha-separador');
+                        fechas.forEach(f => f.style.display = 'none');
+
+                        // FILTRAR MOVIMIENTOS
+                        const elementos = document.querySelectorAll('#listaPasado .bbva-card');
                         elementos.forEach(el => {
-                            // Filtro exacto por el atributo data-cat que añadimos antes
                             if (el.getAttribute('data-cat') === categoriaPulsada) {
                                 el.style.display = 'flex';
                                 el.style.borderLeft = "4px solid #00e5ff";
-                                encontrados++;
                             } else {
                                 el.style.display = 'none';
                             }
                         });
 
-                        // Botón para limpiar filtro
+                        // BOTÓN LIMPIAR
                         if(!document.getElementById('btn-quitar-filtro')) {
                             const btn = document.createElement('button');
                             btn.id = 'btn-quitar-filtro';
-                            btn.innerHTML = `Limpiar filtro: ${categoriaPulsada} (X)`;
+                            btn.innerHTML = `Limpiar filtro: ${categoriaPulsada} ✕`;
                             btn.className = "fixed bottom-24 left-1/2 -translate-x-1/2 bg-white text-navy-900 px-6 py-3 rounded-full font-black text-[10px] uppercase shadow-2xl z-[50] border-2 border-cyan-400";
                             btn.style.color = "#072146";
                             btn.onclick = () => {
@@ -560,6 +575,7 @@ function obtenerLogo(concepto) {
                                     el.style.display = 'flex';
                                     el.style.borderLeft = "none";
                                 });
+                                fechas.forEach(f => f.style.display = 'block'); // Vuelven las fechas
                                 btn.remove();
                             };
                             document.body.appendChild(btn);
@@ -567,6 +583,7 @@ function obtenerLogo(concepto) {
                     }, 400);
                 }
             }
+
         }
     });
 }
