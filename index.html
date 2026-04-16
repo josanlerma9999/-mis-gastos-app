@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -361,75 +363,96 @@ function obtenerLogo(concepto) {
  
 
                         function actualizarInterfaz() {
-            const mesSel = document.getElementById('filtroMes').value;
-            localStorage.setItem('ultimo_mes_consultado', mesSel); 
+    const mesSel = document.getElementById('filtroMes').value;
+    localStorage.setItem('ultimo_mes_consultado', mesSel); 
+    
+    const hoyStr = new Date().toISOString().split('T')[0];
+    const hoyRef = new Date(hoyStr + "T00:00:00").getTime();
+    
+    let saldoReal = 0, gFuturos = 0, iFuturos = 0, deudaAqua = 0, deudaExplora = 0; 
+
+    document.getElementById('listaPasado').innerHTML = '';
+    document.getElementById('listaFuturo').innerHTML = ''; 
+
+    // Variable para controlar el cambio de día
+    let fechaUltimoGrupo = "";
+
+    appData.forEach(g => {
+        const val = Math.abs(g.importe);
+        const esI = categIngresos.includes(g.categoria);
+        const fechaGRef = new Date(g.fecha + "T00:00:00").getTime();
+        const esP = fechaGRef <= hoyRef; 
+
+        if (g.categoria === "Tarjeta Aqua") deudaAqua += val;
+        if (g.categoria === "Tarjeta Explora") deudaExplora += val; 
+
+        if(esP) { esI ? saldoReal += val : saldoReal -= val; } 
+        else { esI ? iFuturos += val : gFuturos += val; }
+        
+        const disp = isPrivate ? "****€" : val.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€"; 
+
+        if(g.fecha.startsWith(mesSel)) {
+            // --- LÓGICA DE AGRUPACIÓN POR DÍAS ---
+            if (g.fecha !== fechaUltimoGrupo) {
+                const labelFecha = (g.fecha === hoyStr) ? "HOY" : g.fecha;
+                document.getElementById('listaPasado').insertAdjacentHTML('beforeend', `
+                    <div class="pt-6 pb-2 px-2">
+                        <p class="text-[10px] font-black text-slate-500 tracking-[0.2em] uppercase">${labelFecha}</p>
+                    </div>
+                `);
+                fechaUltimoGrupo = g.fecha;
+            }
+            // -------------------------------------
+
+            const estiloFuturo = !esP ? 'opacity-40 border-l-4 border-cyan-400' : '';
             
-            const hoyStr = new Date().toISOString().split('T')[0];
-            const hoyRef = new Date(hoyStr + "T00:00:00").getTime();
-            
-            let saldoReal = 0, gFuturos = 0, iFuturos = 0, deudaAqua = 0, deudaExplora = 0; 
+            document.getElementById('listaPasado').insertAdjacentHTML('beforeend', `
+                <div class="bbva-card p-4 flex justify-between items-center gap-3 ${val > 100 && !esI ? 'border-r-4 border-rose-500/30' : ''} ${estiloFuturo}" data-cat="${g.categoria}">
+                    <div class="flex items-center gap-3 flex-1 overflow-hidden">
+                        ${obtenerLogo(g.concepto)}
+                        <div class="truncate">
+                            <p class="text-sm font-bold text-white truncate">${g.concepto}</p>
+                            <p class="text-[9px] text-slate-500 uppercase mt-1">${g.categoria}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <p class="font-black whitespace-nowrap ${esI ? 'text-cyan-400' : (val > 100 ? 'text-rose-400' : 'text-white')}">${esI ? '+' : '-'}${disp}</p>
+                        <button onclick="deleteGasto('${g._id}')" class="btn-action text-rose-500">🗑️</button>
+                    </div>
+                </div>`);
+        } 
 
-            document.getElementById('listaPasado').innerHTML = '';
-            document.getElementById('listaFuturo').innerHTML = ''; 
-
-            appData.forEach(g => {
-                const val = Math.abs(g.importe);
-                const esI = categIngresos.includes(g.categoria);
-                const fechaGRef = new Date(g.fecha + "T00:00:00").getTime();
-                const esP = fechaGRef <= hoyRef; 
-
-                if (g.categoria === "Tarjeta Aqua") deudaAqua += val;
-                if (g.categoria === "Tarjeta Explora") deudaExplora += val; 
-
-                if(esP) { esI ? saldoReal += val : saldoReal -= val; } 
-                else { esI ? iFuturos += val : gFuturos += val; }
-                
-                const disp = isPrivate ? "****€" : val.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€"; 
-
-                if(g.fecha.startsWith(mesSel)) {
-                    const estiloFuturo = !esP ? 'opacity-40 border-l-4 border-cyan-400' : '';
-                    // AQUÍ ESTABA EL ERROR, AHORA ESTÁ LIMPIO:
-                    document.getElementById('listaPasado').insertAdjacentHTML('beforeend', `
-                        <div class="bbva-card p-4 flex justify-between items-center gap-3 ${val > 100 && !esI ? 'border-r-4 border-rose-500/30' : ''} ${estiloFuturo}" data-cat="${g.categoria}">
-                            <div class="flex items-center gap-3 flex-1 overflow-hidden">
-                                ${obtenerLogo(g.concepto)}
-                                <div class="truncate">
-                                    <p class="text-sm font-bold text-white truncate">${g.concepto}</p>
-                                    <p class="text-[9px] text-slate-500 uppercase mt-1">${g.fecha} • ${g.categoria}</p>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-3">
-                                <p class="font-black whitespace-nowrap ${esI ? 'text-cyan-400' : (val > 100 ? 'text-rose-400' : 'text-white')}">${esI ? '+' : '-'}${disp}</p>
-                                <button onclick="deleteGasto('${g._id}')" class="btn-action text-rose-500">🗑️</button>
-                            </div>
-                        </div>`);
-                } 
-
-                if(!esP) {
-                    document.getElementById('listaFuturo').insertAdjacentHTML('beforeend', `
-                        <div class="bbva-card border-l-4 border-cyan-400 p-5 flex justify-between items-center">
-                            <div><p class="font-black text-white">${g.concepto}</p><p class="text-[10px] text-slate-500">${g.fecha}</p></div>
-                            <p class="text-xl font-black ${esI ? 'text-cyan-400' : 'text-white'}">${esI ? '+' : '-'}${disp}</p>
-                        </div>`);
-                }
-            });
-
-            const elReal = document.getElementById('valReal');
-            const saldoTexto = isPrivate ? "****€" : saldoReal.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
-            elReal.innerText = saldoTexto;
-
-            const fontSize = saldoTexto.length > 8 ? 'text-5xl' : 'text-6xl';
-            elReal.className = `${fontSize} font-black tracking-tighter leading-tight transition-all duration-700 ease-in-out ` + 
-                (saldoReal > 200 ? 'text-cyan-400' : (saldoReal >= 100 ? 'text-amber-400' : 'text-rose-500'));
-
-            document.getElementById('valPend').innerText = isPrivate ? "****€" : "-" + gFuturos.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
-            document.getElementById('valProj').innerText = isPrivate ? "****€" : (saldoReal - gFuturos + iFuturos).toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
-            document.getElementById('card-aqua-val').innerText = isPrivate ? "****€" : deudaAqua.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
-            document.getElementById('card-explora-val').innerText = isPrivate ? "****€" : deudaExplora.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€"; 
-
-            renderRecurrentes();
-            updateChart();
+        if(!esP) {
+            document.getElementById('listaFuturo').insertAdjacentHTML('beforeend', `
+                <div class="bbva-card border-l-4 border-cyan-400 p-5 flex justify-between items-center">
+                    <div><p class="font-black text-white">${g.concepto}</p><p class="text-[10px] text-slate-500">${g.fecha}</p></div>
+                    <p class="text-xl font-black ${esI ? 'text-cyan-400' : 'text-white'}">${esI ? '+' : '-'}${disp}</p>
+                </div>`);
         }
+    });
+
+    // Actualización de saldos en pantalla
+    const elReal = document.getElementById('valReal');
+    const saldoTexto = isPrivate ? "****€" : saldoReal.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
+    elReal.innerText = saldoTexto;
+    const fontSize = saldoTexto.length > 8 ? 'text-5xl' : 'text-6xl';
+    elReal.className = `${fontSize} font-black tracking-tighter leading-tight transition-all duration-700 ease-in-out ` + 
+        (saldoReal > 200 ? 'text-cyan-400' : (saldoReal >= 100 ? 'text-amber-400' : 'text-rose-500'));
+
+    document.getElementById('valPend').innerText = isPrivate ? "****€" : "-" + gFuturos.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
+    document.getElementById('valProj').innerText = isPrivate ? "****€" : (saldoReal - gFuturos + iFuturos).toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
+    document.getElementById('card-aqua-val').innerText = isPrivate ? "****€" : deudaAqua.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
+    document.getElementById('card-explora-val').innerText = isPrivate ? "****€" : deudaExplora.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€"; 
+
+    const elAquaHome = document.getElementById('card-aqua-val-home');
+    const elExploraHome = document.getElementById('card-explora-val-home');
+    if(elAquaHome) elAquaHome.innerText = isPrivate ? "****€" : deudaAqua.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
+    if(elExploraHome) elExploraHome.innerText = isPrivate ? "****€" : deudaExplora.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
+
+    renderRecurrentes();
+    if(typeof updateChart === 'function') updateChart();
+}
+
 
 
 
