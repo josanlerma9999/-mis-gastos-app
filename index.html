@@ -159,18 +159,23 @@
 
     <div class="grid grid-cols-5 gap-3">
         
-<div class="col-span-3 bbva-card p-4 flex flex-col justify-center items-center relative" style="height: 240px; min-height: 240px;">
-    <h3 class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-3 w-full text-center">Gastos Mes (Sincronizado)</h3>
+<div class="col-span-3 bbva-card p-4 flex flex-col relative" style="height: 240px;">
+    <h3 class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-4 w-full text-center">Gastos Mes (Sincronizado)</h3>
     
-    <div class="flex items-center justify-center w-full h-full gap-4">
+    <div class="flex items-center justify-between w-full h-full px-1">
         
-        <div id="gastosChartWrapper" class="relative flex justify-center items-center" style="width: 140px; height: 140px; flex-shrink: 0;">
+        <div class="relative" style="width: 130px; height: 130px; flex-shrink: 0;">
             <canvas id="gastosChart"></canvas>
-            
-            <div id="chart-icon-container" class="absolute flex justify-center items-center" style="top: 50%; left: 50%; transform: translate(-50%, -50%); width: 70px; height: 70px;">
-                <div id="chart-icon" class="text-3xl" style="font-size: 2.2rem; filter: drop-shadow(0 0 10px rgba(0,229,255,0.25)); transition: all 0.3s ease;">🏦</div>
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none;">
+                <span id="chart-icon" style="font-size: 2rem;">🏦</span>
             </div>
         </div>
+        
+        <div id="gastosLegend" class="flex flex-col gap-2 ml-4 overflow-y-auto w-full" style="max-height: 150px;">
+            </div>
+    </div>
+</div>
+
         
         <div id="gastosLegend" class="flex-1 space-y-2 overflow-y-auto pr-1" style="max-height: 180px;">
             </div>
@@ -558,14 +563,23 @@ function dibujarDonut(datos) {
         options: { 
             responsive: true, 
             maintainAspectRatio: false, 
-            cutout: '82%', // Anillo equilibrado
+            cutout: '82%', // Grosor del anillo
+            layout: {
+                padding: 5 // Pequeño margen para que no se corte al girar
+            },
             plugins: { 
-                legend: { display: false }, // OCULTAR LEYENDA NATIVA
+                legend: { display: false }, // ESTO QUITA LA LEYENDA QUE SE AMONTONABA
                 tooltip: {
+                    backgroundColor: 'rgba(7, 33, 70, 0.9)',
+                    titleFont: { size: 12 },
+                    bodyFont: { size: 12 },
+                    padding: 10,
+                    cornerRadius: 8,
                     callbacks: {
                         label: (context) => {
                             const val = context.parsed;
-                            return ` ${context.label}: ${isPrivate ? "****€" : val.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€"}`;
+                            const label = context.label || '';
+                            return ` ${label}: ${isPrivate ? "****€" : val.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€"}`;
                         }
                     }
                 }
