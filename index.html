@@ -440,10 +440,44 @@ function obtenerLogo(concepto) {
         }
     });
 
-    // Actualización de saldos en pantalla
+        // --- EFECTO CONTADOR PRO ---
     const elReal = document.getElementById('valReal');
-    const saldoTexto = isPrivate ? "****€" : saldoReal.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
-    elReal.innerText = saldoTexto;
+    
+    if (isPrivate) {
+        elReal.innerText = "****€";
+    } else {
+        const saldoFinal = saldoReal;
+        let inicio = 0;
+        // Si el saldo es muy grande, empezamos más cerca del final para que no tarde mucho
+        if (saldoFinal > 1000) inicio = saldoFinal - 500;
+        if (saldoFinal < 0) inicio = saldoFinal + 500;
+
+        const duracion = 1000; // 1 segundo
+        const pasos = 60; 
+        const incremento = (saldoFinal - inicio) / pasos;
+
+        const timer = setInterval(() => {
+            inicio += incremento;
+            // Detener el contador cuando lleguemos al final
+            if ((incremento > 0 && inicio >= saldoFinal) || (incremento < 0 && inicio <= saldoFinal)) {
+                inicio = saldoFinal;
+                clearInterval(timer);
+            }
+            elReal.innerText = inicio.toLocaleString('de-DE', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }) + "€";
+        }, 1000 / pasos);
+    }
+    // --- FIN EFECTO CONTADOR ---
+    const saldoTextoFormateado = isPrivate ? "****€" : saldoReal.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
+    const fontSize = saldoTextoFormateado.length > 8 ? 'text-5xl' : 'text-6xl';
+    elReal.className = `${fontSize} font-black tracking-tighter leading-tight transition-all duration-700 ease-in-out ` + 
+        (saldoReal > 200 ? 'text-cyan-400' : (saldoReal >= 100 ? 'text-amber-400' : 'text-rose-500'));
+
+    document.getElementById('valPend').innerText = isPrivate ? "****€" : "-" + gFuturos.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
+    // ... resto del código
+
     const fontSize = saldoTexto.length > 8 ? 'text-5xl' : 'text-6xl';
     elReal.className = `${fontSize} font-black tracking-tighter leading-tight transition-all duration-700 ease-in-out ` + 
         (saldoReal > 200 ? 'text-cyan-400' : (saldoReal >= 100 ? 'text-amber-400' : 'text-rose-500'));
