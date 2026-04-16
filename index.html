@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -555,7 +553,7 @@ document.getElementById('listaPasado').insertAdjacentHTML('beforeend', `
 
                         // OCULTAR FECHAS
                         const fechas = document.querySelectorAll('.fecha-separador');
-                        fechas.forEach(f => f.style.display = 'none');
+                       
 
                         // FILTRAR MOVIMIENTOS
                         const elementos = document.querySelectorAll('#listaPasado .bbva-card');
@@ -580,7 +578,8 @@ document.getElementById('listaPasado').insertAdjacentHTML('beforeend', `
                                     el.style.display = 'flex';
                                     el.style.borderLeft = "none";
                                 });
-                                fechas.forEach(f => f.style.display = 'block'); // Vuelven las fechas
+                               fechas.forEach(f => f.style.display = 'flex');
+ // Vuelven las fechas
                                 btn.remove();
                             };
                             document.body.appendChild(btn);
