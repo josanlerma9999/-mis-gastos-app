@@ -227,7 +227,6 @@
                                 <option value="Cuenta BBVA">🏦 Cuenta BBVA</option>
                                 <option value="Tarjeta Aqua">🟦 Tarjeta Aqua</option>
                                 <option value="Tarjeta Explora">💳 Tarjeta Explora</option>
-                                <option value="El Corte Inglés">🟢 El Corte Inglés</option> 
                                 <option value="PayPal">💙 PayPal</option> 
                                 <option value="Amazon">📦 Amazon</option>
                                 <option value="Gasolina">⛽ Gasolina</option>
@@ -338,9 +337,8 @@ function obtenerLogo(concepto) {
     const reglas = [
         // Añadimos esta línea para captar cualquier ingreso
       ['nala', '#FFC0CB', '🐶'],
-       ['corte inglés', '#006732', 'E'], 
-       ['sueldo', '#22c55e', '💵'], 
-         ['nomina', '#22c55e', '💵'],
+  ['sueldo', '#22c55e', '💵'], 
+        ['nomina', '#22c55e', '💵'],
         ['ingreso', '#22c55e', '💵'],
         ['extra', '#22c55e', '💵'],
         ['gasolina', '#4b5563', '⛽'],
@@ -369,24 +367,45 @@ function obtenerLogo(concepto) {
     const hoyStr = new Date().toISOString().split('T')[0];
     const hoyRef = new Date(hoyStr + "T00:00:00").getTime();
     
-    let saldoReal = 0, gFuturos = 0, iFuturos = 0, deudaAqua = 0, deudaExplora = 0; 
-
-    document.getElementById('listaPasado').innerHTML = '';
+        document.getElementById('listaPasado').innerHTML = '';
     document.getElementById('listaFuturo').innerHTML = ''; 
-
     let fechaUltimoGrupo = "";
 
+    // --- NUEVA LÓGICA DE TARJETAS (DÍA 1 Y DÍA 5) ---
     appData.forEach(g => {
         const val = Math.abs(g.importe);
         const esI = categIngresos.includes(g.categoria);
-        const fechaGRef = new Date(g.fecha + "T00:00:00").getTime();
+        const fechaG = new Date(g.fecha + "T00:00:00");
+        const fechaGRef = fechaG.getTime();
         const esP = fechaGRef <= hoyRef; 
+        const esTarjeta = ["Tarjeta Aqua", "Tarjeta Explora", "El Corte Inglés"].includes(g.categoria);
+        const esMesActual = (fechaG.getMonth() === hoy.getMonth() && fechaG.getFullYear() === hoy.getFullYear());
 
+        // Acumular deudas de tarjetas para los visuales
         if (g.categoria === "Tarjeta Aqua") deudaAqua += val;
         if (g.categoria === "Tarjeta Explora") deudaExplora += val; 
 
-        if(esP) { esI ? saldoReal += val : saldoReal -= val; } 
-        else { esI ? iFuturos += val : gFuturos += val; }
+        // CÁLCULO SALDO REAL (Número grande)
+        if(esP) {
+            // Si es tarjeta del mes actual, NO resta hasta el día 5
+            if (esTarjeta && esMesActual && hoy.getDate() < 5) {
+                // No resta del saldo real todavía
+            } else {
+                esI ? saldoReal += val : saldoReal -= val;
+            }
+        } 
+        
+        // CÁLCULO PROYECCIÓN (Saldo Final)
+        if (!esP) {
+            esI ? iFuturos += val : gFuturos += val;
+        }
+        
+        // Lógica para el Saldo Final (valProj): 
+        // Si es tarjeta y es este mes, la ignoramos en gFuturos para que valProj no baje hasta el día 1 del mes siguiente
+        if (esTarjeta && esMesActual && !esP) {
+             gFuturos -= val; // Anulamos el peso en la proyección
+        }
+
         
         const disp = isPrivate ? "****€" : val.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€"; 
 
@@ -459,7 +478,7 @@ function obtenerLogo(concepto) {
 
     // --- 3. RESTO DE VALORES ---
     document.getElementById('valPend').innerText = isPrivate ? "****€" : "-" + gFuturos.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
-    document.getElementById('valProj').innerText = isPrivate ? "****€" : (saldoReal - gFuturos + iFuturos).toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
+[  ]     document.getElementById('valProj').innerText = isPrivate ? "****€" : (saldoReal - gFuturos + iFuturos).toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
     document.getElementById('card-aqua-val').innerText = isPrivate ? "****€" : deudaAqua.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
     document.getElementById('card-explora-val').innerText = isPrivate ? "****€" : deudaExplora.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€"; 
 
