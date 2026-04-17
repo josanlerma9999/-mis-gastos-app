@@ -416,30 +416,46 @@ function obtenerLogo(concepto) {
                 </div>`);
         } 
 
-            // --- CIRUGÍA: LISTA PREVISIÓN ORDENADA ---
+                // --- LISTA PREVISIÓN (CON DISEÑO DE MOVIMIENTOS) ---
+    document.getElementById('listaFuturo').innerHTML = ''; // Limpiamos primero
     let fechaUltimoGrupoFuturo = "";
-    appData.filter(g => new Date(g.fecha + "T00:00:00").getTime() > hoyRef)
-           .sort((a, b) => a.fecha.localeCompare(b.fecha)) // Orden: Mañana arriba, fin de mes abajo
-           .forEach(g => {
-                const val = Math.abs(g.importe);
-                const esI = categIngresos.includes(g.categoria);
-                const disp = isPrivate ? "****€" : val.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
-                
-                if (g.fecha !== fechaUltimoGrupoFuturo) {
-                    let fLabel = new Date(g.fecha + "T00:00:00").toLocaleDateString('es-ES', { day: 'numeric', month: 'long' });
-                    document.getElementById('listaFuturo').insertAdjacentHTML('beforeend', `
-                        <div class="pt-6 pb-2 px-2">
-                            <p class="text-[10px] font-black text-cyan-400 tracking-[0.2em] uppercase">📅 ${fLabel}</p>
-                        </div>`);
-                    fechaUltimoGrupoFuturo = g.fecha;
-                }
-                
-                document.getElementById('listaFuturo').insertAdjacentHTML('beforeend', `
-                    <div class="bbva-card border-l-4 border-cyan-400/30 p-4 flex justify-between items-center mx-2">
-                        <div><p class="font-bold text-white">${g.concepto}</p><p class="text-[9px] text-slate-500 uppercase">${g.categoria}</p></div>
-                        <p class="font-black text-cyan-400">${esI ? '+' : '-'}${disp}</p>
-                    </div>`);
-           });
+    
+    // Filtramos gastos que son estrictamente posteriores a hoy
+    const movimientosFuturos = appData
+        .filter(g => new Date(g.fecha + "T00:00:00").getTime() > hoyRef)
+        .sort((a, b) => a.fecha.localeCompare(b.fecha)); // De más cercano a más lejano
+
+    movimientosFuturos.forEach(g => {
+        const val = Math.abs(g.importe);
+        const esI = categIngresos.includes(g.categoria);
+        const disp = isPrivate ? "****€" : val.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
+        
+        // Si la fecha cambia, ponemos el separador azul igual que en Movimientos
+        if (g.fecha !== fechaUltimoGrupoFuturo) {
+            let fLabel = new Date(g.fecha + "T00:00:00").toLocaleDateString('es-ES', { day: 'numeric', month: 'long' });
+            document.getElementById('listaFuturo').insertAdjacentHTML('beforeend', `
+                <div class="pt-6 pb-2 px-2">
+                    <p class="text-[10px] font-black text-cyan-400 tracking-[0.2em] uppercase">${fLabel}</p>
+                </div>`);
+            fechaUltimoGrupoFuturo = g.fecha;
+        }
+        
+        // El diseño de la tarjeta igual al de movimientos
+        document.getElementById('listaFuturo').insertAdjacentHTML('beforeend', `
+            <div class="bbva-card p-4 flex justify-between items-center gap-3 border-l-4 border-cyan-400/30 mx-2">
+                <div class="flex items-center gap-3 flex-1 overflow-hidden">
+                    ${obtenerLogo(g.concepto)}
+                    <div class="truncate">
+                        <p class="text-sm font-bold text-white truncate">${g.concepto}</p>
+                        <p class="text-[9px] text-slate-500 uppercase mt-1">${g.categoria}</p>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <p class="font-black whitespace-nowrap ${esI ? 'text-cyan-400' : 'text-white'}">${esI ? '+' : '-'}${disp}</p>
+                </div>
+            </div>`);
+    });
+
 
     // --- 1. CONTADOR ANIMADO ---
     const elReal = document.getElementById('valReal');
