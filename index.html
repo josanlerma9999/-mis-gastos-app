@@ -225,7 +225,6 @@
                             </optgroup>
                             <optgroup label="GASTOS">
                                 <option value="Cuenta BBVA">🏦 Cuenta BBVA</option>
-<option value="El Corte Inglés">🟢 El Corte Inglés</option>
                                 <option value="Tarjeta Aqua">🟦 Tarjeta Aqua</option>
                                 <option value="Tarjeta Explora">💳 Tarjeta Explora</option>
                                 <option value="PayPal">💙 PayPal</option> 
@@ -333,34 +332,34 @@
         } 
 
 function obtenerLogo(concepto) {
-    if (!concepto) return `<div class="bg-slate-700 w-10 h-10 rounded-full flex items-center justify-center">?</div>`;
-    
     const c = concepto.toLowerCase();
     const reglas = [
-        ['corte inglés', '#006733', 'E'],
-        ['el corte inglés', '#006733', 'E'],
-        ['nala', '#FFC0CB', '🐶'],
-        ['sueldo', '#22c55e', '💵'], 
+        // Añadimos esta línea para captar cualquier ingreso
+      ['nala', '#FFC0CB', '🐶'],
+  ['sueldo', '#22c55e', '💵'], 
         ['nomina', '#22c55e', '💵'],
         ['ingreso', '#22c55e', '💵'],
         ['extra', '#22c55e', '💵'],
         ['gasolina', '#4b5563', '⛽'],
-        ['recarga', '#0070f3', '⚡'],
-        ['portátil', '#475569', '💻'], 
-        ['tarjeta', '#00e5ff', '💳'], 
-        ['amazon', '#FF9900', 'A'],
-        ['gasto', '#ef4444', '💸']
+['recarga', '#0070f3', '⚡'],
+['portátil', '#475569', '💻'], 
+        ['tarjeta', '#00e5ff', '💳'], ['amazon', '#FF9900', 'A'],
+['gasto', '#ef4444', '💸'],
     ];
     
     const match = reglas.find(r => c.includes(r[0]));
-    if (match) {
-        return `<div class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg" style="background:${match[1]}">${match[2]}</div>`;
+    if (match) return `<div class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg" style="background:${match[1]}">${match[2]}</div>`;
+    
+    // Si no encuentra palabra clave, pero es un ingreso (color verde por defecto)
+    if (c.includes("sueldo") || c.includes("ingreso")) {
+        return `<div class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg bg-green-500 shadow-lg">💵</div>`;
     }
 
     return `<div class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg bg-slate-700 shadow-lg">${concepto.charAt(0).toUpperCase()}</div>`;
 }
+ 
 
-  function actualizarInterfaz() {
+                        function actualizarInterfaz() {
     const mesSel = document.getElementById('filtroMes').value;
     localStorage.setItem('ultimo_mes_consultado', mesSel); 
     
@@ -434,8 +433,7 @@ function obtenerLogo(concepto) {
             document.getElementById('listaPasado').insertAdjacentHTML('beforeend', `
                 <div class="bbva-card p-4 flex justify-between items-center gap-3 ${val > 100 && !esI ? 'border-r-4 border-rose-500/30' : ''} ${estiloFuturo}" data-cat="${g.categoria}">
                     <div class="flex items-center gap-3 flex-1 overflow-hidden">
-                        ${obtenerLogo(g.categoria || g.concepto)}
-
+                        ${obtenerLogo(g.concepto)}
                         <div class="truncate">
                             <p class="text-sm font-bold text-white truncate">${g.concepto}</p>
                             <p class="text-[9px] text-slate-500 uppercase mt-1">${g.categoria}</p>
