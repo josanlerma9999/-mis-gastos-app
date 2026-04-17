@@ -301,7 +301,7 @@
                 toast.classList.add('translate-y-[-20px]', 'opacity-0');
                 setTimeout(() => toast.remove(), 500);
             }, 3000);
-        }
+             }
 
                 async function renderApp() {
             const cache = localStorage.getItem('appData_cache');
@@ -374,19 +374,50 @@ function obtenerLogo(concepto) {
 
     let fechaUltimoGrupo = "";
 
-    appData.forEach(g => {
+        appData.forEach(g => {
         const val = Math.abs(g.importe);
         const esI = categIngresos.includes(g.categoria);
-        const fechaGRef = new Date(g.fecha + "T00:00:00").getTime();
+        const fechaG = new Date(g.fecha + "T00:00:00");
+        const fechaGRef = fechaG.getTime();
         const esP = fechaGRef <= hoyRef; 
+        const esTarjeta = (g.categoria === "Tarjeta Aqua" || g.categoria === "Tarjeta Explora");
 
+        // Acumular deudas de tarjetas siempre (para la pestaña Cards)
         if (g.categoria === "Tarjeta Aqua") deudaAqua += val;
         if (g.categoria === "Tarjeta Explora") deudaExplora += val; 
 
-        if(esP) { esI ? saldoReal += val : saldoReal -= val; } 
-        else { esI ? iFuturos += val : gFuturos += val; }
+        if (esI) {
+            // INGRESOS: Suman al real si ya pasaron, o al proyectado si son futuros
+            if (esP) saldoReal += val;
+            else iFuturos += val;
+        } else {
+            // GASTOS:
+            if (!esTarjeta) {
+                // Gastos normales (Efectivo/Cuenta): Restan al momento
+                if (esP) saldoReal -= val;
+                else gFuturos += val;
+            } else {
+                // LÓGICA DE TARJETAS DE CRÉDITO (Regla día 1 y día 5)
+                const mesGasto = fechaG.getMonth();
+                const añoGasto = fechaG.getFullYear();
+                const hoy = new Date();
+                
+                // Día 1 del mes siguiente al gasto
+                const fechaLiqFinal = new Date(añoGasto, mesGasto + 1, 1);
+                // Día 5 del mes siguiente al gasto
+                const fechaLiqReal = new Date(añoGasto, mesGasto + 1, 5);
+
+                if (hoy >= fechaLiqReal) {
+                    saldoReal -= val; // Se resta del Saldo Real solo si ya es día 5 del mes siguiente
+                } else if (hoy >= fechaLiqFinal) {
+                    gFuturos += val; // Se resta del Saldo Final (Proyectado) si ya es día 1
+                }
+                // Si no es ni día 1 ni día 5 del mes siguiente, el gasto NO resta de los saldos todavía.
+            }
+        }
         
         const disp = isPrivate ? "****€" : val.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€"; 
+ 
 
         if(g.fecha.startsWith(mesSel)) {
             if (g.fecha !== fechaUltimoGrupo) {
@@ -781,3 +812,4 @@ function renderCardChart(cat) {
 <div id="toast-container" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-[10000] flex flex-col gap-2 w-64"></div>
 </body>
 </html>
+        
