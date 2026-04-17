@@ -225,6 +225,7 @@
                             </optgroup>
                             <optgroup label="GASTOS">
                                 <option value="Cuenta BBVA">🏦 Cuenta BBVA</option>
+<option value="El Corte Inglés">🟢 El Corte Inglés</option>
                                 <option value="Tarjeta Aqua">🟦 Tarjeta Aqua</option>
                                 <option value="Tarjeta Explora">💳 Tarjeta Explora</option>
                                 <option value="PayPal">💙 PayPal</option> 
@@ -301,9 +302,8 @@
                 toast.classList.add('translate-y-[-20px]', 'opacity-0');
                 setTimeout(() => toast.remove(), 500);
             }, 3000);
-             }
-
-                async function renderApp() {
+        }
+        async function renderApp() {
             const cache = localStorage.getItem('appData_cache');
             if (cache) { appData = JSON.parse(cache); actualizarInterfaz(); } 
 
@@ -336,6 +336,8 @@ function obtenerLogo(concepto) {
     const c = concepto.toLowerCase();
     const reglas = [
         // Añadimos esta línea para captar cualquier ingreso
+['corte inglés', '#006733', '<div style="width:0; height:0; border-left:8px solid transparent; border-right:8px solid transparent; border-top:12px solid white; margin-top:4px"></div>'],
+        ['el corte inglés', '#006733', '<div style="width:0; height:0; border-left:8px solid transparent; border-right:8px solid transparent; border-top:12px solid white; margin-top:4px"></div>'],
       ['nala', '#FFC0CB', '🐶'],
   ['sueldo', '#22c55e', '💵'], 
         ['nomina', '#22c55e', '💵'],
@@ -812,4 +814,3 @@ function renderCardChart(cat) {
 <div id="toast-container" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-[10000] flex flex-col gap-2 w-64"></div>
 </body>
 </html>
-        
