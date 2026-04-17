@@ -435,7 +435,8 @@ function obtenerLogo(concepto) {
             document.getElementById('listaPasado').insertAdjacentHTML('beforeend', `
                 <div class="bbva-card p-4 flex justify-between items-center gap-3 ${val > 100 && !esI ? 'border-r-4 border-rose-500/30' : ''} ${estiloFuturo}" data-cat="${g.categoria}">
                     <div class="flex items-center gap-3 flex-1 overflow-hidden">
-                        ${obtenerLogo(g.concepto)}
+                        ${obtenerLogo(g.categoria || g.concepto)}
+
                         <div class="truncate">
                             <p class="text-sm font-bold text-white truncate">${g.concepto}</p>
                             <p class="text-[9px] text-slate-500 uppercase mt-1">${g.categoria}</p>
