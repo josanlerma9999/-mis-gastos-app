@@ -441,15 +441,9 @@ function obtenerLogo(concepto) {
                         </div>
                     </div>
                     <div class="flex items-center gap-3">
-    <p class="font-black whitespace-nowrap ${esI ? 'text-cyan-400' : (val > 100 ? 'text-rose-400' : 'text-white')}">
-        ${esI ? '+' : '-'}${disp}
-    </p>
-    
-    <button onclick="editGasto('${g._id}', '${g.concepto}', ${g.importe}, '${g.categoria}', '${g.fecha}')" class="btn-action opacity-60">✏️</button>
-    
-    <button onclick="deleteGasto('${g._id}')" class="btn-action text-rose-500">🗑️</button>
-</div>
-
+                        <p class="font-black whitespace-nowrap ${esI ? 'text-cyan-400' : (val > 100 ? 'text-rose-400' : 'text-white')}">${esI ? '+' : '-'}${disp}</p>
+                        <button onclick="deleteGasto('${g._id}')" class="btn-action text-rose-500">🗑️</button>
+                    </div>
                 </div>`);
         } 
 
@@ -813,39 +807,7 @@ function renderCardChart(cat) {
         }
     });
 }
-async function editGasto(id, conceptoViejo, importeViejo, categoriaVieja, fechaVieja) {
-            const nuevoConcepto = prompt("Nuevo nombre:", conceptoViejo);
-            if (!nuevoConcepto) return;
 
-            const nuevoImporte = prompt("Nuevo importe:", importeViejo);
-            if (!nuevoImporte) return;
-
-            try {
-                // Borramos el registro antiguo
-                await fetch(`${API_URL}/${id}`, { 
-                    method: 'DELETE', 
-                    headers: { 'x-api-key': SECURE_KEY } 
-                });
-
-                // Creamos el nuevo manteniendo fecha y categoría
-                await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'x-api-key': SECURE_KEY },
-                    body: JSON.stringify({ 
-                        concepto: nuevoConcepto, 
-                        importe: parseFloat(nuevoImporte),
-                        categoria: categoriaVieja,
-                        fecha: fechaVieja 
-                    })
-                });
-
-                showToast("¡Actualizado!", "success");
-                renderApp(); 
-
-            } catch (error) {
-                console.error("Error en el proceso:", error);
-            }
-        }
     </script>
 <div id="toast-container" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-[10000] flex flex-col gap-2 w-64"></div>
 </body>
