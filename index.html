@@ -117,6 +117,10 @@
     </div> 
 
     <div id="app-content" class="hidden h-full flex flex-col text-white">
+<div class="px-4 mb-2 pt-6">
+        <h2 id="saludo-texto" class="text-3xl font-black text-white tracking-tighter"></h2>
+        <p id="animo-financiero" class="text-[10px] font-bold text-cyan-400 uppercase tracking-[0.2em] opacity-80"></p>
+    </div>
         <header class="p-5 flex justify-between items-center bg-black">
             <div class="font-black italic text-xl tracking-tighter">BBVA</div>
             <div class="flex gap-4">
@@ -500,9 +504,11 @@ function obtenerLogo(concepto) {
                 inicio = saldoFinal;
                 clearInterval(timer);
             }
+
             elReal.innerText = inicio.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "€";
         }, 1000 / pasos);
     }
+actualizarSaludo(saldoReal);
 
     // --- 2. ESTILOS DINÁMICOS ---
     const saldoTextoFormateado = isPrivate ? "****€" : saldoReal.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
@@ -806,6 +812,24 @@ function renderCardChart(cat) {
             }
         }
     });
+}
+function actualizarSaludo(saldo) {
+    const hora = new Date().getHours();
+    const texto = (hora >= 6 && hora < 12) ? "¡Buen día!" : 
+                  (hora >= 12 && hora < 21) ? "¡Buenas tardes!" : "¡Buenas noches!";
+
+    let emoji, mensaje;
+    if (saldo > 500) { emoji = "🤑"; mensaje = "Estado: En la gloria"; }
+    else if (saldo > 100) { emoji = "⚖️"; mensaje = "Estado: Bajo control"; }
+    else if (saldo > 0) { emoji = "😶"; mensaje = "Estado: Zona crítica"; }
+    else { emoji = "💀"; mensaje = "Estado: Saldo en rojo"; }
+
+    const elTexto = document.getElementById('saludo-texto');
+    const elAnimo = document.getElementById('animo-financiero');
+    if(elTexto && elAnimo) {
+        elTexto.innerText = `${texto} ${emoji}`;
+        elAnimo.innerText = mensaje;
+    }
 }
 
     </script>
