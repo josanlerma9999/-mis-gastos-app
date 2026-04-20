@@ -132,47 +132,53 @@
 
         <div id="viewport">
             <div id="main-view">
-                <section class="tab-content space-y-4">
+                                <section class="tab-content space-y-4">
                     <div class="p-4 bbva-gradient text-center shadow-lg mx-2 rounded-3xl"> 
                         <p class="text-[9px] font-bold uppercase tracking-widest text-cyan-300/60 mb-1">Saldo Real Hoy</p>
                         <h2 id="valReal" class="text-4xl font-black tracking-tighter transition-all duration-500">0.00€</h2>
                     </div>
 
-<div class="grid grid-cols-2 gap-3 px-2 mb-4"> 
-    <div class="bbva-card py-3 px-2 flex flex-col items-center justify-center border border-white/5"> 
-        <p class="text-[8px] text-slate-400 uppercase font-black tracking-tighter">Saldo Final</p>
-        <p id="valProj" class="text-base font-black text-cyan-400">0.00€</p>
-    </div>
-    <div class="bbva-card py-3 px-2 flex flex-col items-center justify-center border border-white/5">
-        <p class="text-[8px] text-slate-400 uppercase font-black tracking-tighter">Próximos Pagos</p>
-        <p id="valPend" class="text-base font-black text-rose-400">0.00€</p>
-    </div>
-</div>
+                    <div class="px-2 mb-4">
+                        <div class="bbva-card flex items-center shadow-xl overflow-hidden border border-white/5 h-[75px]">
+                            <div class="flex-1 text-center border-r border-white/10 py-2">
+                                <p class="text-[8px] text-slate-400 uppercase font-black tracking-widest">Saldo Final</p>
+                                <p id="valProj" class="text-base font-black text-cyan-400 mt-0.5">0.00€</p>
+                            </div>
+                            <div class="flex-1 text-center py-2">
+                                <p class="text-[8px] text-slate-400 uppercase font-black tracking-widest">Próximos Pagos</p>
+                                <p id="valPend" class="text-base font-black text-rose-400 mt-0.5">0.00€</p>
+                            </div>
+                        </div>
+                    </div>
 
+                    <div class="px-2 mb-4">
+                        <div class="bbva-card p-4 border border-white/5">
+                            <div class="flex justify-between items-center mb-2">
+                                <h3 class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Control de Presupuesto</h3>
+                                <span id="txt-limite" class="text-[10px] font-black text-white">0%</span>
+                            </div>
+                            <div class="w-full h-3 bg-black/50 rounded-full p-0.5 border border-white/10">
+                                <div id="barra-presupuesto" class="h-full rounded-full transition-all duration-1000 ease-out bg-cyan-400" style="width: 0%"></div>
+                            </div>
+                            <div class="flex justify-between mt-2">
+                                <p id="msg-presupuesto" class="text-[8px] font-bold uppercase text-cyan-400/60">Presupuesto bajo control</p>
+                                <p class="text-[8px] font-bold text-slate-500 uppercase">
+                                    Límite: <span id="valor-limite" class="text-slate-300">0.00€</span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
 
-<div class="px-2 mb-4">
+                    <div class="px-2 pb-6">
+                        <div class="bbva-card p-4 shadow-xl">
+                            <h3 class="text-[10px] font-bold text-white uppercase tracking-widest mb-1">Distribución</h3>
+                            <div class="chart-container" style="height: 140px;"> 
+                                <canvas id="gastosChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </section>
 
-    <div class="bbva-card p-4 border border-white/5">
-        <div class="flex justify-between items-center mb-2">
-            <h3 class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Control de Presupuesto</h3>
-            <span id="txt-limite" class="text-[10px] font-black text-white">0%</span>
-        </div>
-        <div class="w-full h-3 bg-black/50 rounded-full p-0.5 border border-white/10">
-            <div id="barra-presupuesto" class="h-full rounded-full transition-all duration-1000 ease-out bg-cyan-400" style="width: 0%"></div>
-        </div>
-                <div class="flex justify-between mt-2">
-            <p id="msg-presupuesto" class="text-[8px] font-bold uppercase text-cyan-400/60">Presupuesto bajo control</p>
-            <p class="text-[8px] font-bold text-slate-500 uppercase">
-                Límite: <span id="valor-limite" class="text-slate-300">0.00€</span>
-            </p>
-        </div> </div> <div class="bbva-card p-4 shadow-xl">
-        <h3 class="text-[10px] font-bold text-white uppercase tracking-widest mb-1">Distribución</h3>
-        <div class="chart-container" style="height: 150px;"> 
-            <canvas id="gastosChart"></canvas>
-        </div>
-    </div>
-
-                </section> 
 
 
                 <section class="tab-content">
