@@ -561,19 +561,23 @@ const gastosMes = appData.filter(g => g.fecha.startsWith(mesAct) && !categIngres
         const pct = Math.min((gastosMes / ingresosMes) * 100, 100);
         bPresupuesto.style.width = `${pct}%`;
         tLimite.innerText = `${Math.round(pct)}%`;
-        if (pct >= 90) {
-            bPresupuesto.className = "h-full rounded-full bg-rose-500 shadow-[0_0_15px_rgba(239,68,68,0.5)]";
-            mPresupuesto.innerText = "¡PELIGRO: LÍMITE ALCANZADO!";
+                if (pct >= 90) {
+            // ROJO
+            bPresupuesto.className = "h-full rounded-full bg-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.7)] animate-pulse";
+            mPresupuesto.innerText = `¡LÍMITE! -${gastosMes.toLocaleString('de-DE', {minimumFractionDigits:2})}€`;
             mPresupuesto.style.color = "#fb7185";
         } else if (pct >= 70) {
+            // AMARILLO
             bPresupuesto.className = "h-full rounded-full bg-amber-400";
-            mPresupuesto.innerText = "Cuidado, estás gastando mucho";
+            mPresupuesto.innerText = `OJO: -${gastosMes.toLocaleString('de-DE', {minimumFractionDigits:2})}€`;
             mPresupuesto.style.color = "#fbbf24";
         } else {
+            // AZUL
             bPresupuesto.className = "h-full rounded-full bg-cyan-400";
-            mPresupuesto.innerText = "Presupuesto bajo control";
+            mPresupuesto.innerText = `GASTADO: -${gastosMes.toLocaleString('de-DE', {minimumFractionDigits:2})}€`;
             mPresupuesto.style.color = "rgba(0, 229, 255, 0.6)";
         }
+
     } else {
         bPresupuesto.style.width = "0%";
         tLimite.innerText = "0%";
