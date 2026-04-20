@@ -157,19 +157,18 @@
         <div class="w-full h-3 bg-black/50 rounded-full p-0.5 border border-white/10">
             <div id="barra-presupuesto" class="h-full rounded-full transition-all duration-1000 ease-out bg-cyan-400" style="width: 0%"></div>
         </div>
-        <div class="flex justify-between mt-2">
+                <div class="flex justify-between mt-2">
             <p id="msg-presupuesto" class="text-[8px] font-bold uppercase text-cyan-400/60">Presupuesto bajo control</p>
-            <p class="text-[8px] font-bold text-slate-500 uppercase">Límite: Ingresos del mes</p>
+            <p class="text-[8px] font-bold text-slate-500 uppercase">
+                Límite: <span id="valor-limite" class="text-slate-300">0.00€</span>
+            </p>
+        </div> </div> <div class="bbva-card p-4 shadow-xl">
+        <h3 class="text-[10px] font-bold text-white uppercase tracking-widest mb-1">Distribución</h3>
+        <div class="chart-container" style="height: 150px;"> 
+            <canvas id="gastosChart"></canvas>
         </div>
     </div>
-</div>
 
-
-                    <div class="bbva-card p-4 shadow-xl">
-                        <h3 class="text-[10px] font-bold text-white uppercase tracking-widest mb-1">Distribución</h3>
-                        <div class="chart-container" style="height: 150px;"> <canvas id="gastosChart"></canvas>
-                        </div>
-                    </div>
                 </section> 
 
 
@@ -549,6 +548,7 @@ const ingresosRegistrados = appData.filter(g => g.fecha.startsWith(mesAct) && ca
 
 // 2. Aplicas el "comodín" de los 1000€ si no hay ingresos
 const ingresosMes = ingresosRegistrados > 0 ? ingresosRegistrados : 700;
+document.getElementById('valor-limite').innerText = ingresosMes.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
 
 // 3. Los gastos se quedan igual
 const gastosMes = appData.filter(g => g.fecha.startsWith(mesAct) && !categIngresos.includes(g.categoria)).reduce((sum, g) => sum + Math.abs(g.importe), 0);
