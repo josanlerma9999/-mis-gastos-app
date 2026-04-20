@@ -642,8 +642,19 @@ document.getElementById('mainForm').onsubmit = async (e) => {
             maintainAspectRatio: false, 
             cutout: '75%', 
             plugins: { 
-                legend: { position: 'right', labels: { color: 'white', font: { size: 10 }, boxWidth: 10 } } 
-            },
+    legend: { 
+        position: 'right', 
+        align: 'center', 
+        labels: { 
+            color: 'white', 
+            font: { size: 10 }, 
+            boxWidth: 12,
+            padding: 15, 
+            usePointStyle: true
+        } 
+    } 
+},
+
                         // --- ESTE ES EL APARTADO DOS ---
             onClick: (evt, item) => {
                 if (item.length > 0) {
