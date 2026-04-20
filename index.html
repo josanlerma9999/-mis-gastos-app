@@ -543,8 +543,16 @@ actualizarSaludo(saldoReal);
     renderRecurrentes();
     if(typeof updateChart === 'function') updateChart();
 const mesAct = document.getElementById('filtroMes').value;
-    const ingresosMes = appData.filter(g => g.fecha.startsWith(mesAct) && categIngresos.includes(g.categoria)).reduce((sum, g) => sum + Math.abs(g.importe), 0);
-    const gastosMes = appData.filter(g => g.fecha.startsWith(mesAct) && !categIngresos.includes(g.categoria)).reduce((sum, g) => sum + Math.abs(g.importe), 0);
+
+// 1. Calculas lo que hay en la base de datos
+const ingresosRegistrados = appData.filter(g => g.fecha.startsWith(mesAct) && categIngresos.includes(g.categoria)).reduce((sum, g) => sum + Math.abs(g.importe), 0);
+
+// 2. Aplicas el "comodín" de los 1000€ si no hay ingresos
+const ingresosMes = ingresosRegistrados > 0 ? ingresosRegistrados : 500;
+
+// 3. Los gastos se quedan igual
+const gastosMes = appData.filter(g => g.fecha.startsWith(mesAct) && !categIngresos.includes(g.categoria)).reduce((sum, g) => sum + Math.abs(g.importe), 0);
+
     const bPresupuesto = document.getElementById('barra-presupuesto');
     const tLimite = document.getElementById('txt-limite');
     const mPresupuesto = document.getElementById('msg-presupuesto');
