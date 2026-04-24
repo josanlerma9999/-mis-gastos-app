@@ -245,35 +245,43 @@
 
                 <section class="tab-content">
                     <form id="mainForm" class="bbva-card p-6 space-y-4 shadow-xl">
-                        <h2 class="text-xs font-black uppercase text-cyan-400 tracking-widest mb-2">Nueva Operación</h2>
+                       <h2 class="text-xs font-black uppercase text-cyan-400 tracking-widest mb-4">Nueva Operación</h2>
 
-<input type="text" id="in-concepto" placeholder="Concepto" class="bbva-input" style="font-size: 14px; text-align: left; font-weight: normal; margin-bottom: 12px;" required>
-<input type="number" id="in-importe" step="0.01" placeholder="0.00" class="bbva-input" style="font-size: 14px; text-align: left; font-weight: normal; margin-bottom: 12px;" required>
+<div class="flex flex-col gap-2">
+    <input type="text" id="in-concepto" placeholder="Concepto" 
+        class="bbva-input !p-3 !text-sm !font-normal !bg-white !text-slate-900 rounded-xl" required>
 
-<select id="in-categoria" class="bbva-input" style="font-size: 14px; font-weight: normal; margin-bottom: 12px;" required>
-    <optgroup label="INGRESOS">
-        <option value="Sueldo">💰 Sueldo</option>
-        <option value="Otros Ingresos">💵 Otros Ingresos</option>
-    </optgroup>
-    <optgroup label="GASTOS">
-        <option value="Cuenta BBVA">🏦 Cuenta BBVA</option>
-        <option value="Tarjeta Aqua">🟦 Tarjeta Aqua</option>
-        <option value="Tarjeta Explora">💳 Tarjeta Explora</option>
-        <option value="PayPal">💙 PayPal</option> 
-        <option value="El Corte Inglés">🟢 El Corte Inglés</option>
-        <option value="Amazon">📦 Amazon</option>
-        <option value="Gasolina">⛽ Gasolina</option>
-        <option value="Imagine">📱 Imagine</option>
-        <option value="Varios">🛍️ Varios</option>
-    </optgroup>
-</select>
+    <input type="number" id="in-importe" step="0.01" placeholder="0.00 €" 
+        class="bbva-input !p-3 !text-sm !font-normal !bg-white !text-slate-900 rounded-xl" required>
 
-<input type="date" id="in-fecha" class="bbva-input" style="font-size: 14px; margin-bottom: 12px;" required>
+    <select id="in-categoria" 
+        class="bbva-input !p-3 !text-sm !font-normal !bg-white !text-slate-900 rounded-xl appearance-none" required>
+        <optgroup label="INGRESOS">
+            <option value="Sueldo">💰 Sueldo</option>
+            <option value="Otros Ingresos">💵 Otros Ingresos</option>
+        </optgroup>
+        <optgroup label="GASTOS">
+            <option value="Cuenta BBVA">🏦 Cuenta BBVA</option>
+            <option value="Tarjeta Aqua">🟦 Tarjeta Aqua</option>
+            <option value="Tarjeta Explora">💳 Tarjeta Explora</option>
+            <option value="PayPal">💙 PayPal</option> 
+            <option value="El Corte Inglés">🟢 El Corte Inglés</option>
+            <option value="Amazon">📦 Amazon</option>
+            <option value="Gasolina">⛽ Gasolina</option>
+            <option value="Imagine">📱 Imagine</option>
+            <option value="Varios">🛍️ Varios</option>
+        </optgroup>
+    </select>
 
-<div class="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/10">
+    <input type="date" id="in-fecha" 
+        class="bbva-input !p-3 !text-sm !font-normal !bg-white !text-slate-900 rounded-xl" required>
+</div>
+
+<div class="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/10 mt-4">
     <input type="checkbox" id="check-recurrente" class="w-5 h-5 accent-cyan-400">
     <label for="check-recurrente" class="text-[10px] font-black uppercase text-slate-400">Convertir en pago fijo mensual</label>
 </div>
+ 
 <div id="form-buttons" class="space-y-3">
     <button type="submit" id="btn-submit" class="w-full bg-cyan-400 text-black font-black py-4 rounded-xl uppercase">Confirmar Operación</button>
     
