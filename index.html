@@ -249,13 +249,13 @@
 
 <div class="flex flex-col gap-2">
     <input type="text" id="in-concepto" placeholder="Concepto" 
-        class="bbva-input !p-3 !text-sm !font-normal !bg-white !text-slate-900 rounded-xl" required>
+        class="bbva-input !p-3 !text-sm !font-bold !bg-white !text-slate-900 rounded-xl" required>
 
     <input type="number" id="in-importe" step="0.01" placeholder="0.00 €" 
-        class="bbva-input !p-3 !text-sm !font-normal !bg-white !text-slate-900 rounded-xl" required>
+        class="bbva-input !p-3 !text-sm !font-bold !bg-white !text-slate-900 rounded-xl" required>
 
     <select id="in-categoria" 
-        class="bbva-input !p-3 !text-sm !font-normal !bg-white !text-slate-900 rounded-xl appearance-none" required>
+        class="bbva-input !p-3 !text-sm !font-bold !bg-white !text-slate-900 rounded-xl appearance-none" required>
         <optgroup label="INGRESOS">
             <option value="Sueldo">💰 Sueldo</option>
             <option value="Otros Ingresos">💵 Otros Ingresos</option>
@@ -274,14 +274,13 @@
     </select>
 
     <input type="date" id="in-fecha" 
-        class="bbva-input !p-3 !text-sm !font-normal !bg-white !text-slate-900 rounded-xl" required>
+        class="bbva-input !p-3 !text-sm !font-bold !bg-white !text-slate-900 rounded-xl" required>
 </div>
 
 <div class="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/10 mt-4">
     <input type="checkbox" id="check-recurrente" class="w-5 h-5 accent-cyan-400">
     <label for="check-recurrente" class="text-[10px] font-black uppercase text-slate-400">Convertir en pago fijo mensual</label>
 </div>
- 
 <div id="form-buttons" class="space-y-3">
     <button type="submit" id="btn-submit" class="w-full bg-cyan-400 text-black font-black py-4 rounded-xl uppercase">Confirmar Operación</button>
     
