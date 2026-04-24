@@ -394,9 +394,8 @@ cargarDatos(); }
                 setTimeout(() => toast.remove(), 500);
             }, 3000);
         }
-        async function cargarDatos() {
-
-            const cache = localStorage.getItem('appData_cache');
+        async function renderApp() {
+const cache = localStorage.getItem('appData_cache');
             if (cache) { appData = JSON.parse(cache); actualizarInterfaz(); } 
 
             try {
@@ -674,10 +673,9 @@ document.getElementById('mainForm').onsubmit = async (e) => {
     try {
         const baseClean = API_URL.replace(/\/$/, "");
         const urlFinal = editMode ? `${baseClean}/${editId}` : baseClean;
-        const metodo = editMode ? 'PUT' : 'POST';
-
+        
         const response = await fetch(urlFinal, {
-            method: metodo,
+            method: editMode ? 'PUT' : 'POST',
             headers: { 
                 'Content-Type': 'application/json', 
                 'x-api-key': SECURE_KEY 
@@ -685,32 +683,35 @@ document.getElementById('mainForm').onsubmit = async (e) => {
             body: JSON.stringify({ concepto, importe, categoria, fecha })
         });
 
-        if (!response.ok) throw new Error("Error en servidor");
+        if (!response.ok) throw new Error("Fallo Servidor");
 
         showToast(editMode ? "¡Actualizado!" : "¡Guardado!");
 
-        // Reset variables
+        // Reset de edición
         editMode = false;
         editId = null;
 
-        // Limpiar interfaz
+        // Limpieza visual
         document.getElementById('mainForm').reset();
         btnSubmit.disabled = false;
         btnSubmit.innerText = "Confirmar Operación";
-        btnSubmit.style.backgroundColor = "#00e5ff"; 
+        btnSubmit.style.backgroundColor = "#22d3ee"; 
         document.getElementById('btn-cancel-edit').classList.add('hidden');
 
-        // RECARGA: Usamos cargarDatos que es como ahora se llama tu función
-        await cargarDatos(); 
+        // Refrescar usando TU función existente
+        await renderApp(); 
+        
+        // Volver al inicio
         goToTab(0);
 
     } catch (error) {
         console.error("Error:", error);
-        showToast("Error: No se pudo guardar", "error");
+        showToast("Error: No se puede guardar", "error");
         btnSubmit.disabled = false;
         btnSubmit.innerText = editMode ? "Guardar Cambios" : "Confirmar Operación";
     }
 };
+
 
 
  function updateChart() {
@@ -876,21 +877,19 @@ document.getElementById('mainForm').onsubmit = async (e) => {
         }
 
         async function deleteGasto(id) {
-            if (!confirm("¿Eliminar este movimiento?")) return; 
-            appData = appData.filter(g => g._id !== id);
-            localStorage.setItem('appData_cache', JSON.stringify(appData));
-            actualizarInterfaz(); 
-            try {
-                   await fetch(`${API_URL}/${id}`, { 
-    method: 'DELETE', 
-    headers: { 
-        'x-api-key': SECURE_KEY 
-    } 
-});
-showToast("Movimiento eliminado", "delete"); // <--- PEGAR ESTO
-setTimeout(renderApp, 800);
-   } catch (error) { console.error("Error borrando:", error); }
-        } 
+    if (!confirm("¿Eliminar este movimiento?")) return; 
+    try {
+        await fetch(`${API_URL}/${id}`, { 
+            method: 'DELETE', 
+            headers: { 'x-api-key': SECURE_KEY } 
+        });
+        showToast("Movimiento eliminado", "delete");
+        await renderApp(); // Usamos renderApp que es la que tienes
+    } catch (error) { 
+        console.error("Error borrando:", error); 
+    }
+}
+
 
         function togglePrivacy() { isPrivate = !isPrivate; actualizarInterfaz(); } 
 
