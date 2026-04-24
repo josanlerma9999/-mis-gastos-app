@@ -658,47 +658,66 @@ const gastosMes = appData.filter(g => g.fecha.startsWith(mesAct) && !categIngres
 
 document.getElementById('mainForm').onsubmit = async (e) => {
     e.preventDefault();
+    
+    // Recogemos valores
     const concepto = document.getElementById('in-concepto').value;
     const importe = parseFloat(document.getElementById('in-importe').value);
     const categoria = document.getElementById('in-categoria').value;
     const fecha = document.getElementById('in-fecha').value;
 
+    // Bloqueamos el botón para evitar dobles clics
+    const btnSubmit = document.getElementById('btn-submit');
+    btnSubmit.disabled = true;
+    btnSubmit.innerText = "Procesando...";
+
     try {
-        if (editMode) {
-            // MODO EDICIÓN: Enviamos los cambios a la base de datos
-            await fetch(`${API_URL}/${editId}`, {
+        let response;
+        
+        if (editMode && editId) {
+            // MODO EDICIÓN
+            response = await fetch(`${API_URL}/${editId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json', 'x-api-key': SECURE_KEY },
                 body: JSON.stringify({ concepto, importe, categoria, fecha })
             });
-            showToast("Movimiento actualizado");
         } else {
-            // MODO NUEVO: Creamos un registro nuevo
-            await fetch(API_URL, {
+            // MODO NUEVO
+            response = await fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'x-api-key': SECURE_KEY },
                 body: JSON.stringify({ concepto, importe, categoria, fecha })
             });
-            showToast("Operación confirmada");
         }
 
-        // LIMPIEZA Y REFRESCO REAL
+        if (!response.ok) throw new Error('Error en el servidor');
+
+        // Si llegamos aquí, la base de datos ya tiene el cambio
+        showToast(editMode ? "Cambio guardado" : "Operación confirmada");
+
+        // RESET ESTADO
         editMode = false;
         editId = null;
-        cancelarEdicion(); // Limpia el formulario y resetea el botón
-
-        // OBLIGAMOS A LA APP A PEDIR LOS DATOS NUEVOS AL SERVIDOR
-        await cargarDatos(); 
         
-        // PINTAMOS LA INTERFAZ CON LOS DATOS NUEVOS
+        // LIMPIEZA VISUAL
+        document.getElementById('mainForm').reset();
+        btnSubmit.innerText = "Confirmar Operación";
+        btnSubmit.style.backgroundColor = "#00e5ff";
+        btnSubmit.disabled = false;
+        document.getElementById('btn-cancel-edit').classList.add('hidden');
+
+        // RECARGA TOTAL
+        await cargarDatos(); 
         actualizarInterfaz();
         goToTab(0);
 
     } catch (error) {
-        console.error("Error al guardar:", error);
+        console.error("Error detallado:", error);
         showToast("Error de conexión");
+        btnSubmit.disabled = false;
+        btnSubmit.innerText = editMode ? "Guardar Cambios" : "Confirmar Operación";
     }
 };
+
    function updateChart() {
     const canvas = document.getElementById('gastosChart');
     if (!canvas) return;
