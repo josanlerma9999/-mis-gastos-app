@@ -360,7 +360,7 @@ function cancelarEdicion() {
                 if(v === 'C') pin = ""; else if(v === 'DEL') pin = pin.slice(0,-1); else if(pin.length < 4) pin += v;
                 document.querySelectorAll('#pin-dots div').forEach((d, i) => d.style.background = i < pin.length ? '#00e5ff' : 'transparent');
                 if(pin === "1763") { document.getElementById('pin-screen').remove(); document.getElementById('app-content').classList.remove('hidden'); 
-cargarDatos(); }
+renderApp(); }
 
             };
             document.getElementById('pin-pad').appendChild(b);
