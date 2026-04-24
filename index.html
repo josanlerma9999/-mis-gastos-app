@@ -659,64 +659,63 @@ const gastosMes = appData.filter(g => g.fecha.startsWith(mesAct) && !categIngres
 document.getElementById('mainForm').onsubmit = async (e) => {
     e.preventDefault();
     
-    // Recogemos valores
     const concepto = document.getElementById('in-concepto').value;
     const importe = parseFloat(document.getElementById('in-importe').value);
     const categoria = document.getElementById('in-categoria').value;
     const fecha = document.getElementById('in-fecha').value;
-
-    // Bloqueamos el botón para evitar dobles clics
     const btnSubmit = document.getElementById('btn-submit');
+
     btnSubmit.disabled = true;
-    btnSubmit.innerText = "Procesando...";
+    btnSubmit.innerText = "Cargando...";
 
     try {
-        let response;
-        
-        if (editMode && editId) {
-            // MODO EDICIÓN
-            response = await fetch(`${API_URL}/${editId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json', 'x-api-key': SECURE_KEY },
-                body: JSON.stringify({ concepto, importe, categoria, fecha })
-            });
-        } else {
-            // MODO NUEVO
-            response = await fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'x-api-key': SECURE_KEY },
-                body: JSON.stringify({ concepto, importe, categoria, fecha })
-            });
+        // Configuramos la URL: si editamos, añadimos el ID al final
+        const urlFinal = editMode ? `${API_URL}/${editId}` : API_URL;
+        const metodo = editMode ? 'PUT' : 'POST';
+
+        console.log(`Enviando a: ${urlFinal} con método ${metodo}`);
+
+        const response = await fetch(urlFinal, {
+            method: metodo,
+            headers: { 
+                'Content-Type': 'application/json', 
+                'x-api-key': SECURE_KEY 
+            },
+            body: JSON.stringify({ concepto, importe, categoria, fecha })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            console.error("Error del servidor:", errorData);
+            throw new Error("Fallo en el servidor");
         }
 
-        if (!response.ok) throw new Error('Error en el servidor');
+        showToast(editMode ? "¡Actualizado!" : "¡Guardado!");
 
-        // Si llegamos aquí, la base de datos ya tiene el cambio
-        showToast(editMode ? "Cambio guardado" : "Operación confirmada");
-
-        // RESET ESTADO
+        // --- RESET TOTAL ---
         editMode = false;
         editId = null;
-        
-        // LIMPIEZA VISUAL
         document.getElementById('mainForm').reset();
-        btnSubmit.innerText = "Confirmar Operación";
-        btnSubmit.style.backgroundColor = "#00e5ff";
+        
+        // Restaurar botón
         btnSubmit.disabled = false;
+        btnSubmit.innerText = "Confirmar Operación";
+        btnSubmit.style.backgroundColor = "#22d3ee"; // Cyan
         document.getElementById('btn-cancel-edit').classList.add('hidden');
 
-        // RECARGA TOTAL
-        await cargarDatos(); 
+        // Refrescar datos y volver
+        await cargarDatos();
         actualizarInterfaz();
         goToTab(0);
 
     } catch (error) {
-        console.error("Error detallado:", error);
-        showToast("Error de conexión");
+        console.error("Error en la petición:", error);
+        showToast("Error: No se pudo guardar");
         btnSubmit.disabled = false;
         btnSubmit.innerText = editMode ? "Guardar Cambios" : "Confirmar Operación";
     }
 };
+
 
    function updateChart() {
     const canvas = document.getElementById('gastosChart');
