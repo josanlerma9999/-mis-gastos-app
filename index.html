@@ -245,43 +245,32 @@
 
                 <section class="tab-content">
                     <form id="mainForm" class="bbva-card p-6 space-y-4 shadow-xl">
-                       <h2 class="text-xs font-black uppercase text-cyan-400 tracking-widest mb-4">Nueva Operación</h2>
-
-<div class="flex flex-col gap-2">
-    <input type="text" id="in-concepto" placeholder="Concepto" 
-        class="bbva-input !p-3 !text-sm !font-bold !bg-white !text-slate-900 rounded-xl" required>
-
-    <input type="number" id="in-importe" step="0.01" placeholder="0.00 €" 
-        class="bbva-input !p-3 !text-sm !font-bold !bg-white !text-slate-900 rounded-xl" required>
-
-    <select id="in-categoria" 
-        class="bbva-input !p-3 !text-sm !font-bold !bg-white !text-slate-900 rounded-xl appearance-none" required>
-        <optgroup label="INGRESOS">
-            <option value="Sueldo">💰 Sueldo</option>
-            <option value="Otros Ingresos">💵 Otros Ingresos</option>
-        </optgroup>
-        <optgroup label="GASTOS">
-            <option value="Cuenta BBVA">🏦 Cuenta BBVA</option>
-            <option value="Tarjeta Aqua">🟦 Tarjeta Aqua</option>
-            <option value="Tarjeta Explora">💳 Tarjeta Explora</option>
-            <option value="PayPal">💙 PayPal</option> 
-            <option value="El Corte Inglés">🟢 El Corte Inglés</option>
-            <option value="Amazon">📦 Amazon</option>
-            <option value="Gasolina">⛽ Gasolina</option>
-            <option value="Imagine">📱 Imagine</option>
-            <option value="Varios">🛍️ Varios</option>
-        </optgroup>
-    </select>
-
-    <input type="date" id="in-fecha" 
-        class="bbva-input !p-3 !text-sm !font-bold !bg-white !text-slate-900 rounded-xl" required>
-</div>
-
-<div class="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/10 mt-4">
-    <input type="checkbox" id="check-recurrente" class="w-5 h-5 accent-cyan-400">
-    <label for="check-recurrente" class="text-[10px] font-black uppercase text-slate-400">Convertir en pago fijo mensual</label>
-</div>
-<div id="form-buttons" class="space-y-3">
+                        <h2 class="text-xs font-black uppercase text-cyan-400 tracking-widest mb-2">Nueva Operación</h2>
+                        <input type="text" id="in-concepto" placeholder="Concepto" class="bbva-input" required>
+                        <input type="number" id="in-importe" step="0.01" placeholder="0.00" class="bbva-input text-3xl text-center font-bold" required>
+                        <select id="in-categoria" class="bbva-input font-bold" required>
+                            <optgroup label="INGRESOS">
+                                <option value="Sueldo">💰 Sueldo</option>
+                                <option value="Otros Ingresos">💵 Otros Ingresos</option>
+                            </optgroup>
+                            <optgroup label="GASTOS">
+                                <option value="Cuenta BBVA">🏦 Cuenta BBVA</option>
+                                <option value="Tarjeta Aqua">🟦 Tarjeta Aqua</option>
+                                <option value="Tarjeta Explora">💳 Tarjeta Explora</option>
+                                <option value="PayPal">💙 PayPal</option> 
+                                <option value="El Corte Inglés">🟢 El Corte Inglés</option>
+                                <option value="Amazon">📦 Amazon</option>
+                                <option value="Gasolina">⛽ Gasolina</option>
+                                <option value="Imagine">📱 Imagine</option>
+                                <option value="Varios">🛍️ Varios</option>
+                            </optgroup>
+                        </select>
+                        <input type="date" id="in-fecha" class="bbva-input" required>
+                        <div class="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/10">
+                            <input type="checkbox" id="check-recurrente" class="w-5 h-5 accent-cyan-400">
+                            <label for="check-recurrente" class="text-[10px] font-black uppercase text-slate-400">Convertir en pago fijo mensual</label>
+                        </div> 
+                        <div id="form-buttons" class="space-y-3">
     <button type="submit" id="btn-submit" class="w-full bg-cyan-400 text-black font-black py-4 rounded-xl uppercase">Confirmar Operación</button>
     
     <button type="button" id="btn-cancel-edit" onclick="cancelarEdicion()" class="hidden w-full bg-white/10 text-white font-black py-4 rounded-xl uppercase border border-white/10">
@@ -359,9 +348,7 @@ function cancelarEdicion() {
             b.onclick = () => {
                 if(v === 'C') pin = ""; else if(v === 'DEL') pin = pin.slice(0,-1); else if(pin.length < 4) pin += v;
                 document.querySelectorAll('#pin-dots div').forEach((d, i) => d.style.background = i < pin.length ? '#00e5ff' : 'transparent');
-                if(pin === "1763") { document.getElementById('pin-screen').remove(); document.getElementById('app-content').classList.remove('hidden'); 
-renderApp(); }
-
+                if(pin === "1763") { document.getElementById('pin-screen').remove(); document.getElementById('app-content').classList.remove('hidden'); renderApp(); }
             };
             document.getElementById('pin-pad').appendChild(b);
         }); 
@@ -395,7 +382,7 @@ renderApp(); }
             }, 3000);
         }
         async function renderApp() {
-const cache = localStorage.getItem('appData_cache');
+            const cache = localStorage.getItem('appData_cache');
             if (cache) { appData = JSON.parse(cache); actualizarInterfaz(); } 
 
             try {
@@ -660,61 +647,43 @@ const gastosMes = appData.filter(g => g.fecha.startsWith(mesAct) && !categIngres
 
 document.getElementById('mainForm').onsubmit = async (e) => {
     e.preventDefault();
-    
     const concepto = document.getElementById('in-concepto').value;
     const importe = parseFloat(document.getElementById('in-importe').value);
     const categoria = document.getElementById('in-categoria').value;
     const fecha = document.getElementById('in-fecha').value;
-    const btnSubmit = document.getElementById('btn-submit');
-
-    btnSubmit.disabled = true;
-    btnSubmit.innerText = "Cargando...";
 
     try {
-        const baseClean = API_URL.replace(/\/$/, "");
-        const urlFinal = editMode ? `${baseClean}/${editId}` : baseClean;
-        
-        const response = await fetch(urlFinal, {
-            method: editMode ? 'PUT' : 'POST',
-            headers: { 
-                'Content-Type': 'application/json', 
-                'x-api-key': SECURE_KEY 
-            },
-            body: JSON.stringify({ concepto, importe, categoria, fecha })
-        });
+        if (editMode) {
+            // --- MODO EDICIÓN (PUT) ---
+            await fetch(`${API_URL}/${editId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'x-api-key': SECURE_KEY },
+                body: JSON.stringify({ concepto, importe, categoria, fecha })
+            });
+            showToast("Movimiento actualizado");
+        } else {
+            // --- MODO NUEVO (POST) ---
+            await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'x-api-key': SECURE_KEY },
+                body: JSON.stringify({ concepto, importe, categoria, fecha })
+            });
+            showToast("Operación confirmada");
+        }
 
-        if (!response.ok) throw new Error("Fallo Servidor");
-
-        showToast(editMode ? "¡Actualizado!" : "¡Guardado!");
-
-        // Reset de edición
+        // Resetear todo y volver al inicio
         editMode = false;
         editId = null;
-
-        // Limpieza visual
-        document.getElementById('mainForm').reset();
-        btnSubmit.disabled = false;
-        btnSubmit.innerText = "Confirmar Operación";
-        btnSubmit.style.backgroundColor = "#22d3ee"; 
-        document.getElementById('btn-cancel-edit').classList.add('hidden');
-
-        // Refrescar usando TU función existente
-        await renderApp(); 
-        
-        // Volver al inicio
+        document.getElementById('btn-cancel-edit').click(); // Esto limpia el form
+        renderApp();
         goToTab(0);
-
     } catch (error) {
         console.error("Error:", error);
-        showToast("Error: No se puede guardar", "error");
-        btnSubmit.disabled = false;
-        btnSubmit.innerText = editMode ? "Guardar Cambios" : "Confirmar Operación";
     }
 };
 
 
-
- function updateChart() {
+                      function updateChart() {
     const canvas = document.getElementById('gastosChart');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -877,19 +846,21 @@ document.getElementById('mainForm').onsubmit = async (e) => {
         }
 
         async function deleteGasto(id) {
-    if (!confirm("¿Eliminar este movimiento?")) return; 
-    try {
-        await fetch(`${API_URL}/${id}`, { 
-            method: 'DELETE', 
-            headers: { 'x-api-key': SECURE_KEY } 
-        });
-        showToast("Movimiento eliminado", "delete");
-        await renderApp(); // Usamos renderApp que es la que tienes
-    } catch (error) { 
-        console.error("Error borrando:", error); 
-    }
-}
-
+            if (!confirm("¿Eliminar este movimiento?")) return; 
+            appData = appData.filter(g => g._id !== id);
+            localStorage.setItem('appData_cache', JSON.stringify(appData));
+            actualizarInterfaz(); 
+            try {
+                   await fetch(`${API_URL}/${id}`, { 
+    method: 'DELETE', 
+    headers: { 
+        'x-api-key': SECURE_KEY 
+    } 
+});
+showToast("Movimiento eliminado", "delete"); // <--- PEGAR ESTO
+setTimeout(renderApp, 800);
+   } catch (error) { console.error("Error borrando:", error); }
+        } 
 
         function togglePrivacy() { isPrivate = !isPrivate; actualizarInterfaz(); } 
 
