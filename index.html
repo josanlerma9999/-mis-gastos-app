@@ -669,11 +669,11 @@ document.getElementById('mainForm').onsubmit = async (e) => {
     btnSubmit.innerText = "Cargando...";
 
     try {
-        // Configuramos la URL: si editamos, añadimos el ID al final
-        const urlFinal = editMode ? `${API_URL}/${editId}` : API_URL;
+        // --- LIMPIEZA DE URL SEGURA ---
+        // Esto quita cualquier barra al final de la API_URL para que no haya errores
+        const baseClean = API_URL.replace(/\/$/, "");
+        const urlFinal = editMode ? `${baseClean}/${editId}` : baseClean;
         const metodo = editMode ? 'PUT' : 'POST';
-
-        console.log(`Enviando a: ${urlFinal} con método ${metodo}`);
 
         const response = await fetch(urlFinal, {
             method: metodo,
@@ -684,40 +684,35 @@ document.getElementById('mainForm').onsubmit = async (e) => {
             body: JSON.stringify({ concepto, importe, categoria, fecha })
         });
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            console.error("Error del servidor:", errorData);
-            throw new Error("Fallo en el servidor");
-        }
+        if (!response.ok) throw new Error("Error en respuesta servidor");
 
         showToast(editMode ? "¡Actualizado!" : "¡Guardado!");
 
-        // --- RESET TOTAL ---
+        // Resetear variables de edición
         editMode = false;
         editId = null;
+
+        // Limpiar Formulario y Botones
         document.getElementById('mainForm').reset();
-        
-        // Restaurar botón
         btnSubmit.disabled = false;
         btnSubmit.innerText = "Confirmar Operación";
         btnSubmit.style.backgroundColor = "#22d3ee"; // Cyan
         document.getElementById('btn-cancel-edit').classList.add('hidden');
 
-        // Refrescar datos y volver
+        // Refrescar y volver
         await cargarDatos();
         actualizarInterfaz();
         goToTab(0);
 
     } catch (error) {
-        console.error("Error en la petición:", error);
+        console.error("Error detallado:", error);
         showToast("Error: No se pudo guardar");
         btnSubmit.disabled = false;
         btnSubmit.innerText = editMode ? "Guardar Cambios" : "Confirmar Operación";
     }
 };
 
-
-   function updateChart() {
+ function updateChart() {
     const canvas = document.getElementById('gastosChart');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
