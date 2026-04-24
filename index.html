@@ -272,10 +272,12 @@
                         </div> 
                         <div id="form-buttons" class="space-y-3">
     <button type="submit" id="btn-submit" class="w-full bg-cyan-400 text-black font-black py-4 rounded-xl uppercase">Confirmar Operación</button>
-    <button type="button" id="btn-cancel-edit" class="hidden w-full bg-white/10 text-white font-black py-4 rounded-xl uppercase border border-white/10">Cancelar Edición</button>
+    
+    <button type="button" id="btn-cancel-edit" onclick="cancelarEdicion()" class="hidden w-full bg-white/10 text-white font-black py-4 rounded-xl uppercase border border-white/10">
+        Cancelar Edición
+    </button>
 </div>
-
-                    </form>
+</form>
                 </section> 
             </div>
         </div> 
@@ -293,7 +295,7 @@
     <script>
         const API_URL = 'https://mis-gastos-app.onrender.com/api/gastos'; const SECURE_KEY = 'YakoNala99'; 
         let touchstartX = 0, touchendX = 0, currentTabIndex = 0;
-        // --- LÓGICA DE EDICIÓN ---
+// --- LÓGICA DE EDICIÓN ---
 let editMode = false;
 let editId = null;
 
