@@ -293,6 +293,48 @@
     <script>
         const API_URL = 'https://mis-gastos-app.onrender.com/api/gastos'; const SECURE_KEY = 'YakoNala99'; 
         let touchstartX = 0, touchendX = 0, currentTabIndex = 0;
+        // --- LÓGICA DE EDICIÓN ---
+let editMode = false;
+let editId = null;
+
+function prepararEdicion(id) {
+    // Buscamos el gasto en los datos que ya tenemos cargados
+    const gasto = appData.find(g => g._id === id);
+    if (!gasto) return;
+
+    // Rellenamos los campos del formulario
+    document.getElementById('in-concepto').value = gasto.concepto;
+    document.getElementById('in-importe').value = Math.abs(gasto.importe);
+    document.getElementById('in-categoria').value = gasto.categoria;
+    document.getElementById('in-fecha').value = gasto.fecha;
+
+    // Cambiamos el estado a "Editando"
+    editMode = true;
+    editId = id;
+
+    // Cambiamos el botón visualmente para saber que estamos editando
+    const btnSubmit = document.getElementById('btn-submit');
+    btnSubmit.innerText = "Guardar Cambios";
+    btnSubmit.style.backgroundColor = "#f59e0b"; // Color ámbar/naranja
+    
+    // Mostramos el botón de cancelar
+    document.getElementById('btn-cancel-edit').classList.remove('hidden');
+
+    // Saltamos a la pestaña de "Operar" (la número 5)
+    goToTab(5);
+}
+
+// Función para limpiar el formulario y volver al estado normal
+function cancelarEdicion() {
+    editMode = false;
+    editId = null;
+    document.getElementById('mainForm').reset();
+    const btnSubmit = document.getElementById('btn-submit');
+    btnSubmit.innerText = "Confirmar Operación";
+    btnSubmit.style.backgroundColor = "#00e5ff"; // Color cyan original
+    document.getElementById('btn-cancel-edit').classList.add('hidden');
+}
+
         let pin = "", isPrivate = false, appData = [];
         const categIngresos = ["Sueldo", "Otros Ingresos"];
         let gastosChart = null; 
