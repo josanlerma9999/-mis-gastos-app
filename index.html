@@ -665,7 +665,7 @@ document.getElementById('mainForm').onsubmit = async (e) => {
 
     try {
         if (editMode) {
-            // --- MODO EDICIÓN (PUT) ---
+            // MODO EDICIÓN: Enviamos los cambios a la base de datos
             await fetch(`${API_URL}/${editId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json', 'x-api-key': SECURE_KEY },
@@ -673,7 +673,7 @@ document.getElementById('mainForm').onsubmit = async (e) => {
             });
             showToast("Movimiento actualizado");
         } else {
-            // --- MODO NUEVO (POST) ---
+            // MODO NUEVO: Creamos un registro nuevo
             await fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'x-api-key': SECURE_KEY },
@@ -682,19 +682,24 @@ document.getElementById('mainForm').onsubmit = async (e) => {
             showToast("Operación confirmada");
         }
 
-        // Resetear todo y volver al inicio
+        // LIMPIEZA Y REFRESCO REAL
         editMode = false;
         editId = null;
-        document.getElementById('btn-cancel-edit').click(); // Esto limpia el form
-        renderApp();
+        cancelarEdicion(); // Limpia el formulario y resetea el botón
+
+        // OBLIGAMOS A LA APP A PEDIR LOS DATOS NUEVOS AL SERVIDOR
+        await cargarDatos(); 
+        
+        // PINTAMOS LA INTERFAZ CON LOS DATOS NUEVOS
+        actualizarInterfaz();
         goToTab(0);
+
     } catch (error) {
-        console.error("Error:", error);
+        console.error("Error al guardar:", error);
+        showToast("Error de conexión");
     }
 };
-
-
-                      function updateChart() {
+   function updateChart() {
     const canvas = document.getElementById('gastosChart');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
