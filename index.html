@@ -270,7 +270,11 @@
                             <input type="checkbox" id="check-recurrente" class="w-5 h-5 accent-cyan-400">
                             <label for="check-recurrente" class="text-[10px] font-black uppercase text-slate-400">Convertir en pago fijo mensual</label>
                         </div> 
-                        <button type="submit" class="w-full bg-cyan-400 text-black font-black py-4 rounded-xl uppercase">Confirmar Operación</button>
+                        <div id="form-buttons" class="space-y-3">
+    <button type="submit" id="btn-submit" class="w-full bg-cyan-400 text-black font-black py-4 rounded-xl uppercase">Confirmar Operación</button>
+    <button type="button" id="btn-cancel-edit" class="hidden w-full bg-white/10 text-white font-black py-4 rounded-xl uppercase border border-white/10">Cancelar Edición</button>
+</div>
+
                     </form>
                 </section> 
             </div>
@@ -462,7 +466,8 @@ function obtenerLogo(concepto) {
 
             const estiloFuturo = !esP ? 'opacity-40 border-l-4 border-cyan-400' : '';
             document.getElementById('listaPasado').insertAdjacentHTML('beforeend', `
-                <div class="bbva-card p-4 flex justify-between items-center gap-3 ${val > 100 && !esI ? 'border-r-4 border-rose-500/30' : ''} ${estiloFuturo}" data-cat="${g.categoria}">
+                <div onclick="prepararEdicion('${g._id}')" class="bbva-card p-4 flex justify-between items-center gap-3 ${val > 100 && !esI ? 'border-r-4 border-rose-500/30' : ''} ${estiloFuturo} active:scale-95 transition-transform" data-cat="${g.categoria}">
+
                     <div class="flex items-center gap-3 flex-1 overflow-hidden">
                         ${obtenerLogo(g.concepto)}
                         <div class="truncate">
@@ -472,7 +477,8 @@ function obtenerLogo(concepto) {
                     </div>
                     <div class="flex items-center gap-3">
                         <p class="font-black whitespace-nowrap ${esI ? 'text-cyan-400' : (val > 100 ? 'text-rose-400' : 'text-white')}">${esI ? '+' : '-'}${disp}</p>
-                        <button onclick="deleteGasto('${g._id}')" class="btn-action text-rose-500">🗑️</button>
+                        <button onclick="event.stopPropagation(); deleteGasto('${g._id}')"
+ class="btn-action text-rose-500">🗑️</button>
                     </div>
                 </div>`);
         } 
@@ -596,42 +602,42 @@ const gastosMes = appData.filter(g => g.fecha.startsWith(mesAct) && !categIngres
 
 
 document.getElementById('mainForm').onsubmit = async (e) => {
-            e.preventDefault();
-            const concepto = document.getElementById('in-concepto').value;
-            const importe = parseFloat(document.getElementById('in-importe').value);
-            const categoria = document.getElementById('in-categoria').value;
-            const fecha = document.getElementById('in-fecha').value;
-            const esRecurrente = document.getElementById('check-recurrente').checked; 
+    e.preventDefault();
+    const concepto = document.getElementById('in-concepto').value;
+    const importe = parseFloat(document.getElementById('in-importe').value);
+    const categoria = document.getElementById('in-categoria').value;
+    const fecha = document.getElementById('in-fecha').value;
 
-            const tempId = "temp-" + Date.now();
-            appData.unshift({ _id: tempId, concepto, importe, categoria, fecha });
-            actualizarInterfaz();
-            goToTab(0);
-            e.target.reset(); 
+    try {
+        if (editMode) {
+            // --- MODO EDICIÓN (PUT) ---
+            await fetch(`${API_URL}/${editId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'x-api-key': SECURE_KEY },
+                body: JSON.stringify({ concepto, importe, categoria, fecha })
+            });
+            showToast("Movimiento actualizado");
+        } else {
+            // --- MODO NUEVO (POST) ---
+            await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'x-api-key': SECURE_KEY },
+                body: JSON.stringify({ concepto, importe, categoria, fecha })
+            });
+            showToast("Operación confirmada");
+        }
 
-            try {
-        await fetch(API_URL, { 
-        method: 'POST', 
-        headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': SECURE_KEY 
-        }, 
-        body: JSON.stringify({ concepto, importe, categoria, fecha }) 
-    }); 
-    showToast("Operación confirmada"); // <--- PEGAR ESTO
-    setTimeout(renderApp, 800);
+        // Resetear todo y volver al inicio
+        editMode = false;
+        editId = null;
+        document.getElementById('btn-cancel-edit').click(); // Esto limpia el form
+        renderApp();
+        goToTab(0);
+    } catch (error) {
+        console.error("Error:", error);
+    }
+};
 
- 
-                if(esRecurrente) {
-                    const diaPago = fecha.split('-')[2];
-                    let recs = JSON.parse(localStorage.getItem('recurrentes') || "[]");
-                    if (!recs.some(p => p.concepto === concepto)) {
-                        recs.push({ concepto, importe, dia: diaPago, categoria, id: Date.now() });
-                        localStorage.setItem('recurrentes', JSON.stringify(recs));
-                    }
-                }
-            } catch (error) { console.error("Error guardando:", error); }
-        };
 
                       function updateChart() {
     const canvas = document.getElementById('gastosChart');
