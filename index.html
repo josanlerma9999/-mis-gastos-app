@@ -359,7 +359,9 @@ function cancelarEdicion() {
             b.onclick = () => {
                 if(v === 'C') pin = ""; else if(v === 'DEL') pin = pin.slice(0,-1); else if(pin.length < 4) pin += v;
                 document.querySelectorAll('#pin-dots div').forEach((d, i) => d.style.background = i < pin.length ? '#00e5ff' : 'transparent');
-                if(pin === "1763") { document.getElementById('pin-screen').remove(); document.getElementById('app-content').classList.remove('hidden'); renderApp(); }
+                if(pin === "1763") { document.getElementById('pin-screen').remove(); document.getElementById('app-content').classList.remove('hidden'); 
+cargarDatos(); }
+
             };
             document.getElementById('pin-pad').appendChild(b);
         }); 
@@ -392,7 +394,8 @@ function cancelarEdicion() {
                 setTimeout(() => toast.remove(), 500);
             }, 3000);
         }
-        async function renderApp() {
+        async function cargarDatos() {
+
             const cache = localStorage.getItem('appData_cache');
             if (cache) { appData = JSON.parse(cache); actualizarInterfaz(); } 
 
@@ -669,8 +672,6 @@ document.getElementById('mainForm').onsubmit = async (e) => {
     btnSubmit.innerText = "Cargando...";
 
     try {
-        // --- LIMPIEZA DE URL SEGURA ---
-        // Esto quita cualquier barra al final de la API_URL para que no haya errores
         const baseClean = API_URL.replace(/\/$/, "");
         const urlFinal = editMode ? `${baseClean}/${editId}` : baseClean;
         const metodo = editMode ? 'PUT' : 'POST';
@@ -684,33 +685,33 @@ document.getElementById('mainForm').onsubmit = async (e) => {
             body: JSON.stringify({ concepto, importe, categoria, fecha })
         });
 
-        if (!response.ok) throw new Error("Error en respuesta servidor");
+        if (!response.ok) throw new Error("Error en servidor");
 
         showToast(editMode ? "¡Actualizado!" : "¡Guardado!");
 
-        // Resetear variables de edición
+        // Reset variables
         editMode = false;
         editId = null;
 
-        // Limpiar Formulario y Botones
+        // Limpiar interfaz
         document.getElementById('mainForm').reset();
         btnSubmit.disabled = false;
         btnSubmit.innerText = "Confirmar Operación";
-        btnSubmit.style.backgroundColor = "#22d3ee"; // Cyan
+        btnSubmit.style.backgroundColor = "#00e5ff"; 
         document.getElementById('btn-cancel-edit').classList.add('hidden');
 
-        // Refrescar y volver
-        await cargarDatos();
-        actualizarInterfaz();
+        // RECARGA: Usamos cargarDatos que es como ahora se llama tu función
+        await cargarDatos(); 
         goToTab(0);
 
     } catch (error) {
-        console.error("Error detallado:", error);
-        showToast("Error: No se pudo guardar");
+        console.error("Error:", error);
+        showToast("Error: No se pudo guardar", "error");
         btnSubmit.disabled = false;
         btnSubmit.innerText = editMode ? "Guardar Cambios" : "Confirmar Operación";
     }
 };
+
 
  function updateChart() {
     const canvas = document.getElementById('gastosChart');
