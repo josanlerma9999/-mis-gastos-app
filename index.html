@@ -415,8 +415,11 @@ function obtenerLogo(concepto) {
     const mesSel = document.getElementById('filtroMes').value;
     localStorage.setItem('ultimo_mes_consultado', mesSel); 
     
-    const hoyStr = new Date().toISOString().split('T')[0];
-    const hoyRef = new Date(hoyStr + "T00:00:00").getTime();
+    const hoy = new Date();
+hoy.setHours(0, 0, 0, 0); 
+const hoyStr = hoy.toISOString().split('T')[0];
+const hoyRef = hoy.getTime();
+
     
     let saldoReal = 0, gFuturos = 0, iFuturos = 0, deudaAqua = 0, deudaExplora = 0; 
 
@@ -459,20 +462,25 @@ function obtenerLogo(concepto) {
                 if (esP) saldoReal -= val;
                 else gFuturos += val;
             } else {
-                // --- RESTAR DEL SALDO REAL EL DÍA 5 DEL MES SIGUIENTE ---
-                const mesGasto = fechaG.getMonth();
-                const añoGasto = fechaG.getFullYear();
-                
-                // Calculamos el día 5 del mes siguiente al gasto
-                const fechaLiqReal = new Date(añoGasto, mesGasto + 1, 5);
+    // LÓGICA DE TARJETAS
+    const mesGasto = fechaG.getMonth();
+    const añoGasto = fechaG.getFullYear();
+    
+    // El día 5 del mes siguiente al gasto
+    const fechaLiqReal = new Date(añoGasto, mesGasto + 1, 5);
+    fechaLiqReal.setHours(0, 0, 0, 0); 
 
-                if (hoy >= fechaLiqReal) {
-                    saldoReal -= val; // Solo resta del dinero real cuando llega el día 5
-                } else {
-                    gFuturos += val; // Mientras tanto, aparece en "Próximos Pagos"
-                }
-            }
-        }
+    if (hoy >= fechaLiqReal) {
+        // Si ya es día 5 o más del mes siguiente, se resta del saldo real
+        saldoReal -= val; 
+    } else {
+        // MIENTRAS NO SEA DÍA 5:
+        // Sumamos a Próximos Pagos (gFuturos)
+        // Esto incluirá tus gastos de abril porque hoy es día 1 (menor que el día 5)
+        gFuturos += val; 
+    }
+}
+  }
 
         
         const disp = isPrivate ? "****€" : val.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€"; 
