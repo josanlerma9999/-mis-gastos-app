@@ -441,57 +441,42 @@ function obtenerLogo(concepto) {
     document.getElementById('listaPasado').innerHTML = '';
     let fechaUltimoGrupo = "";
 
-    appData.forEach(g => {
+        appData.forEach(g => {
         const val = Math.abs(g.importe);
         const esI = categIngresos.includes(g.categoria);
         const fechaG = new Date(g.fecha + "T00:00:00");
         const fechaGRef = fechaG.getTime();
         const esP = fechaGRef <= hoyRef; 
-        const esTarjeta = (g.categoria === "Tarjeta Aqua" || g.categoria === "Tarjeta Explora");
 
+        // --- CÁLCULO TARJETAS (RECUPERADO) ---
         const mesActual = hoy.getMonth();
         const anioActual = hoy.getFullYear();
+        if (g.categoria === "Tarjeta Aqua" && fechaG.getMonth() === mesActual && fechaG.getFullYear() === anioActual) deudaAqua += val;
+        if (g.categoria === "Tarjeta Explora" && fechaG.getMonth() === mesActual && fechaG.getFullYear() === anioActual) deudaExplora += val;
 
-        if (g.categoria === "Tarjeta Aqua") {
-            if (fechaG.getMonth() === mesActual && fechaG.getFullYear() === anioActual) deudaAqua += val;
-        }
-        if (g.categoria === "Tarjeta Explora") {
-            if (fechaG.getMonth() === mesActual && fechaG.getFullYear() === anioActual) deudaExplora += val;
-        } 
-
+        // --- LÓGICA DE SALDOS ---
         if (esI) {
-            if (esP) saldoReal += val;
-            else iFuturos += val;
+            if (esP) saldoReal += val; else iFuturos += val;
         } else {
-            if (!esTarjeta) {
-                if (esP) saldoReal -= val;
-                else gFuturos += val;
+            if (g.categoria !== "Tarjeta Aqua" && g.categoria !== "Tarjeta Explora") {
+                if (esP) saldoReal -= val; else gFuturos += val;
             } else {
-                const mesGasto = fechaG.getMonth();
-                const añoGasto = fechaG.getFullYear();
-                const fechaLiqReal = new Date(añoGasto, mesGasto + 1, 5);
-                fechaLiqReal.setHours(0, 0, 0, 0); 
-                if (hoy >= fechaLiqReal) saldoReal -= val; 
-                else gFuturos += val; 
+                const fechaLiq = new Date(fechaG.getFullYear(), fechaG.getMonth() + 1, 5);
+                if (hoy >= fechaLiq) saldoReal -= val; else gFuturos += val;
             }
         }
-        
-        const disp = isPrivate ? "****€" : val.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€"; 
 
+        // --- PINTAR HISTORIAL (PASADO) ---
         if(g.fecha.startsWith(mesSel)) {
             if (g.fecha !== fechaUltimoGrupo) {
-                let labelFecha = (g.fecha === hoyStr) ? "HOY" : new Date(g.fecha + "T00:00:00").toLocaleDateString('es-ES', { day: 'numeric', month: 'long' });
-                document.getElementById('listaPasado').insertAdjacentHTML('beforeend', `
-                    <div class="pt-6 pb-2 px-2 fecha-separador">
-                        <p class="text-[10px] font-black text-cyan-400/80 tracking-[0.2em] uppercase">${labelFecha}</p>
-                    </div>
-                `);
+                let labelF = (g.fecha === hoyStr) ? "HOY" : new Date(g.fecha + "T00:00:00").toLocaleDateString('es-ES', { day: 'numeric', month: 'long' });
+                document.getElementById('listaPasado').insertAdjacentHTML('beforeend', `<div class="pt-6 pb-2 px-2 fecha-separador"><p class="text-[10px] font-black text-cyan-400/80 uppercase tracking-widest">${labelF}</p></div>`);
                 fechaUltimoGrupo = g.fecha;
             }
-
             const estiloFuturo = !esP ? 'opacity-40 border-l-4 border-cyan-400' : '';
+            const disp = isPrivate ? "****€" : val.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
             document.getElementById('listaPasado').insertAdjacentHTML('beforeend', `
-                <div class="bbva-card p-4 flex justify-between items-center gap-3 ${val > 100 && !esI ? 'border-r-4 border-rose-500/30' : ''} ${estiloFuturo}" data-cat="${g.categoria}">
+                <div class="bbva-card p-4 flex justify-between items-center gap-3 ${estiloFuturo}" data-cat="${g.categoria}">
                     <div class="flex items-center gap-3 flex-1 overflow-hidden">
                         ${obtenerLogo(g.concepto)}
                         <div class="truncate">
@@ -500,19 +485,19 @@ function obtenerLogo(concepto) {
                         </div>
                     </div>
                     <div class="flex items-center gap-3">
-                        <p class="font-black whitespace-nowrap ${esI ? 'text-cyan-400' : (val > 100 ? 'text-rose-400' : 'text-white')}">${esI ? '+' : '-'}${disp}</p>
+                        <p class="font-black ${esI ? 'text-cyan-400' : 'text-white'}">${esI ? '+' : '-'}${disp}</p>
                         <button onclick="deleteGasto('${g._id}')" class="btn-action text-rose-500">🗑️</button>
                     </div>
                 </div>`);
-        } 
+        }
     });
 
-    // --- LISTA PREVISIÓN ---
+    // --- LISTA PREVISIÓN (CON DISNEY) ---
     const listaFuturo = document.getElementById('listaFuturo');
     listaFuturo.innerHTML = ''; 
     let fechaUltimoGrupoFuturo = "";
     let movsParaLista = appData.filter(g => g.fecha > hoyStr && g.fecha.startsWith(mesSel));
-
+    
     recs.forEach(p => {
         const fechaP = `${mesActualStr}-${p.dia.padStart(2, '0')}`;
         if (parseInt(p.dia) > hoy.getDate() && !appData.some(g => g.concepto === p.concepto && g.fecha === fechaP)) {
@@ -522,29 +507,38 @@ function obtenerLogo(concepto) {
 
     movsParaLista.sort((a, b) => a.fecha.localeCompare(b.fecha)).forEach(g => {
         const val = Math.abs(g.importe);
-        const esI = categIngresos.includes(g.categoria);
         const disp = isPrivate ? "****€" : val.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
-
         if (g.fecha !== fechaUltimoGrupoFuturo) {
             let fLabel = new Date(g.fecha + "T00:00:00").toLocaleDateString('es-ES', { day: 'numeric', month: 'long' });
             listaFuturo.insertAdjacentHTML('beforeend', `<div class="pt-6 pb-2 px-2"><p class="text-[10px] font-black text-cyan-400 uppercase tracking-widest">${fLabel}</p></div>`);
             fechaUltimoGrupoFuturo = g.fecha;
         }
-
         listaFuturo.insertAdjacentHTML('beforeend', `
             <div class="bbva-card p-4 flex justify-between items-center gap-3 border-l-4 border-cyan-400/30 mx-2 mb-2">
                 <div class="flex items-center gap-3 flex-1 overflow-hidden">
                     ${obtenerLogo(g.concepto)}
                     <div class="truncate">
-                        <p class="text-sm font-bold text-white truncate">${g.concepto} ${g.esFijo ? '<span class="text-[8px] text-cyan-400 ml-1">FIJO</span>' : ''}</p>
+                        <p class="text-sm font-bold text-white truncate">${g.concepto} <span class="text-[8px] text-cyan-400 ml-1">FIJO</span></p>
                         <p class="text-[9px] text-slate-500 uppercase mt-1">${g.categoria}</p>
                     </div>
                 </div>
-                <p class="font-black ${esI ? 'text-cyan-400' : 'text-white'}">${esI ? '+' : '-'}${disp}</p>
+                <p class="font-black text-white">-${disp}</p>
             </div>`);
     });
 
+    // --- CONTADOR ANIMADO ---
+    const elReal = document.getElementById('valReal');
+    if (isPrivate) { elReal.innerText = "****€"; } else {
+        let inicio = 0, saldoFinal = saldoReal;
+        const timer = setInterval(() => {
+            inicio += (saldoFinal - inicio) / 10;
+            if (Math.abs(saldoFinal - inicio) < 0.1) { inicio = saldoFinal; clearInterval(timer); }
+            elReal.innerText = inicio.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "€";
+        }, 30);
+    }
+
     actualizarSaludo(saldoReal);
+
     
 
     // --- 2. ESTILOS DINÁMICOS ---
