@@ -423,7 +423,22 @@ const hoyRef = hoy.getTime();
     
     let saldoReal = 0, gFuturos = 0, iFuturos = 0, deudaAqua = 0, deudaExplora = 0; 
 
-    document.getElementById('listaPasado').innerHTML = '';
+       // --- ESCÁNER DE PAGOS FIJOS PENDIENTES ---
+    let recs = JSON.parse(localStorage.getItem('recurrentes') || "[]");
+    const mesActualStr = hoy.toISOString().slice(0, 7); // "2024-05"
+
+    recs.forEach(p => {
+        const fechaPagoFijo = `${mesActualStr}-${p.dia.padStart(2, '0')}`;
+        // Si el día del pago fijo es mayor que hoy, es un pago que va a venir
+        if (parseInt(p.dia) > hoy.getDate()) {
+            gFuturos += parseFloat(p.importe);
+        }
+        // Si el día ya pasó pero por alguna razón no se ha registrado en appData
+        else if (!appData.some(g => g.concepto === p.concepto && g.fecha === fechaPagoFijo)) {
+            gFuturos += parseFloat(p.importe);
+        }
+    });
+ document.getElementById('listaPasado').innerHTML = '';
     document.getElementById('listaFuturo').innerHTML = ''; 
 
     let fechaUltimoGrupo = "";
