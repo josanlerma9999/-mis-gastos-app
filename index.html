@@ -895,7 +895,6 @@ function renderCardChart(cat) {
     if (!canvasEl) return;
     const ctx = canvasEl.getContext('2d');
     
-    // 1. Obtener meses (hoy y los 3 anteriores)
     const labelsRaw = [];
     const hoy = new Date();
     for(let i=3; i>=0; i--) {
@@ -903,18 +902,16 @@ function renderCardChart(cat) {
         labelsRaw.push(d.toISOString().slice(0, 7)); 
     }
 
-    // 2. Filtrar gastos de ESA tarjeta
     const datos = labelsRaw.map(mes => {
         return appData
             .filter(g => g.categoria === cat && g.fecha.startsWith(mes))
             .reduce((sum, g) => sum + Math.abs(g.importe), 0);
     });
 
-    // 3. Traductor de números a nombres de meses
     const nombresMeses = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
     const etiquetasFinales = labelsRaw.map(m => {
-        const numeroMes = parseInt(m.split('-')[1]); // Saca el "03" y lo hace 3
-        return nombresMeses[numeroMes - 1]; // Busca en el array (Ene es 0)
+        const numeroMes = parseInt(m.split('-')[1]);
+        return nombresMeses[numeroMes - 1];
     });
 
     if (cardCharts[cat]) cardCharts[cat].destroy();
@@ -922,7 +919,7 @@ function renderCardChart(cat) {
     cardCharts[cat] = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: etiquetasFinales, // <--- Aquí ya salen los nombres
+            labels: etiquetasFinales,
             datasets: [{
                 data: datos,
                 backgroundColor: cat === 'Tarjeta Explora' ? 'rgba(255,255,255,0.9)' : '#00e5ff',
@@ -933,17 +930,46 @@ function renderCardChart(cat) {
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
+            layout: {
+                padding: { top: 25 } // Espacio extra arriba para que el número no se corte
+            },
+            plugins: { 
+                legend: { display: false },
+                // TRUCO: Usamos una función para dibujar los números sobre las barras
+                tooltip: { enabled: true } 
+            },
             scales: {
-                y: { display: false },
+                y: { display: false, beginAtZero: true },
                 x: { 
                     ticks: { color: 'rgba(255,255,255,0.6)', font: { size: 10, weight: 'bold' } }, 
                     grid: { display: false } 
+                }
+            },
+            // ESTO DIBUJA LOS NÚMEROS AUTOMÁTICAMENTE
+            animation: {
+                onComplete: function() {
+                    const chartInstance = this;
+                    const ctx = chartInstance.ctx;
+                    ctx.font = Chart.helpers.fontString(9, 'bold', 'Inter');
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'bottom';
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'; // Color del número
+
+                    this.data.datasets.forEach(function(dataset, i) {
+                        const meta = chartInstance.getDatasetMeta(i);
+                        meta.data.forEach(function(bar, index) {
+                            const data = dataset.data[index];
+                            if(data > 0) { // Solo dibuja si hay gasto
+                                ctx.fillText(Math.round(data) + '€', bar.x, bar.y - 5);
+                            }
+                        });
+                    });
                 }
             }
         }
     });
 }
+
 function actualizarSaludo(saldo) {
     const hora = new Date().getHours();
     const texto = (hora >= 6 && hora < 12) ? "¡Buenos días!" : 
