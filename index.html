@@ -411,43 +411,37 @@ function obtenerLogo(concepto) {
 }
  
 
-                        function actualizarInterfaz() {
+                    function actualizarInterfaz() {
     const mesSel = document.getElementById('filtroMes').value;
     localStorage.setItem('ultimo_mes_consultado', mesSel); 
     
     const hoy = new Date();
-    // Forzamos año, mes y día local para evitar líos de zona horaria
     const yyyy = hoy.getFullYear();
     const mm = String(hoy.getMonth() + 1).padStart(2, '0');
     const dd = String(hoy.getDate()).padStart(2, '0');
     
-    const hoyStr = `${yyyy}-${mm}-${dd}`; // Esto genera "2024-05-01" exacto
+    const hoyStr = `${yyyy}-${mm}-${dd}`;
     const hoyRef = new Date(hoyStr + "T00:00:00").getTime();
     
     let saldoReal = 0, gFuturos = 0, iFuturos = 0, deudaAqua = 0, deudaExplora = 0;
 
-
-       // --- ESCÁNER DE PAGOS FIJOS PENDIENTES ---
+    // --- ESCÁNER DE PAGOS FIJOS PENDIENTES ---
     let recs = JSON.parse(localStorage.getItem('recurrentes') || "[]");
-    const mesActualStr = hoy.toISOString().slice(0, 7); // "2024-05"
+    const mesActualStr = hoy.toISOString().slice(0, 7);
 
     recs.forEach(p => {
         const fechaPagoFijo = `${mesActualStr}-${p.dia.padStart(2, '0')}`;
-        // Si el día del pago fijo es mayor que hoy, es un pago que va a venir
         if (parseInt(p.dia) > hoy.getDate()) {
             gFuturos += parseFloat(p.importe);
-        }
-        // Si el día ya pasó pero por alguna razón no se ha registrado en appData
-        else if (!appData.some(g => g.concepto === p.concepto && g.fecha === fechaPagoFijo)) {
+        } else if (!appData.some(g => g.concepto === p.concepto && g.fecha === fechaPagoFijo)) {
             gFuturos += parseFloat(p.importe);
         }
     });
- document.getElementById('listaPasado').innerHTML = '';
-    document.getElementById('listaFuturo').innerHTML = ''; 
 
+    document.getElementById('listaPasado').innerHTML = '';
     let fechaUltimoGrupo = "";
 
-            appData.forEach(g => {
+    appData.forEach(g => {
         const val = Math.abs(g.importe);
         const esI = categIngresos.includes(g.categoria);
         const fechaG = new Date(g.fecha + "T00:00:00");
@@ -455,22 +449,14 @@ function obtenerLogo(concepto) {
         const esP = fechaGRef <= hoyRef; 
         const esTarjeta = (g.categoria === "Tarjeta Aqua" || g.categoria === "Tarjeta Explora");
 
-        // --- LÓGICA DE TARJETAS (SOLO SUMAR MES ACTUAL EN "CARDS") ---
-        const hoy = new Date();
         const mesActual = hoy.getMonth();
         const anioActual = hoy.getFullYear();
 
         if (g.categoria === "Tarjeta Aqua") {
-            // Solo suma a la visualización de la tarjeta si es de este mes
-            if (fechaG.getMonth() === mesActual && fechaG.getFullYear() === anioActual) {
-                deudaAqua += val;
-            }
+            if (fechaG.getMonth() === mesActual && fechaG.getFullYear() === anioActual) deudaAqua += val;
         }
         if (g.categoria === "Tarjeta Explora") {
-            // Solo suma a la visualización de la tarjeta si es de este mes
-            if (fechaG.getMonth() === mesActual && fechaG.getFullYear() === anioActual) {
-                deudaExplora += val;
-            }
+            if (fechaG.getMonth() === mesActual && fechaG.getFullYear() === anioActual) deudaExplora += val;
         } 
 
         if (esI) {
@@ -481,29 +467,16 @@ function obtenerLogo(concepto) {
                 if (esP) saldoReal -= val;
                 else gFuturos += val;
             } else {
-    // LÓGICA DE TARJETAS
-    const mesGasto = fechaG.getMonth();
-    const añoGasto = fechaG.getFullYear();
-    
-    // El día 5 del mes siguiente al gasto
-    const fechaLiqReal = new Date(añoGasto, mesGasto + 1, 5);
-    fechaLiqReal.setHours(0, 0, 0, 0); 
-
-    if (hoy >= fechaLiqReal) {
-        // Si ya es día 5 o más del mes siguiente, se resta del saldo real
-        saldoReal -= val; 
-    } else {
-        // MIENTRAS NO SEA DÍA 5:
-        // Sumamos a Próximos Pagos (gFuturos)
-        // Esto incluirá tus gastos de abril porque hoy es día 1 (menor que el día 5)
-        gFuturos += val; 
-    }
-}
-  }
-
+                const mesGasto = fechaG.getMonth();
+                const añoGasto = fechaG.getFullYear();
+                const fechaLiqReal = new Date(añoGasto, mesGasto + 1, 5);
+                fechaLiqReal.setHours(0, 0, 0, 0); 
+                if (hoy >= fechaLiqReal) saldoReal -= val; 
+                else gFuturos += val; 
+            }
+        }
         
         const disp = isPrivate ? "****€" : val.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€"; 
- 
 
         if(g.fecha.startsWith(mesSel)) {
             if (g.fecha !== fechaUltimoGrupo) {
@@ -532,33 +505,21 @@ function obtenerLogo(concepto) {
                     </div>
                 </div>`);
         } 
+    });
 
-               // --- LISTA PREVISIÓN (MOVIMIENTOS + PAGOS FIJOS FUTUROS) ---
+    // --- LISTA PREVISIÓN ---
     const listaFuturo = document.getElementById('listaFuturo');
     listaFuturo.innerHTML = ''; 
     let fechaUltimoGrupoFuturo = "";
-
-    // 1. Combinamos gastos manuales futuros con suscripciones pendientes
     let movsParaLista = appData.filter(g => g.fecha > hoyStr && g.fecha.startsWith(mesSel));
 
-    const recurrentes = JSON.parse(localStorage.getItem('recurrentes') || "[]");
-    const mesActualStr = hoyStr.slice(0, 7);
-
-    recurrentes.forEach(p => {
+    recs.forEach(p => {
         const fechaP = `${mesActualStr}-${p.dia.padStart(2, '0')}`;
-        // Si el día es mayor que hoy y no está ya anotado
         if (parseInt(p.dia) > hoy.getDate() && !appData.some(g => g.concepto === p.concepto && g.fecha === fechaP)) {
-            movsParaLista.push({
-                concepto: p.concepto,
-                importe: parseFloat(p.importe),
-                categoria: p.categoria,
-                fecha: fechaP,
-                esFijo: true 
-            });
+            movsParaLista.push({ concepto: p.concepto, importe: parseFloat(p.importe), categoria: p.categoria, fecha: fechaP, esFijo: true });
         }
     });
 
-    // 2. Ordenamos y dibujamos con tu diseño exacto
     movsParaLista.sort((a, b) => a.fecha.localeCompare(b.fecha)).forEach(g => {
         const val = Math.abs(g.importe);
         const esI = categIngresos.includes(g.categoria);
@@ -575,9 +536,7 @@ function obtenerLogo(concepto) {
                 <div class="flex items-center gap-3 flex-1 overflow-hidden">
                     ${obtenerLogo(g.concepto)}
                     <div class="truncate">
-                        <p class="text-sm font-bold text-white truncate">
-                            ${g.concepto} ${g.esFijo ? '<span class="text-[8px] text-cyan-400 ml-1">FIJO</span>' : ''}
-                        </p>
+                        <p class="text-sm font-bold text-white truncate">${g.concepto} ${g.esFijo ? '<span class="text-[8px] text-cyan-400 ml-1">FIJO</span>' : ''}</p>
                         <p class="text-[9px] text-slate-500 uppercase mt-1">${g.categoria}</p>
                     </div>
                 </div>
@@ -585,32 +544,8 @@ function obtenerLogo(concepto) {
             </div>`);
     });
 
-
-    // --- 1. CONTADOR ANIMADO ---
-    const elReal = document.getElementById('valReal');
-    if (isPrivate) {
-        elReal.innerText = "****€";
-    } else {
-        const saldoFinal = saldoReal;
-        let inicio = 0;
-        if (saldoFinal > 1000) inicio = saldoFinal - 500;
-        if (saldoFinal < 0) inicio = saldoFinal + 500;
-
-        const duracion = 1000;
-        const pasos = 60; 
-        const incremento = (saldoFinal - inicio) / pasos;
-
-        const timer = setInterval(() => {
-            inicio += incremento;
-            if ((incremento > 0 && inicio >= saldoFinal) || (incremento < 0 && inicio <= saldoFinal)) {
-                inicio = saldoFinal;
-                clearInterval(timer);
-            }
-
-            elReal.innerText = inicio.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "€";
-        }, 1000 / pasos);
-    }
-actualizarSaludo(saldoReal);
+    actualizarSaludo(saldoReal);
+    
 
     // --- 2. ESTILOS DINÁMICOS ---
     const saldoTextoFormateado = isPrivate ? "****€" : saldoReal.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
