@@ -441,20 +441,20 @@ function obtenerLogo(concepto) {
     document.getElementById('listaPasado').innerHTML = '';
     let fechaUltimoGrupo = "";
 
-        appData.forEach(g => {
+            appData.forEach(g => {
         const val = Math.abs(g.importe);
         const esI = categIngresos.includes(g.categoria);
         const fechaG = new Date(g.fecha + "T00:00:00");
         const fechaGRef = fechaG.getTime();
         const esP = fechaGRef <= hoyRef; 
 
-        // --- CÁLCULO TARJETAS (RECUPERADO) ---
+        // --- TUS TARJETAS (CÁLCULO RECUPERADO) ---
         const mesActual = hoy.getMonth();
         const anioActual = hoy.getFullYear();
         if (g.categoria === "Tarjeta Aqua" && fechaG.getMonth() === mesActual && fechaG.getFullYear() === anioActual) deudaAqua += val;
         if (g.categoria === "Tarjeta Explora" && fechaG.getMonth() === mesActual && fechaG.getFullYear() === anioActual) deudaExplora += val;
 
-        // --- LÓGICA DE SALDOS ---
+        // --- TUS SALDOS (LÓGICA INTACTA) ---
         if (esI) {
             if (esP) saldoReal += val; else iFuturos += val;
         } else {
@@ -466,7 +466,7 @@ function obtenerLogo(concepto) {
             }
         }
 
-        // --- PINTAR HISTORIAL (PASADO) ---
+        // --- TU DISEÑO DE HISTORIAL (PASADO) ---
         if(g.fecha.startsWith(mesSel)) {
             if (g.fecha !== fechaUltimoGrupo) {
                 let labelF = (g.fecha === hoyStr) ? "HOY" : new Date(g.fecha + "T00:00:00").toLocaleDateString('es-ES', { day: 'numeric', month: 'long' });
@@ -492,7 +492,7 @@ function obtenerLogo(concepto) {
         }
     });
 
-    // --- LISTA PREVISIÓN (CON DISNEY) ---
+    // --- TU NUEVA PREVISIÓN (SISTEMA DISNEY) ---
     const listaFuturo = document.getElementById('listaFuturo');
     listaFuturo.innerHTML = ''; 
     let fechaUltimoGrupoFuturo = "";
@@ -526,7 +526,7 @@ function obtenerLogo(concepto) {
             </div>`);
     });
 
-    // --- CONTADOR ANIMADO ---
+    // --- TU SALDO ANIMADO (RESURRECCIÓN) ---
     const elReal = document.getElementById('valReal');
     if (isPrivate) { elReal.innerText = "****€"; } else {
         let inicio = 0, saldoFinal = saldoReal;
@@ -538,6 +538,7 @@ function obtenerLogo(concepto) {
     }
 
     actualizarSaludo(saldoReal);
+
 
     
 
