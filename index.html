@@ -549,9 +549,21 @@ function obtenerLogo(concepto) {
         (saldoReal > 200 ? 'text-cyan-400' : (saldoReal >= 100 ? 'text-amber-400' : 'text-rose-500'));
 
     // --- 3. RESTO DE VALORES ---
-    document.getElementById('valPend').innerText = isPrivate ? "****€" : "-" + gFuturos.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
-    document.getElementById('valProj').innerText = isPrivate ? "****€" : (saldoReal - gFuturos + iFuturos).toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
-    document.getElementById('card-aqua-val').innerText = isPrivate ? "****€" : deudaAqua.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
+        // --- ACTUALIZACIÓN DE VALORES CON COLOR DINÁMICO ---
+    const elPend = document.getElementById('valPend');
+    const elProj = document.getElementById('valProj');
+    const saldoFinalCalculado = saldoReal - gFuturos + iFuturos;
+
+    elPend.innerText = isPrivate ? "****€" : "-" + gFuturos.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
+    elProj.innerText = isPrivate ? "****€" : saldoFinalCalculado.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
+
+    // Lógica de colores para el Saldo Final
+    if (saldoFinalCalculado < 0) {
+        elProj.style.setProperty('color', '#f43f5e', 'important'); // Rojo si es negativo
+    } else {
+        elProj.style.setProperty('color', '#00e5ff', 'important'); // Tu Cian si es positivo
+    }
+document.getElementById('card-aqua-val').innerText = isPrivate ? "****€" : deudaAqua.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
     document.getElementById('card-explora-val').innerText = isPrivate ? "****€" : deudaExplora.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€"; 
 
     renderRecurrentes();
