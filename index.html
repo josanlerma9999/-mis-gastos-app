@@ -416,12 +416,16 @@ function obtenerLogo(concepto) {
     localStorage.setItem('ultimo_mes_consultado', mesSel); 
     
     const hoy = new Date();
-hoy.setHours(0, 0, 0, 0); 
-const hoyStr = hoy.toISOString().split('T')[0];
-const hoyRef = hoy.getTime();
-
+    // Forzamos año, mes y día local para evitar líos de zona horaria
+    const yyyy = hoy.getFullYear();
+    const mm = String(hoy.getMonth() + 1).padStart(2, '0');
+    const dd = String(hoy.getDate()).padStart(2, '0');
     
-    let saldoReal = 0, gFuturos = 0, iFuturos = 0, deudaAqua = 0, deudaExplora = 0; 
+    const hoyStr = `${yyyy}-${mm}-${dd}`; // Esto genera "2024-05-01" exacto
+    const hoyRef = new Date(hoyStr + "T00:00:00").getTime();
+    
+    let saldoReal = 0, gFuturos = 0, iFuturos = 0, deudaAqua = 0, deudaExplora = 0;
+
 
        // --- ESCÁNER DE PAGOS FIJOS PENDIENTES ---
     let recs = JSON.parse(localStorage.getItem('recurrentes') || "[]");
