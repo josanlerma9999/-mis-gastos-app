@@ -425,7 +425,7 @@ function obtenerLogo(concepto) {
 
     let fechaUltimoGrupo = "";
 
-        appData.forEach(g => {
+            appData.forEach(g => {
         const val = Math.abs(g.importe);
         const esI = categIngresos.includes(g.categoria);
         const fechaG = new Date(g.fecha + "T00:00:00");
@@ -433,39 +433,47 @@ function obtenerLogo(concepto) {
         const esP = fechaGRef <= hoyRef; 
         const esTarjeta = (g.categoria === "Tarjeta Aqua" || g.categoria === "Tarjeta Explora");
 
-        // Acumular deudas de tarjetas siempre (para la pestaña Cards)
-        if (g.categoria === "Tarjeta Aqua") deudaAqua += val;
-        if (g.categoria === "Tarjeta Explora") deudaExplora += val; 
+        // --- LÓGICA DE TARJETAS (SOLO SUMAR MES ACTUAL EN "CARDS") ---
+        const hoy = new Date();
+        const mesActual = hoy.getMonth();
+        const anioActual = hoy.getFullYear();
+
+        if (g.categoria === "Tarjeta Aqua") {
+            // Solo suma a la visualización de la tarjeta si es de este mes
+            if (fechaG.getMonth() === mesActual && fechaG.getFullYear() === anioActual) {
+                deudaAqua += val;
+            }
+        }
+        if (g.categoria === "Tarjeta Explora") {
+            // Solo suma a la visualización de la tarjeta si es de este mes
+            if (fechaG.getMonth() === mesActual && fechaG.getFullYear() === anioActual) {
+                deudaExplora += val;
+            }
+        } 
 
         if (esI) {
-            // INGRESOS: Suman al real si ya pasaron, o al proyectado si son futuros
             if (esP) saldoReal += val;
             else iFuturos += val;
         } else {
-            // GASTOS:
             if (!esTarjeta) {
-                // Gastos normales (Efectivo/Cuenta): Restan al momento
                 if (esP) saldoReal -= val;
                 else gFuturos += val;
             } else {
-                // LÓGICA DE TARJETAS DE CRÉDITO (Regla día 1 y día 5)
+                // --- RESTAR DEL SALDO REAL EL DÍA 5 DEL MES SIGUIENTE ---
                 const mesGasto = fechaG.getMonth();
                 const añoGasto = fechaG.getFullYear();
-                const hoy = new Date();
                 
-                // Día 1 del mes siguiente al gasto
-                const fechaLiqFinal = new Date(añoGasto, mesGasto + 1, 1);
-                // Día 5 del mes siguiente al gasto
+                // Calculamos el día 5 del mes siguiente al gasto
                 const fechaLiqReal = new Date(añoGasto, mesGasto + 1, 5);
 
                 if (hoy >= fechaLiqReal) {
-                    saldoReal -= val; // Se resta del Saldo Real solo si ya es día 5 del mes siguiente
-                } else if (hoy >= fechaLiqFinal) {
-                    gFuturos += val; // Se resta del Saldo Final (Proyectado) si ya es día 1
+                    saldoReal -= val; // Solo resta del dinero real cuando llega el día 5
+                } else {
+                    gFuturos += val; // Mientras tanto, aparece en "Próximos Pagos"
                 }
-                // Si no es ni día 1 ni día 5 del mes siguiente, el gasto NO resta de los saldos todavía.
             }
         }
+
         
         const disp = isPrivate ? "****€" : val.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€"; 
  
