@@ -638,9 +638,7 @@ const gastosMes = appData.filter(g => g.fecha.startsWith(mesAct) && !categIngres
         mPresupuesto.innerText = "Sin ingresos este mes";
     }
 }
-
-
-               document.getElementById('mainForm').onsubmit = async (e) => {
+        document.getElementById('mainForm').onsubmit = async (e) => {
     e.preventDefault();
     const concepto = document.getElementById('in-concepto').value;
     const importe = parseFloat(document.getElementById('in-importe').value);
