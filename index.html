@@ -309,7 +309,9 @@
 
     <script>
         const API_URL = 'https://mis-gastos-app.onrender.com/api/gastos'; const SECURE_KEY = 'YakoNala99'; 
-        let touchstartX = 0, touchendX = 0, currentTabIndex = 0;
+        let editMode = false; 
+        let editId = null;
+ let touchstartX = 0, touchendX = 0, currentTabIndex = 0;
         let pin = "", isPrivate = false, appData = [];
         const categIngresos = ["Sueldo", "Otros Ingresos"];
         let gastosChart = null; 
@@ -486,7 +488,11 @@ function obtenerLogo(concepto) {
                     </div>
                     <div class="flex items-center gap-3">
                         <p class="font-black ${esI ? 'text-cyan-400' : 'text-white'}">${esI ? '+' : '-'}${disp}</p>
-                        <button onclick="deleteGasto('${g._id}')" class="btn-action text-rose-500">🗑️</button>
+                                                <div class="flex items-center gap-2">
+                            <button onclick="prepararEdicion('${g._id}')" class="btn-action text-cyan-400/70">✏️</button>
+                            <button onclick="deleteGasto('${g._id}')" class="btn-action text-rose-500">🗑️</button>
+                        </div>
+
                     </div>
                 </div>`);
         }
@@ -811,6 +817,25 @@ document.getElementById('mainForm').onsubmit = async (e) => {
             recs = recs.filter(p => p.id !== id);
             localStorage.setItem('recurrentes', JSON.stringify(recs));
             renderApp();
+        }
+        function prepararEdicion(id) {
+            const gasto = appData.find(g => g._id === id);
+            if (!gasto) return;
+
+            document.getElementById('in-concepto').value = gasto.concepto;
+            document.getElementById('in-importe').value = Math.abs(gasto.importe);
+            document.getElementById('in-categoria').value = gasto.categoria;
+            document.getElementById('in-fecha').value = gasto.fecha;
+
+            editMode = true;
+            editId = id;
+
+            const btnForm = document.querySelector('#mainForm button[type="submit"]');
+            btnForm.innerText = "Guardar Cambios";
+            btnForm.style.backgroundColor = "#fbbf24"; // Color ámbar para diferenciar
+            btnForm.style.color = "#000";
+
+            goToTab(5); // Te lleva a la pestaña de "Operar"
         }
 
         async function deleteGasto(id) {
