@@ -619,58 +619,55 @@ const gastosMes = appData.filter(g => g.fecha.startsWith(mesAct) && !categIngres
 }
 
 
-                document.getElementById('mainForm').onsubmit = async (e) => {
-            e.preventDefault();
-            const concepto = document.getElementById('in-concepto').value;
-            const importe = parseFloat(document.getElementById('in-importe').value);
-            const categoria = document.getElementById('in-categoria').value;
-            const fecha = document.getElementById('in-fecha').value;
+               document.getElementById('mainForm').onsubmit = async (e) => {
+    e.preventDefault();
+    const concepto = document.getElementById('in-concepto').value;
+    const importe = parseFloat(document.getElementById('in-importe').value);
+    const categoria = document.getElementById('in-categoria').value;
+    const fecha = document.getElementById('in-fecha').value;
 
-            try {
-                if (editMode && editId) {
-                    // --- MODO EDICIÓN ---
-                    const res = await fetch(`${API_URL}/${editId}`, {
-                        method: 'PUT',
-                        headers: { 
-                            'Content-Type': 'application/json',
-                            'x-api-key': SECURE_KEY 
-                        },
-                        body: JSON.stringify({ concepto, importe, categoria, fecha })
-                    });
+    try {
+        let url = API_URL;
+        let metodo = 'POST';
 
-                    if (!res.ok) throw new Error('Error en el servidor');
+        if (editMode && editId) {
+            url = `${API_URL}/${editId}`;
+            metodo = 'PUT';
+        }
 
-                    showToast("Actualizado correctamente");
-                    
-                    // Resetear formulario y modo
-                    editMode = false;
-                    editId = null;
-                    const btnForm = document.querySelector('#mainForm button[type="submit"]');
-                    btnForm.innerText = "Confirmar Operación";
-                    btnForm.style.backgroundColor = "#00e5ff";
-                } else {
-                    // --- MODO CREAR ---
-                    await fetch(API_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'x-api-key': SECURE_KEY },
-                        body: JSON.stringify({ concepto, importe, categoria, fecha })
-                    });
-                    showToast("Operación confirmada");
-                }
+        const respuesta = await fetch(url, {
+            method: metodo,
+            headers: { 
+                'Content-Type': 'application/json',
+                'x-api-key': SECURE_KEY 
+            },
+            body: JSON.stringify({ concepto, importe, categoria, fecha })
+        });
 
-                e.target.reset();
-                // Forzamos la limpieza de caché local para que lea lo nuevo del servidor
-                localStorage.removeItem('appData_cache'); 
-                
-                goToTab(0); 
-                // Esperamos un pelín más para que el servidor procese y luego pedimos los datos
-                setTimeout(() => { renderApp(); }, 800);
+        if (!respuesta.ok) {
+            throw new Error(`Error servidor: ${respuesta.status}`);
+        }
 
-            } catch (error) {
-                console.error("Error crítico:", error);
-                showToast("Fallo al guardar", "delete");
-            }
-        };
+        showToast(editMode ? "Actualizado" : "Confirmado");
+        
+        // Limpieza total tras éxito
+        editMode = false;
+        editId = null;
+        const btnForm = document.querySelector('#mainForm button[type="submit"]');
+        btnForm.innerText = "Confirmar Operación";
+        btnForm.style.backgroundColor = "#00e5ff";
+        
+        e.target.reset();
+        localStorage.removeItem('appData_cache'); 
+        goToTab(0);
+        setTimeout(renderApp, 600);
+
+    } catch (error) {
+        console.error("Detalle del fallo:", error);
+        showToast("Error: " + error.message, "delete");
+    }
+};
+ 
 
 
 
