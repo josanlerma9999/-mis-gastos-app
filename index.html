@@ -543,7 +543,7 @@ function obtenerLogo(concepto) {
             </div>`);
     });
 
-        // --- TU SALDO ANIMADO (RESURRECCIÓN) ---
+         // --- TU SALDO ANIMADO (RESURRECCIÓN) ---
     const elReal = document.getElementById('valReal');
     if (isPrivate) { 
         elReal.innerText = "****€"; 
@@ -567,24 +567,14 @@ function obtenerLogo(concepto) {
         }, 30);
     }
 
+    // Ajuste de tamaño y limpieza de clases
     const saldoTextoFormateado = isPrivate ? "****€" : saldoReal.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
     const fontSize = saldoTextoFormateado.length > 10 ? 'text-3xl' : 'text-4xl';
     elReal.className = `${fontSize} font-black tracking-tighter leading-tight transition-all duration-700 ease-in-out`;
     
     actualizarSaludo(saldoReal);
 
-
-
-    
-
-    // --- 2. ESTILOS DINÁMICOS ---
-    const saldoTextoFormateado = isPrivate ? "****€" : saldoReal.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
-    const fontSize = saldoTextoFormateado.length > 10 ? 'text-3xl' : 'text-4xl';
-    elReal.className = `${fontSize} font-black tracking-tighter leading-tight transition-all duration-700 ease-in-out ` + 
-        (saldoReal > 200 ? 'text-cyan-400' : (saldoReal >= 100 ? 'text-amber-400' : 'text-rose-500'));
-
-    // --- 3. RESTO DE VALORES ---
-        // --- ACTUALIZACIÓN DE VALORES CON COLOR DINÁMICO ---
+    // --- ACTUALIZACIÓN DE VALORES SECUNDARIOS ---
     const elPend = document.getElementById('valPend');
     const elProj = document.getElementById('valProj');
     const saldoFinalCalculado = saldoReal - gFuturos + iFuturos;
@@ -592,17 +582,19 @@ function obtenerLogo(concepto) {
     elPend.innerText = isPrivate ? "****€" : "-" + gFuturos.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
     elProj.innerText = isPrivate ? "****€" : saldoFinalCalculado.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
 
-    // Lógica de colores para el Saldo Final
+    // Color del saldo proyectado
     if (saldoFinalCalculado < 0) {
-        elProj.style.setProperty('color', '#f43f5e', 'important'); // Rojo si es negativo
+        elProj.style.setProperty('color', '#f43f5e', 'important');
     } else {
-        elProj.style.setProperty('color', '#00e5ff', 'important'); // Tu Cian si es positivo
+        elProj.style.setProperty('color', '#00e5ff', 'important');
     }
-document.getElementById('card-aqua-val').innerText = isPrivate ? "****€" : deudaAqua.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
+
+    document.getElementById('card-aqua-val').innerText = isPrivate ? "****€" : deudaAqua.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
     document.getElementById('card-explora-val').innerText = isPrivate ? "****€" : deudaExplora.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€"; 
 
     renderRecurrentes();
     if(typeof updateChart === 'function') updateChart();
+
 const mesAct = document.getElementById('filtroMes').value;
 
 // 1. Calculas lo que hay en la base de datos
