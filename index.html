@@ -116,6 +116,14 @@
     width: 100%;
     height: 100%;
 }
+#valReal {
+    animation: pulse-glow 3s infinite ease-in-out;
+}
+
+@keyframes pulse-glow {
+    0%, 100% { opacity: 1; filter: drop-shadow(0 0 5px rgba(0,229,255,0.2)); }
+    50% { opacity: 0.85; filter: drop-shadow(0 0 15px rgba(0,229,255,0.5)); }
+}
 
     </style>
 </head>
