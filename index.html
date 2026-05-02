@@ -619,58 +619,59 @@ const gastosMes = appData.filter(g => g.fecha.startsWith(mesAct) && !categIngres
 }
 
 
-        document.getElementById('mainForm').onsubmit = async (e) => {
+                document.getElementById('mainForm').onsubmit = async (e) => {
             e.preventDefault();
             const concepto = document.getElementById('in-concepto').value;
             const importe = parseFloat(document.getElementById('in-importe').value);
             const categoria = document.getElementById('in-categoria').value;
             const fecha = document.getElementById('in-fecha').value;
-            const esRecurrente = document.getElementById('check-recurrente').checked;
 
             try {
-                if (editMode) {
-                    // --- MODO EDICIÓN: ACTUALIZAR ---
-                    await fetch(`${API_URL}/${editId}`, {
+                if (editMode && editId) {
+                    // --- MODO EDICIÓN ---
+                    const res = await fetch(`${API_URL}/${editId}`, {
                         method: 'PUT',
-                        headers: { 'Content-Type': 'application/json', 'x-api-key': SECURE_KEY },
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'x-api-key': SECURE_KEY 
+                        },
                         body: JSON.stringify({ concepto, importe, categoria, fecha })
                     });
-                    showToast("Movimiento actualizado");
+
+                    if (!res.ok) throw new Error('Error en el servidor');
+
+                    showToast("Actualizado correctamente");
                     
-                    // Resetear el modo edición
+                    // Resetear formulario y modo
                     editMode = false;
                     editId = null;
                     const btnForm = document.querySelector('#mainForm button[type="submit"]');
                     btnForm.innerText = "Confirmar Operación";
-                    btnForm.style.backgroundColor = "#00e5ff"; // Vuelve al Cian
+                    btnForm.style.backgroundColor = "#00e5ff";
                 } else {
-                    // --- MODO NORMAL: CREAR ---
+                    // --- MODO CREAR ---
                     await fetch(API_URL, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'x-api-key': SECURE_KEY },
                         body: JSON.stringify({ concepto, importe, categoria, fecha })
                     });
                     showToast("Operación confirmada");
-
-                    if(esRecurrente) {
-                        const diaPago = fecha.split('-')[2];
-                        let recs = JSON.parse(localStorage.getItem('recurrentes') || "[]");
-                        if (!recs.some(p => p.concepto === concepto)) {
-                            recs.push({ concepto, importe, dia: diaPago, categoria, id: Date.now() });
-                            localStorage.setItem('recurrentes', JSON.stringify(recs));
-                        }
-                    }
                 }
 
                 e.target.reset();
-                goToTab(0); // Volver al inicio
-                setTimeout(renderApp, 500); // Recargar datos
+                // Forzamos la limpieza de caché local para que lea lo nuevo del servidor
+                localStorage.removeItem('appData_cache'); 
+                
+                goToTab(0); 
+                // Esperamos un pelín más para que el servidor procese y luego pedimos los datos
+                setTimeout(() => { renderApp(); }, 800);
 
             } catch (error) {
-                console.error("Error al procesar:", error);
-                showToast("Error al guardar", "delete");
+                console.error("Error crítico:", error);
+                showToast("Fallo al guardar", "delete");
             }
         };
+
 
 
                       function updateChart() {
