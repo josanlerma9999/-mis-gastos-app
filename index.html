@@ -500,11 +500,10 @@ function obtenerLogo(concepto) {
                     <div class="flex items-center gap-3">
                         <p class="font-black ${esI ? 'text-cyan-400' : 'text-white'}">${esI ? '+' : '-'}${disp}</p>
                                                 <div class="flex items-center gap-2">
-                            <button onclick="prepararEdicion('${g._id}')" class="btn-action text-cyan-400/70">✏️</button>
-                            <button onclick="deleteGasto('${g._id}')" class="btn-action text-rose-500">🗑️</button>
-                        </div>
-
-                    </div>
+    <button onclick="prepararEdicion('${g._id}')" class="btn-action text-[#00fbff] drop-shadow-[0_0_8px_rgba(0,251,255,0.4)]">✏️</button>
+    <button onclick="deleteGasto('${g._id}')" class="btn-action text-[#ff0040] drop-shadow-[0_0_8px_rgba(255,0,64,0.4)]">🗑️</button>
+</div>
+ </div>
                 </div>`);
         }
     });
