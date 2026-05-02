@@ -333,6 +333,17 @@
             document.getElementById('main-view').style.transform = `translateX(-${i * 16.666}%)`; 
             document.querySelectorAll('.nav-btn').forEach((b, idx) => idx === i ? b.classList.add('active-tab') : b.classList.remove('active-tab'));
             if(i === 0) setTimeout(updateChart, 100);
+        if (i !== 5 && editMode) {
+                editMode = false;
+                editId = null;
+                const btnForm = document.querySelector('#mainForm button[type="submit"]');
+                if(btnForm) {
+                    btnForm.innerText = "Confirmar Operación";
+                    btnForm.style.backgroundColor = "#00e5ff"; // Vuelve al cian
+                    btnForm.style.color = "#000";
+                }
+                document.getElementById('mainForm').reset();
+            }
         } 
          function showToast(msj, tipo = 'success') {
             const container = document.getElementById('toast-container');
@@ -532,18 +543,36 @@ function obtenerLogo(concepto) {
             </div>`);
     });
 
-    // --- TU SALDO ANIMADO (RESURRECCIÓN) ---
+        // --- TU SALDO ANIMADO (RESURRECCIÓN) ---
     const elReal = document.getElementById('valReal');
-    if (isPrivate) { elReal.innerText = "****€"; } else {
+    if (isPrivate) { 
+        elReal.innerText = "****€"; 
+        elReal.style.color = "white"; 
+    } else {
         let inicio = 0, saldoFinal = saldoReal;
         const timer = setInterval(() => {
             inicio += (saldoFinal - inicio) / 10;
-            if (Math.abs(saldoFinal - inicio) < 0.1) { inicio = saldoFinal; clearInterval(timer); }
+            if (Math.abs(saldoFinal - inicio) < 0.1) { 
+                inicio = saldoFinal; 
+                clearInterval(timer); 
+            }
+            
             elReal.innerText = inicio.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "€";
+            
+            // TU LÓGICA DE COLOR DINÁMICO
+            if (inicio > 200) elReal.style.color = '#00e5ff';
+            else if (inicio >= 100) elReal.style.color = '#fbbf24';
+            else elReal.style.color = '#f43f5e';
+
         }, 30);
     }
 
+    const saldoTextoFormateado = isPrivate ? "****€" : saldoReal.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
+    const fontSize = saldoTextoFormateado.length > 10 ? 'text-3xl' : 'text-4xl';
+    elReal.className = `${fontSize} font-black tracking-tighter leading-tight transition-all duration-700 ease-in-out`;
+    
     actualizarSaludo(saldoReal);
+
 
 
     
@@ -827,13 +856,17 @@ const gastosMes = appData.filter(g => g.fecha.startsWith(mesAct) && !categIngres
     }
 }
 
- async function borrarRecurrente(id) {
+         async function borrarRecurrente(id) {
             if(!confirm("¿Borrar de fijos y movimientos de este mes?")) return;
             let recs = JSON.parse(localStorage.getItem('recurrentes') || "[]");
             recs = recs.filter(p => p.id !== id);
             localStorage.setItem('recurrentes', JSON.stringify(recs));
-            renderApp();
+            
+            // Ponemos el await para que la interfaz espere a que el servidor responda
+            await renderApp(); 
+            showToast("Pago fijo eliminado");
         }
+
         function prepararEdicion(id) {
             const gasto = appData.find(g => g._id === id);
             if (!gasto) return;
