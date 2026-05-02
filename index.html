@@ -627,34 +627,31 @@ const gastosMes = appData.filter(g => g.fecha.startsWith(mesAct) && !categIngres
     const fecha = document.getElementById('in-fecha').value;
 
     try {
-        let url = API_URL;
-        let metodo = 'POST';
-
-                if (editMode && editId) {
-            // Aseguramos que no haya dobles barras y que el ID esté presente
-            const baseUrl = API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL;
-            url = `${baseUrl}/${editId}`;
-            metodo = 'PUT';
-            console.log("Intentando editar en:", url); // Esto nos dirá la verdad en la consola
+        if (editMode && editId) {
+            // --- ESTRATEGIA DE RESCATE: BORRAR Y CREAR ---
+            // 1. Borramos el antiguo
+            await fetch(`${API_URL}/${editId}`, {
+                method: 'DELETE',
+                headers: { 'x-api-key': SECURE_KEY }
+            });
+            // 2. Creamos el nuevo con los datos corregidos
+            await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'x-api-key': SECURE_KEY },
+                body: JSON.stringify({ concepto, importe, categoria, fecha })
+            });
+            showToast("Movimiento editado");
+        } else {
+            // --- MODO CREAR NORMAL ---
+            await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'x-api-key': SECURE_KEY },
+                body: JSON.stringify({ concepto, importe, categoria, fecha })
+            });
+            showToast("Operación confirmada");
         }
 
-
-        const respuesta = await fetch(url, {
-            method: metodo,
-            headers: { 
-                'Content-Type': 'application/json',
-                'x-api-key': SECURE_KEY 
-            },
-            body: JSON.stringify({ concepto, importe, categoria, fecha })
-        });
-
-        if (!respuesta.ok) {
-            throw new Error(`Error servidor: ${respuesta.status}`);
-        }
-
-        showToast(editMode ? "Actualizado" : "Confirmado");
-        
-        // Limpieza total tras éxito
+        // Limpiar y resetear
         editMode = false;
         editId = null;
         const btnForm = document.querySelector('#mainForm button[type="submit"]');
@@ -667,10 +664,11 @@ const gastosMes = appData.filter(g => g.fecha.startsWith(mesAct) && !categIngres
         setTimeout(renderApp, 600);
 
     } catch (error) {
-        console.error("Detalle del fallo:", error);
-        showToast("Error: " + error.message, "delete");
+        console.error("Error:", error);
+        showToast("Error al procesar", "delete");
     }
 };
+
  
 
 
