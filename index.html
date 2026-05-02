@@ -630,10 +630,14 @@ const gastosMes = appData.filter(g => g.fecha.startsWith(mesAct) && !categIngres
         let url = API_URL;
         let metodo = 'POST';
 
-        if (editMode && editId) {
-            url = `${API_URL}/${editId}`;
+                if (editMode && editId) {
+            // Aseguramos que no haya dobles barras y que el ID esté presente
+            const baseUrl = API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL;
+            url = `${baseUrl}/${editId}`;
             metodo = 'PUT';
+            console.log("Intentando editar en:", url); // Esto nos dirá la verdad en la consola
         }
+
 
         const respuesta = await fetch(url, {
             method: metodo,
