@@ -475,35 +475,41 @@ function obtenerLogo(concepto) {
         if (g.categoria === "Tarjeta Aqua" && fechaG.getMonth() === mesActual && fechaG.getFullYear() === anioActual) deudaAqua += val;
         if (g.categoria === "Tarjeta Explora" && fechaG.getMonth() === mesActual && fechaG.getFullYear() === anioActual) deudaExplora += val;
 
-                // --- TUS SALDOS (LÓGICA DE DIFERIDO DÍA 5) ---
+                       // --- TUS SALDOS (VERSION BLINDADA DIFERIDO) ---
         if (esI) {
             if (esP) saldoReal += val; else iFuturos += val;
         } else {
+            // 1. Si NO es tarjeta, se resta siempre (del real o del proyectado)
             if (g.categoria !== "Tarjeta Aqua" && g.categoria !== "Tarjeta Explora") {
                 if (esP) saldoReal -= val; else gFuturos += val;
             } else {
+                // 2. Es una TARJETA: Calculamos cuándo toca pagarla
                 const fechaGasto = new Date(g.fecha + "T00:00:00");
                 const mesGasto = fechaGasto.getMonth();
                 const anioGasto = fechaGasto.getFullYear();
+                
+                const hoy = new Date();
                 const mesActual = hoy.getMonth();
                 const anioActual = hoy.getFullYear();
 
-                const fechaLiq = new Date(anioGasto, mesGasto + 1, 5);
+                // Fecha en la que te cobran la tarjeta (Día 5 del mes siguiente al gasto)
+                const fechaCobro = new Date(anioGasto, mesGasto + 1, 5);
 
-                if (hoy >= fechaLiq) {
-                    // Ya pasó el día 5 del mes siguiente: Resta del Real
+                if (hoy >= fechaCobro) {
+                    // CASO A: Ya ha pasado el día 5 del mes siguiente. Resta del REAL.
                     saldoReal -= val;
                 } else if (mesGasto < mesActual || anioGasto < anioActual) {
-                    // Es de un mes pasado pero aún no es día 5: Resta del Proyectado
+                    // CASO B: El gasto es de un mes pasado (ej: Abril) y hoy es Mayo (antes del día 5). Resta del PROYECTADO.
                     gFuturos += val;
                 } else {
-                    // ES DE ESTE MES: No resta de nada (Solo suma deuda en la Card)
+                    // CASO C: El gasto es de ESTE MES (Mayo). 
+                    // NO RESTAMOS NADA. Ni de saldoReal ni de gFuturos.
+                    // Así el Saldo Final (azul) se mantiene intacto.
                 }
             }
         }
-
-
-        // --- TU DISEÑO DE HISTORIAL (PASADO) ---
+ 
+// --- TU DISEÑO DE HISTORIAL (PASADO) ---
         if(g.fecha.startsWith(mesSel)) {
             if (g.fecha !== fechaUltimoGrupo) {
                 let labelF = (g.fecha === hoyStr) ? "HOY" : new Date(g.fecha + "T00:00:00").toLocaleDateString('es-ES', { day: 'numeric', month: 'long' });
