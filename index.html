@@ -475,17 +475,33 @@ function obtenerLogo(concepto) {
         if (g.categoria === "Tarjeta Aqua" && fechaG.getMonth() === mesActual && fechaG.getFullYear() === anioActual) deudaAqua += val;
         if (g.categoria === "Tarjeta Explora" && fechaG.getMonth() === mesActual && fechaG.getFullYear() === anioActual) deudaExplora += val;
 
-        // --- TUS SALDOS (LÓGICA INTACTA) ---
+                // --- TUS SALDOS (LÓGICA DE DIFERIDO DÍA 5) ---
         if (esI) {
             if (esP) saldoReal += val; else iFuturos += val;
         } else {
             if (g.categoria !== "Tarjeta Aqua" && g.categoria !== "Tarjeta Explora") {
                 if (esP) saldoReal -= val; else gFuturos += val;
             } else {
-                const fechaLiq = new Date(fechaG.getFullYear(), fechaG.getMonth() + 1, 5);
-                if (hoy >= fechaLiq) saldoReal -= val; else gFuturos += val;
+                const fechaGasto = new Date(g.fecha + "T00:00:00");
+                const mesGasto = fechaGasto.getMonth();
+                const anioGasto = fechaGasto.getFullYear();
+                const mesActual = hoy.getMonth();
+                const anioActual = hoy.getFullYear();
+
+                const fechaLiq = new Date(anioGasto, mesGasto + 1, 5);
+
+                if (hoy >= fechaLiq) {
+                    // Ya pasó el día 5 del mes siguiente: Resta del Real
+                    saldoReal -= val;
+                } else if (mesGasto < mesActual || anioGasto < anioActual) {
+                    // Es de un mes pasado pero aún no es día 5: Resta del Proyectado
+                    gFuturos += val;
+                } else {
+                    // ES DE ESTE MES: No resta de nada (Solo suma deuda en la Card)
+                }
             }
         }
+
 
         // --- TU DISEÑO DE HISTORIAL (PASADO) ---
         if(g.fecha.startsWith(mesSel)) {
