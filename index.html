@@ -667,59 +667,66 @@ const gastosMes = appData.filter(g => g.fecha.startsWith(mesAct) && !categIngres
         mPresupuesto.innerText = "Sin ingresos este mes";
     }
 }
+                // --- MOTOR DE ENVÍO Y GUARDADO (CORREGIDO) ---
         document.getElementById('mainForm').onsubmit = async (e) => {
-    e.preventDefault();
-    const concepto = document.getElementById('in-concepto').value;
-    const importe = parseFloat(document.getElementById('in-importe').value);
-    const categoria = document.getElementById('in-categoria').value;
-    const fecha = document.getElementById('in-fecha').value;
-    const esRecurrente = document.getElementById('check-recurrente').checked; // <--- LEER EL CHECK
+            e.preventDefault();
+            
+            const concepto = document.getElementById('in-concepto').value;
+            const importe = parseFloat(document.getElementById('in-importe').value);
+            const categoria = document.getElementById('in-categoria').value;
+            const fecha = document.getElementById('in-fecha').value;
+            const checkEl = document.getElementById('check-recurrente');
+            const esRecurrente = checkEl ? checkEl.checked : false;
 
-    try {
-        // 1. Guardar en la Nube (Render)
-        if (editMode && editId) {
-            await fetch(`${API_URL}/${editId}`, {
-                method: 'DELETE',
-                headers: { 'x-api-key': SECURE_KEY }
-            });
-        }
-        
-        await fetch(API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'x-api-key': SECURE_KEY },
-            body: JSON.stringify({ concepto, importe, categoria, fecha })
-        });
+            try {
+                // 1. Enviar a la nube (Render)
+                if (editMode && editId) {
+                    await fetch(`${API_URL}/${editId}`, {
+                        method: 'DELETE',
+                        headers: { 'x-api-key': SECURE_KEY }
+                    });
+                }
+                
+                await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'x-api-key': SECURE_KEY },
+                    body: JSON.stringify({ concepto, importe, categoria, fecha })
+                });
 
-        // 2. SI ES RECURRENTE -> Guardar en el Teléfono (Suscripciones)
-        if (esRecurrente) {
-            let fijos = JSON.parse(localStorage.getItem('recurrentes') || "[]");
-            const nuevoFijo = {
-                id: Date.now(),
-                concepto: concepto,
-                importe: importe,
-                categoria: categoria,
-                dia: fecha.split('-')[2] // Extrae el día de la fecha seleccionada
-            };
-            fijos.push(nuevoFijo);
-            localStorage.setItem('recurrentes', JSON.stringify(fijos));
-        }
+                // 2. SI ES RECURRENTE -> Guardar en el teléfono
+                if (esRecurrente) {
+                    let fijos = JSON.parse(localStorage.getItem('recurrentes') || "[]");
+                    fijos.push({
+                        id: Date.now(),
+                        concepto: concepto,
+                        importe: importe,
+                        categoria: categoria,
+                        dia: fecha.split('-')[2] // El día (ej: "05")
+                    });
+                    localStorage.setItem('recurrentes', JSON.stringify(fijos));
+                }
 
-        showToast(esRecurrente ? "Pago Fijo Registrado" : "Operación confirmada");
+                // 3. Feedback visual
+                showToast(esRecurrente ? "Pago Fijo Registrado" : "Operación confirmada");
 
-        // Limpiar y resetear
-        editMode = false;
-        editId = null;
-        e.target.reset();
-        localStorage.removeItem('appData_cache'); 
-        
-        renderApp(); // Esto recargará todo, incluyendo la lista de Suscripciones
-        goToTab(0);
+                // 4. Limpiar y Resetear todo
+                editMode = false;
+                editId = null;
+                e.target.reset();
+                localStorage.removeItem('appData_cache'); 
+                
+                // Forzamos actualización de todo
+                await renderApp(); 
+                renderRecurrentes(); 
+                
+                goToTab(0); // Volver al inicio
 
-    } catch (error) {
-        console.error("Error:", error);
-        showToast("Error al procesar", "delete");
-    }
-};
+            } catch (error) {
+                console.error("Error crítico:", error);
+                showToast("Error de conexión", "delete");
+            }
+        };
+
 
 
  
