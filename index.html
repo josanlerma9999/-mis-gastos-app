@@ -673,49 +673,54 @@ const gastosMes = appData.filter(g => g.fecha.startsWith(mesAct) && !categIngres
     const importe = parseFloat(document.getElementById('in-importe').value);
     const categoria = document.getElementById('in-categoria').value;
     const fecha = document.getElementById('in-fecha').value;
+    const esRecurrente = document.getElementById('check-recurrente').checked; // <--- LEER EL CHECK
 
     try {
+        // 1. Guardar en la Nube (Render)
         if (editMode && editId) {
-            // --- ESTRATEGIA DE RESCATE: BORRAR Y CREAR ---
-            // 1. Borramos el antiguo
             await fetch(`${API_URL}/${editId}`, {
                 method: 'DELETE',
                 headers: { 'x-api-key': SECURE_KEY }
             });
-            // 2. Creamos el nuevo con los datos corregidos
-            await fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'x-api-key': SECURE_KEY },
-                body: JSON.stringify({ concepto, importe, categoria, fecha })
-            });
-            showToast("Movimiento editado");
-        } else {
-            // --- MODO CREAR NORMAL ---
-            await fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'x-api-key': SECURE_KEY },
-                body: JSON.stringify({ concepto, importe, categoria, fecha })
-            });
-            showToast("Operación confirmada");
         }
+        
+        await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-api-key': SECURE_KEY },
+            body: JSON.stringify({ concepto, importe, categoria, fecha })
+        });
+
+        // 2. SI ES RECURRENTE -> Guardar en el Teléfono (Suscripciones)
+        if (esRecurrente) {
+            let fijos = JSON.parse(localStorage.getItem('recurrentes') || "[]");
+            const nuevoFijo = {
+                id: Date.now(),
+                concepto: concepto,
+                importe: importe,
+                categoria: categoria,
+                dia: fecha.split('-')[2] // Extrae el día de la fecha seleccionada
+            };
+            fijos.push(nuevoFijo);
+            localStorage.setItem('recurrentes', JSON.stringify(fijos));
+        }
+
+        showToast(esRecurrente ? "Pago Fijo Registrado" : "Operación confirmada");
 
         // Limpiar y resetear
         editMode = false;
         editId = null;
-        const btnForm = document.querySelector('#mainForm button[type="submit"]');
-        btnForm.innerText = "Confirmar Operación";
-        btnForm.style.backgroundColor = "#00e5ff";
-        
         e.target.reset();
         localStorage.removeItem('appData_cache'); 
+        
+        renderApp(); // Esto recargará todo, incluyendo la lista de Suscripciones
         goToTab(0);
-        setTimeout(renderApp, 600);
 
     } catch (error) {
         console.error("Error:", error);
         showToast("Error al procesar", "delete");
     }
 };
+
 
  
 
