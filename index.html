@@ -861,7 +861,8 @@ const gastosMes = appData.filter(g => g.fecha.startsWith(mesAct) && !categIngres
                     </div>
                 </div>
                 <div class="flex items-center gap-3">
-                    <p class="font-black text-[#ff0040] drop-shadow-[0_0_5px_rgba(255,0,64,0.3)]">-${importe}€</p>
+                    <p class="font-black text-amber-200/90">-${importe}€</p>
+
                     <button onclick="borrarRecurrente(${p.id})" class="btn-action text-rose-500/50 hover:text-rose-500">
                         🗑️
                     </button>
