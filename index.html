@@ -680,18 +680,45 @@ const gastosMes = appData.filter(g => g.fecha.startsWith(mesAct) && !categIngres
 
             try {
                 // 1. Enviar a la nube (Render)
-                if (editMode && editId) {
-                    await fetch(`${API_URL}/${editId}`, {
-                        method: 'DELETE',
-                        headers: { 'x-api-key': SECURE_KEY }
-                    });
-                }
-                
-                await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'x-api-key': SECURE_KEY },
-                    body: JSON.stringify({ concepto, importe, categoria, fecha })
-                });
+               // Si estamos editando, primero eliminamos el rastro del antiguo en el servidor
+if (editMode && editId) {
+await fetch(API_URL + '/' + editId, {
+method: 'DELETE',
+headers: { 'x-api-key': SECURE_KEY }
+});
+
+// Limpieza preventiva: si el gasto era fijo, lo quitamos de la lista local para que no se duplique
+var fijos = JSON.parse(localStorage.getItem('recurrentes') || '[]');
+fijos = fijos.filter(function(item) { return item.concepto !== concepto; });
+localStorage.setItem('recurrentes', JSON.stringify(fijos));
+}
+
+// Guardamos la nueva versión del gasto
+await fetch(API_URL, {
+method: 'POST',
+headers: { 'Content-Type': 'application/json', 'x-api-key': SECURE_KEY },
+body: JSON.stringify({
+concepto: concepto,
+importe: importe,
+categoria: categoria,
+fecha: fecha
+})
+});
+
+// Si has marcado la casilla de recurrente, lo añadimos a la lista de fijos
+if (esRecurrente) {
+var fijosNuevos = JSON.parse(localStorage.getItem('recurrentes') || '[]');
+fijosNuevos.push({
+id: Date.now(),
+concepto: concepto,
+importe: importe,
+categoria: categoria,
+dia: fecha.split('-')[2]
+});
+localStorage.setItem('recurrentes', JSON.stringify(fijosNuevos));
+}
+
+ 
 
                 // 2. SI ES RECURRENTE -> Guardar en el teléfono
                 if (esRecurrente) {
