@@ -698,18 +698,30 @@ const gastosMes = appData.filter(g => g.fecha.startsWith(mesAct) && !categIngres
                     body: JSON.stringify({ concepto, importe, categoria, fecha })
                 });
 
-                // 2. SI ES RECURRENTE -> Guardar en el teléfono
+                  // 2. SI ES RECURRENTE -> Guardar o Actualizar en el teléfono
                 if (esRecurrente) {
                     let fijos = JSON.parse(localStorage.getItem('recurrentes') || "[]");
-                    fijos.push({
-                        id: Date.now(),
+                    
+                    // Comprobamos si ya existía un fijo con el mismo concepto para no duplicarlo
+                    const indiceExistente = fijos.findIndex(p => p.concepto.trim().toLowerCase() === concepto.trim().toLowerCase());
+                    
+                    const datosFijo = {
+                        id: indiceExistente !== -1 ? fijos[indiceExistente].id : Date.now(), // Mantiene el ID si ya existía
                         concepto: concepto,
                         importe: importe,
                         categoria: categoria,
-                        dia: fecha.split('-')[2] // El día (ej: "05")
-                    });
+                        dia: fecha.split('-')[2]
+                    };
+
+                    if (indiceExistente !== -1) {
+                        fijos[indiceExistente] = datosFijo; // Actualiza el existente
+                    } else {
+                        fijos.push(datosFijo); // Añade uno nuevo si no existía
+                    }
+                    
                     localStorage.setItem('recurrentes', JSON.stringify(fijos));
                 }
+
 
                 // 3. Feedback visual
                 showToast(esRecurrente ? "Pago Fijo Registrado" : "Operación confirmada");
