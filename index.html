@@ -538,6 +538,7 @@ function obtenerLogo(concepto) {
         }
     });
 
+        // --- TU NUEVA PREVISIÓN (SISTEMA DISNEY) ---
     const listaFuturo = document.getElementById('listaFuturo');
     listaFuturo.innerHTML = ''; 
     let fechaUltimoGrupoFuturo = "";
@@ -550,7 +551,7 @@ function obtenerLogo(concepto) {
         const yaExisteEnBD = appData.some(g => g.concepto.trim().toLowerCase() === p.concepto.trim().toLowerCase() && g.fecha === fechaP);
 
         if (parseInt(p.dia) > hoy.getDate() && !yaExisteEnBD) {
-            movsParaLista.push({ concepto: p.concepto, importe: parseFloat(p.importe), categoria: p.categoria, fecha: fechaP, esFijo: true });
+            movsParaLista.push({ concepto: p.concepto, importe: parseFloat(p.importe), categoria: p.categoria, fecha: fechaP });
         }
     });
 
@@ -562,7 +563,10 @@ function obtenerLogo(concepto) {
             listaFuturo.insertAdjacentHTML('beforeend', `<div class="pt-6 pb-2 px-2"><p class="text-[10px] font-black text-cyan-400 uppercase tracking-widest">${fLabel}</p></div>`);
             fechaUltimoGrupoFuturo = g.fecha;
         }
-        const etiquetaFijo = g.esFijo ? '<span style="color:#fde68a; font-size:8px; margin-left:4px; font-weight:900;">FIJO</span>' : '';
+        
+        // Comprobación total: Si el concepto coincide con algún fijo, se activa la etiqueta dorada
+        const esGastoFijo = recs.some(p => p.concepto.trim().toLowerCase() === g.concepto.trim().toLowerCase());
+        const etiquetaFijo = esGastoFijo ? '<span style="color:#fde68a; font-size:8px; margin-left:4px; font-weight:900;">FIJO</span>' : '';
 
         listaFuturo.insertAdjacentHTML('beforeend', `
             <div class="bbva-card p-4 flex justify-between items-center gap-3 border-l-4 border-cyan-400/30 mx-2 mb-2">
