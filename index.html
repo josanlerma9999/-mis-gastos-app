@@ -565,7 +565,11 @@ function obtenerLogo(concepto) {
         }
         
         // Comprobación total: Si el concepto coincide con algún fijo, se activa la etiqueta dorada
-        const esGastoFijo = recs.some(p => p.concepto.trim().toLowerCase() === g.concepto.trim().toLowerCase());
+                // Comprobación corregida: Solo es fijo si el movimiento actual de la BD tiene la propiedad 'fijo' como true, 
+        // o si es una previsión automática que aún está en la lista de recurrentes
+        const esGastoFijo = g.hasOwnProperty('fijo') ? g.fijo : recs.some(p => p.concepto.trim().toLowerCase() === g.concepto.trim().toLowerCase());
+        const etiquetaFijo = esGastoFijo ? '<span style="color:#fde68a; font-size:8px; margin-left:4px; font-weight:900;">FIJO</span>' : '';
+
         const etiquetaFijo = esGastoFijo ? '<span style="color:#fde68a; font-size:8px; margin-left:4px; font-weight:900;">FIJO</span>' : '';
 
         listaFuturo.insertAdjacentHTML('beforeend', `
