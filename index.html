@@ -336,23 +336,28 @@
             document.getElementById('pin-pad').appendChild(b);
         }); 
 
-        function goToTab(i) {
+                function goToTab(i) {
             currentTabIndex = i;
             document.getElementById('main-view').style.transform = `translateX(-${i * 16.666}%)`; 
             document.querySelectorAll('.nav-btn').forEach((b, idx) => idx === i ? b.classList.add('active-tab') : b.classList.remove('active-tab'));
+            
             if(i === 0) setTimeout(updateChart, 100);
-        if (i !== 5 && editMode) {
+
+            // CORRECCIÓN: Si entras a cualquier pestaña que NO sea "Operar" (la 5), reseteamos el botón
+            if (i !== 5) {
                 editMode = false;
                 editId = null;
                 const btnForm = document.querySelector('#mainForm button[type="submit"]');
                 if(btnForm) {
                     btnForm.innerText = "Confirmar Operación";
-                    btnForm.style.backgroundColor = "#00e5ff"; // Vuelve al cian
+                    btnForm.style.backgroundColor = "#00e5ff"; // Vuelve al cian original
                     btnForm.style.color = "#000";
                 }
-                document.getElementById('mainForm').reset();
+                const form = document.getElementById('mainForm');
+                if(form) form.reset();
             }
         } 
+
          function showToast(msj, tipo = 'success') {
             const container = document.getElementById('toast-container');
             if (!container) return;
