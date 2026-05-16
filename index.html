@@ -538,15 +538,18 @@ function obtenerLogo(concepto) {
         }
     });
 
-    // --- TU NUEVA PREVISIÓN (SISTEMA DISNEY) ---
     const listaFuturo = document.getElementById('listaFuturo');
     listaFuturo.innerHTML = ''; 
     let fechaUltimoGrupoFuturo = "";
     let movsParaLista = appData.filter(g => g.fecha > hoyStr && g.fecha.startsWith(mesSel));
     
     recs.forEach(p => {
-        const fechaP = `${mesActualStr}-${p.dia.padStart(2, '0')}`;
-        if (parseInt(p.dia) > hoy.getDate() && !appData.some(g => g.concepto === p.concepto && g.fecha === fechaP)) {
+        const diaFormateado = String(p.dia).padStart(2, '0');
+        const fechaP = `${mesActualStr}-${diaFormateado}`;
+        
+        const yaExisteEnBD = appData.some(g => g.concepto.trim().toLowerCase() === p.concepto.trim().toLowerCase() && g.fecha === fechaP);
+
+        if (parseInt(p.dia) > hoy.getDate() && !yaExisteEnBD) {
             movsParaLista.push({ concepto: p.concepto, importe: parseFloat(p.importe), categoria: p.categoria, fecha: fechaP, esFijo: true });
         }
     });
@@ -561,20 +564,20 @@ function obtenerLogo(concepto) {
         }
         const etiquetaFijo = g.esFijo ? '<span style="color:#fde68a; font-size:8px; margin-left:4px; font-weight:900;">FIJO</span>' : '';
 
-listaFuturo.insertAdjacentHTML('beforeend', `
-    <div class="bbva-card p-4 flex justify-between items-center gap-3 border-l-4 border-cyan-400/30 mx-2 mb-2">
-        <div class="flex items-center gap-3 flex-1 overflow-hidden">
-            ${obtenerLogo(g.concepto)}
-            <div class="truncate">
-                <p class="text-sm font-bold text-white truncate">${g.concepto} ${etiquetaFijo}</p>
-                <p class="text-[9px] text-slate-500 uppercase mt-1">${g.categoria}</p>
+        listaFuturo.insertAdjacentHTML('beforeend', `
+            <div class="bbva-card p-4 flex justify-between items-center gap-3 border-l-4 border-cyan-400/30 mx-2 mb-2">
+                <div class="flex items-center gap-3 flex-1 overflow-hidden">
+                    ${obtenerLogo(g.concepto)}
+                    <div class="truncate">
+                        <p class="text-sm font-bold text-white truncate">${g.concepto} ${etiquetaFijo}</p>
+                        <p class="text-[9px] text-slate-500 uppercase mt-1">${g.categoria}</p>
+                    </div>
+                </div>
+                <p class="font-black text-white">-${disp}</p>
             </div>
-        </div>
-        <p class="font-black text-white">-${disp}</p>
-    </div>
-`);
-
+        `);
     });
+
 
          // --- TU SALDO ANIMADO (RESURRECCIÓN) ---
     const elReal = document.getElementById('valReal');
