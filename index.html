@@ -564,17 +564,26 @@ function obtenerLogo(concepto) {
             listaFuturo.insertAdjacentHTML('beforeend', `<div class="pt-6 pb-2 px-2"><p class="text-[10px] font-black text-cyan-400 uppercase tracking-widest">${fLabel}</p></div>`);
             fechaUltimoGrupoFuturo = g.fecha;
         }
-                listaFuturo.insertAdjacentHTML('beforeend', `
+            movsParaLista.sort((a, b) => a.fecha.localeCompare(b.fecha)).forEach(g => {
+        const val = Math.abs(g.importe);
+        const disp = isPrivate ? "****€" : val.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
+        if (g.fecha !== fechaUltimoGrupoFuturo) {
+            let fLabel = new Date(g.fecha + "T00:00:00").toLocaleDateString('es-ES', { day: 'numeric', month: 'long' });
+            listaFuturo.insertAdjacentHTML('beforeend', `<div class="pt-6 pb-2 px-2"><p class="text-[10px] font-black text-cyan-400 uppercase tracking-widest">${fLabel}</p></div>`);
+            fechaUltimoGrupoFuturo = g.fecha;
+        }
+        listaFuturo.insertAdjacentHTML('beforeend', `
             <div class="bbva-card p-4 flex justify-between items-center gap-3 border-l-4 border-cyan-400/30 mx-2 mb-2">
                 <div class="flex items-center gap-3 flex-1 overflow-hidden">
                     ${obtenerLogo(g.concepto)}
                     <div class="truncate">
-                        <p class="text-sm font-bold text-white truncate">${g.concepto} <span style="color:#fde68a; font-size:8px; margin-left:4px; font-weight:900; filter:drop-shadow(0 0 5px rgba(251,191,36,0.2))">FIJO</span></p>
+                        <p class="text-sm font-bold text-white truncate">${g.concepto} <span class="ml-1" style="color:#fde68a; font-size:8px; font-weight:900; filter:drop-shadow(0 0 5px rgba(251,191,36,0.2))">FIJO</span></p>
                         <p class="text-[9px] text-slate-500 uppercase mt-1">${g.categoria}</p>
                     </div>
                 </div>
                 <p class="font-black text-white">-${disp}</p>
             </div>`);
+    });
 
          // --- TU SALDO ANIMADO (RESURRECCIÓN) ---
     const elReal = document.getElementById('valReal');
