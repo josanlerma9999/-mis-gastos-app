@@ -380,43 +380,64 @@
                 setTimeout(() => toast.remove(), 500);
             }, 3000);
         }
-                async function renderApp() {
+                     async function renderApp() {
             const cache = localStorage.getItem('appData_cache');
             if (cache) { appData = JSON.parse(cache); actualizarInterfaz(); } 
 
             try {
                 const res = await fetch(API_URL, { headers: { 'x-api-key': SECURE_KEY } });
                 const dataFresh = await res.json(); 
-                const hoyStr = new Date().toISOString().split('T')[0]; 
+                
+                // Creamos un objeto Fecha de HOY a medianoche para comparar limpio
+                const hoy = new Date();
+                hoy.setHours(0,0,0,0);
+
+                // Función auxiliar para digerir cualquier formato (YYYY-MM-DD o DD/MM/YYYY)
+                const parsearFecha = (fechaStr) => {
+                    if (!fechaStr) return new Date(0);
+                    // Si viene con barras (ej: 24/05/2026)
+                    if (fechaStr.includes('/')) {
+                        const [d, m, a] = fechaStr.split('/');
+                        return new Date(a, m - 1, d);
+                    }
+                    // Si viene con guiones (ej: 2026-05-24 o 24-05-2026)
+                    const partes = fechaStr.split('-');
+                    if (partes[0].length === 4) {
+                        return new Date(partes[0], partes[1] - 1, partes[2]); // YYYY-MM-DD
+                    } else {
+                        return new Date(partes[2], partes[1] - 1, partes[0]); // DD-MM-YYYY
+                    }
+                };
 
                 let processedData = dataFresh.map((g, index) => ({
                     ...g,
                     importe: parseFloat(g.importe),
+                    fechaObjeto: parsearFecha(g.fecha),
                     indexOriginal: index
                 })); 
 
-                // ORDENACIÓN CORREGIDA: Pasado arriba (de más nuevo a más viejo), Futuro abajo
+                // ORDENACIÓN ABSOLUTA
                 processedData.sort((a, b) => {
-                    const aEsFuturo = a.fecha > hoyStr;
-                    const bEsFuturo = b.fecha > hoyStr;
+                    const aEsFuturo = a.fechaObjeto > hoy;
+                    const bEsFuturo = b.fechaObjeto > hoy;
 
-                    // Si uno es futuro y el otro no, el futuro se va hacia abajo (devuelve 1)
+                    // 1. Los futuros se van abajo del todo
                     if (aEsFuturo && !bEsFuturo) return 1;
                     if (!aEsFuturo && bEsFuturo) return -1;
 
-                    // Si ambos son del mismo tipo (ambos pasados o ambos futuros),
-                    // ordenamos por fecha descendente (lo más nuevo primero)
-                    if (a.fecha !== b.fecha) {
-                        return b.fecha.localeCompare(a.fecha);
+                    // 2. Si ambos son pasados/hoy o ambos futuros, el más reciente arriba
+                    if (a.fechaObjeto.getTime() !== b.fechaObjeto.getTime()) {
+                        return b.fechaObjeto - a.fechaObjeto;
                     }
                     
-                    // Si coinciden en fecha, mantenemos orden de llegada usando el índice
+                    // 3. Si son del mismo día, por orden de llegada
                     return b.indexOriginal - a.indexOriginal;
                 });
 
-                // Limpieza limpia de la propiedad temporal sin mutaciones raras
+                // Limpiamos los datos para guardarlos idénticos a como los usa tu app
                 appData = processedData.map(mov => {
                     const cleanMov = { ...mov };
+                    delete cleanMov.fechaObjeto;
                     delete cleanMov.indexOriginal;
                     return cleanMov;
                 });
@@ -428,6 +449,7 @@
                 console.error("Error cargando datos:", e); 
             }
         }
+   
 
 function obtenerLogo(concepto) {
     const c = concepto.toLowerCase();
@@ -466,7 +488,7 @@ function obtenerLogo(concepto) {
     const mm = String(hoy.getMonth() + 1).padStart(2, '0');
     const dd = String(hoy.getDate()).padStart(2, '0');
     
-    const hoyStr = new Date().toLocaleDateString('sv-SE');
+    const hoyStr = `${yyyy}-${mm}-${dd}`;
     const hoyRef = new Date(hoyStr + "T00:00:00").getTime();
     
     let saldoReal = 0, gFuturos = 0, iFuturos = 0, deudaAqua = 0, deudaExplora = 0;
