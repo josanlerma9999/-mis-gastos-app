@@ -456,7 +456,7 @@ function obtenerLogo(concepto) {
     const mm = String(hoy.getMonth() + 1).padStart(2, '0');
     const dd = String(hoy.getDate()).padStart(2, '0');
     
-    const hoyStr = `${yyyy}-${mm}-${dd}`;
+    const hoyStr = new Date().toLocaleDateString('sv-SE');
     const hoyRef = new Date(hoyStr + "T00:00:00").getTime();
     
     let saldoReal = 0, gFuturos = 0, iFuturos = 0, deudaAqua = 0, deudaExplora = 0;
