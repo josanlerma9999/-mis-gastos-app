@@ -380,36 +380,46 @@
                 setTimeout(() => toast.remove(), 500);
             }, 3000);
         }
-        async function renderApp() {
+                async function renderApp() {
             const cache = localStorage.getItem('appData_cache');
             if (cache) { appData = JSON.parse(cache); actualizarInterfaz(); } 
 
             try {
-                const res = await fetch(API_URL, {
-                    headers: { 'x-api-key': SECURE_KEY }
-                });
+                const res = await fetch(API_URL, { headers: { 'x-api-key': SECURE_KEY } });
                 const dataFresh = await res.json(); 
-
                 const hoyStr = new Date().toISOString().split('T')[0]; 
 
-                appData = dataFresh.map(g => ({ ...g, importe: parseFloat(g.importe) })); 
+                let processedData = dataFresh.map((g, index) => ({
+                    ...g,
+                    importe: parseFloat(g.importe),
+                    indexOriginal: index
+                })); 
 
-// ORDENACIÓN: PASADO ARRIBA, FUTURO ABAJO
-const movimientosConIndice = appData.map((mov, index) => ({ ...mov, indexOriginal: index }));
+                // ORDENACIÓN CORREGIDA: Pasado arriba (de más nuevo a más viejo), Futuro abajo
+                processedData.sort((a, b) => {
+                    const aEsFuturo = a.fecha > hoyStr;
+                    const bEsFuturo = b.fecha > hoyStr;
 
-movimientosConIndice.sort((a, b) => {
-    if (a.fecha > hoyStr && b.fecha <= hoyStr) return 1;
-    if (a.fecha <= hoyStr && b.fecha > hoyStr) return -1;
-    
-    if (a.fecha !== b.fecha) {
-        return b.fecha.localeCompare(a.fecha);
-    }
-    
-    return b.indexOriginal - a.indexOriginal;
-});
+                    // Si uno es futuro y el otro no, el futuro se va hacia abajo (devuelve 1)
+                    if (aEsFuturo && !bEsFuturo) return 1;
+                    if (!aEsFuturo && bEsFuturo) return -1;
 
-appData = movimientosConIndice.map(({ indexOriginal, ...mov }) => mov);
+                    // Si ambos son del mismo tipo (ambos pasados o ambos futuros),
+                    // ordenamos por fecha descendente (lo más nuevo primero)
+                    if (a.fecha !== b.fecha) {
+                        return b.fecha.localeCompare(a.fecha);
+                    }
+                    
+                    // Si coinciden en fecha, mantenemos orden de llegada usando el índice
+                    return b.indexOriginal - a.indexOriginal;
+                });
 
+                // Limpieza limpia de la propiedad temporal sin mutaciones raras
+                appData = processedData.map(mov => {
+                    const cleanMov = { ...mov };
+                    delete cleanMov.indexOriginal;
+                    return cleanMov;
+                });
 
                 localStorage.setItem('appData_cache', JSON.stringify(appData));
                 actualizarInterfaz();
@@ -417,7 +427,7 @@ appData = movimientosConIndice.map(({ indexOriginal, ...mov }) => mov);
             } catch (e) { 
                 console.error("Error cargando datos:", e); 
             }
-        } 
+        }
 
 function obtenerLogo(concepto) {
     const c = concepto.toLowerCase();
