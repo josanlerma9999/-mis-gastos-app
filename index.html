@@ -393,22 +393,22 @@
                 const hoyStr = new Date().toISOString().split('T')[0]; 
 
                 appData = dataFresh.map(g => ({ ...g, importe: parseFloat(g.importe) })); 
-                
-                // ORDENACIÓN: FUTURO ABAJO, HOY ARRIBA DEL TODO, PASADO ORDENADO
-appData.sort((a, b) => {
-    // 1. Si son fechas del futuro, van abajo del todo
+
+// ORDENACIÓN: PASADO ARRIBA, FUTURO ABAJO
+const movimientosConIndice = appData.map((mov, index) => ({ ...mov, indexOriginal: index }));
+
+movimientosConIndice.sort((a, b) => {
     if (a.fecha > hoyStr && b.fecha <= hoyStr) return 1;
     if (a.fecha <= hoyStr && b.fecha > hoyStr) return -1;
     
-    // 2. Si ambos están en el presente/pasado, ordenamos por fecha de más reciente a más antiguo
     if (a.fecha !== b.fecha) {
         return b.fecha.localeCompare(a.fecha);
     }
     
-    // 3. ¡El truco para hoy! Si tienen la misma fecha exacta (hoy), 
-    // dejamos el último creado (el de más ID o más nuevo) arriba del todo.
-    return b.id - a.id; 
+    return b.indexOriginal - a.indexOriginal;
 });
+
+appData = movimientosConIndice.map(({ indexOriginal, ...mov }) => mov);
 
 
                 localStorage.setItem('appData_cache', JSON.stringify(appData));
