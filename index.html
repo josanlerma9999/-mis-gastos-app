@@ -1042,6 +1042,75 @@ function renderCardChart(cat) {
         }
     });
 }
+// --- CONTROLADOR DEL FORMULARIO DE OPERACIONES ---
+document.getElementById('mainForm').addEventListener('submit', async (e) => {
+    e.preventDefault(); // Bloquea la recarga de la página
+
+    // Capturar valores
+    const concepto = document.getElementById('in-concepto').value;
+    const importe = document.getElementById('in-importe').value;
+    const categoria = document.getElementById('in-categoria').value;
+    const fecha = document.getElementById('in-fecha').value;
+    const esRecurrente = document.getElementById('check-recurrente').checked;
+
+    const payload = { concepto, importe, categoria, fecha };
+
+    try {
+        if (editMode && editId) {
+            // Lógica para ACTUALIZAR (PUT)
+            await fetch(`${API_URL}/${editId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'x-api-key': SECURE_KEY },
+                body: JSON.stringify(payload)
+            });
+            showToast("Operación actualizada con éxito", "success");
+        } else {
+            // Lógica para CREAR (POST)
+            await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'x-api-key': SECURE_KEY },
+                body: JSON.stringify(payload)
+            });
+            showToast("Operación registrada con éxito", "success");
+        }
+
+        // --- LÓGICA PARA PAGOS RECURRENTES ---
+        if (esRecurrente && !categIngresos.includes(categoria)) {
+            let recs = JSON.parse(localStorage.getItem('recurrentes') || "[]");
+            const diaPago = fecha.split('-')[2]; // Saca el día exacto de la fecha (YYYY-MM-DD)
+            
+            // Solo lo añade si no existe ya un pago fijo con ese concepto
+            if (!recs.some(r => r.concepto.toLowerCase() === concepto.toLowerCase())) {
+                recs.push({ 
+                    id: Date.now(), 
+                    concepto: concepto, 
+                    importe: importe, 
+                    categoria: categoria, 
+                    dia: diaPago 
+                });
+                localStorage.setItem('recurrentes', JSON.stringify(recs));
+            }
+        }
+
+        // Limpiar el formulario y resetear el modo edición
+        document.getElementById('mainForm').reset();
+        editMode = false;
+        editId = null;
+        
+        const btnForm = document.querySelector('#mainForm button[type="submit"]');
+        btnForm.innerText = "Confirmar Operación";
+        btnForm.style.backgroundColor = "#00e5ff";
+        btnForm.style.color = "#000";
+
+        // Refrescar los datos de la app y volver a la pestaña de inicio
+        await renderApp();
+        goToTab(0); 
+
+    } catch (error) {
+        console.error("Error al procesar el formulario:", error);
+        showToast("Error de conexión al guardar", "delete");
+    }
+});
 
 function actualizarSaludo(saldo) {
     const hora = new Date().getHours();
