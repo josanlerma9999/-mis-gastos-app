@@ -755,23 +755,27 @@ function updateChart() {
                             }
                         });
 
-                        // SOLUCCIÓN AL COLOR DEL BOTÓN: Cambiamos text-navy-900 por el color hexadecimal real corporativo #072146
-                        if(!document.getElementById('btn-quitar-filtro')) {
-                            const btn = document.createElement('button');
-                            btn.id = 'btn-quitar-filtro';
-                            btn.innerHTML = `Limpiar filtro: ${categoriaPulsada} ✕`;
-                            btn.className = "fixed bottom-24 left-1/2 -translate-x-1/2 bg-white px-6 py-3 rounded-full font-black text-[10px] uppercase shadow-2xl z-[50] border-2 border-cyan-400";
-                            btn.style.color = "#072146"; 
-                            btn.onclick = () => {
-                                elementos.forEach(el => {
-                                    el.style.display = 'flex';
-                                    el.style.borderLeft = "none";
-                                });
-                                fechas.forEach(f => f.style.display = 'block'); 
-                                btn.remove();
-                            };
-                            document.body.appendChild(btn);
-                        }
+                        // SOLUCIÓN AL DUPLICADO DE BOTONES: Si ya había un botón de filtro activo de otra categoría, lo eliminamos primero
+const botonExistente = document.getElementById('btn-quitar-filtro');
+if (botonExistente) {
+    botonExistente.remove();
+}
+
+const btn = document.createElement('button');
+btn.id = 'btn-quitar-filtro';
+btn.innerHTML = `Limpiar filtro: ${categoriaPulsada} ✕`;
+btn.className = "fixed bottom-24 left-1/2 -translate-x-1/2 bg-white px-6 py-3 rounded-full font-black text-[10px] uppercase shadow-2xl z-[50] border-2 border-cyan-400";
+btn.style.color = "#072146"; 
+btn.onclick = () => {
+    elementos.forEach(el => {
+        el.style.display = 'flex';
+        el.style.borderLeft = "none";
+    });
+    fechas.forEach(f => f.style.display = 'block'); 
+    btn.remove();
+};
+document.body.appendChild(btn);
+
                     }, 400);
                 }
             }
