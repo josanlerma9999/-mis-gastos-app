@@ -316,14 +316,16 @@
     </div> 
 
     <script>
-        const API_URL = 'https://mis-gastos-app.onrender.com/api/gastos'; const SECURE_KEY = 'YakoNala99'; 
-        let editMode = false; 
-        let editId = null;
- let touchstartX = 0, touchendX = 0, currentTabIndex = 0;
-        let pin = "", isPrivate = false, appData = [];
-        const categIngresos = ["Sueldo", "Otros Ingresos"];
-        let gastosChart = null; 
-        let pagosProcesados = false; 
+const API_URL = 'https://mis-gastos-app.onrender.com/api/gastos'; const SECURE_KEY = 'YakoNala99'; 
+let editMode = false; 
+let editId = null;
+let touchstartX = 0, touchendX = 0, currentTabIndex = 0;
+let pin = "", isPrivate = false, appData = [];
+const categIngresos = ["Sueldo", "Otros Ingresos"];
+let gastosChart = null; 
+let pagosProcesados = false; 
+let saldoTimer = null; // Control global para evitar el parpadeo del saldo
+
 
         // PIN PAD
         [1,2,3,4,5,6,7,8,9,'C',0,'DEL'].forEach(v => {
@@ -479,7 +481,8 @@ function obtenerLogo(concepto) {
 }
  
 
-                    function actualizarInterfaz() {
+                   // --- PEGA ESTE BLOQUE EN SU LUGAR ---
+function actualizarInterfaz() {
     const mesSel = document.getElementById('filtroMes').value;
     localStorage.setItem('ultimo_mes_consultado', mesSel); 
     
@@ -509,54 +512,36 @@ function obtenerLogo(concepto) {
     document.getElementById('listaPasado').innerHTML = '';
     let fechaUltimoGrupo = "";
 
-            appData.forEach(g => {
+    appData.forEach(g => {
         const val = Math.abs(g.importe);
         const esI = categIngresos.includes(g.categoria);
         const fechaG = new Date(g.fecha + "T00:00:00");
         const fechaGRef = fechaG.getTime();
         const esP = fechaGRef <= hoyRef; 
 
-        // --- TUS TARJETAS (CÁLCULO RECUPERADO) ---
+        // --- TUS TARJETAS ---
         const mesActual = hoy.getMonth();
         const anioActual = hoy.getFullYear();
         if (g.categoria === "Tarjeta Aqua" && fechaG.getMonth() === mesActual && fechaG.getFullYear() === anioActual) deudaAqua += val;
         if (g.categoria === "Tarjeta Explora" && fechaG.getMonth() === mesActual && fechaG.getFullYear() === anioActual) deudaExplora += val;
 
-                       // --- TUS SALDOS (VERSION BLINDADA DIFERIDO) ---
+        // --- TUS SALDOS ---
         if (esI) {
             if (esP) saldoReal += val; else iFuturos += val;
         } else {
-            // 1. Si NO es tarjeta, se resta siempre (del real o del proyectado)
             if (g.categoria !== "Tarjeta Aqua" && g.categoria !== "Tarjeta Explora") {
                 if (esP) saldoReal -= val; else gFuturos += val;
             } else {
-                // 2. Es una TARJETA: Calculamos cuándo toca pagarla
-                const fechaGasto = new Date(g.fecha + "T00:00:00");
-                const mesGasto = fechaGasto.getMonth();
-                const anioGasto = fechaGasto.getFullYear();
-                
-                const hoy = new Date();
-                const mesActual = hoy.getMonth();
-                const anioActual = hoy.getFullYear();
-
-                // Fecha en la que te cobran la tarjeta (Día 5 del mes siguiente al gasto)
-                const fechaCobro = new Date(anioGasto, mesGasto + 1, 5);
-
+                const fechaCobro = new Date(fechaG.getFullYear(), fechaG.getMonth() + 1, 5);
                 if (hoy >= fechaCobro) {
-                    // CASO A: Ya ha pasado el día 5 del mes siguiente. Resta del REAL.
                     saldoReal -= val;
-                } else if (mesGasto < mesActual || anioGasto < anioActual) {
-                    // CASO B: El gasto es de un mes pasado (ej: Abril) y hoy es Mayo (antes del día 5). Resta del PROYECTADO.
+                } else if (fechaG.getMonth() < mesActual || fechaG.getFullYear() < anioActual) {
                     gFuturos += val;
-                } else {
-                    // CASO C: El gasto es de ESTE MES (Mayo). 
-                    // NO RESTAMOS NADA. Ni de saldoReal ni de gFuturos.
-                    // Así el Saldo Final (azul) se mantiene intacto.
                 }
             }
         }
  
-// --- TU DISEÑO DE HISTORIAL (PASADO) ---
+        // --- HISTORIAL (PASADO) ---
         if(g.fecha.startsWith(mesSel)) {
             if (g.fecha !== fechaUltimoGrupo) {
                 let labelF = (g.fecha === hoyStr) ? "HOY" : new Date(g.fecha + "T00:00:00").toLocaleDateString('es-ES', { day: 'numeric', month: 'long' });
@@ -576,16 +561,16 @@ function obtenerLogo(concepto) {
                     </div>
                     <div class="flex items-center gap-3">
                         <p class="font-black ${esI ? 'text-cyan-400' : 'text-white'}">${esI ? '+' : '-'}${disp}</p>
-                                                <div class="flex items-center gap-2">
-    <button onclick="prepararEdicion('${g._id}')" class="btn-action text-[#00fbff] drop-shadow-[0_0_8px_rgba(0,251,255,0.4)]">✏️</button>
-    <button onclick="deleteGasto('${g._id}')" class="btn-action text-[#ff0040] drop-shadow-[0_0_8px_rgba(255,0,64,0.4)]">🗑️</button>
-</div>
- </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="prepararEdicion('${g._id}')" class="btn-action text-[#00fbff] drop-shadow-[0_0_8px_rgba(0,251,255,0.4)]">✏️</button>
+                            <button onclick="deleteGasto('${g._id}')" class="btn-action text-[#ff0040] drop-shadow-[0_0_8px_rgba(255,0,64,0.4)]">🗑️</button>
+                        </div>
+                    </div>
                 </div>`);
         }
     });
 
-    // --- TU NUEVA PREVISIÓN (SISTEMA DISNEY) ---
+    // --- PREVISIÓN ---
     const listaFuturo = document.getElementById('listaFuturo');
     listaFuturo.innerHTML = ''; 
     let fechaUltimoGrupoFuturo = "";
@@ -606,7 +591,7 @@ function obtenerLogo(concepto) {
             listaFuturo.insertAdjacentHTML('beforeend', `<div class="pt-6 pb-2 px-2"><p class="text-[10px] font-black text-cyan-400 uppercase tracking-widest">${fLabel}</p></div>`);
             fechaUltimoGrupoFuturo = g.fecha;
         }
-                listaFuturo.insertAdjacentHTML('beforeend', `
+        listaFuturo.insertAdjacentHTML('beforeend', `
             <div class="bbva-card p-4 flex justify-between items-center gap-3 border-l-4 border-cyan-400/30 mx-2 mb-2">
                 <div class="flex items-center gap-3 flex-1 overflow-hidden">
                     ${obtenerLogo(g.concepto)}
@@ -617,39 +602,39 @@ function obtenerLogo(concepto) {
                 </div>
                 <p class="font-black text-white">-${disp}</p>
             </div>`);
-});
-         // --- TU SALDO ANIMADO (RESURRECCIÓN) ---
+    });
+
+    // --- SALDO ANIMADO (SOLUCIÓN AL PARPADEO) ---
     const elReal = document.getElementById('valReal');
+    clearInterval(saldoTimer); // Detiene cualquier animación previa de inmediato
+
     if (isPrivate) { 
         elReal.innerText = "****€"; 
         elReal.style.color = "white"; 
     } else {
         let inicio = 0, saldoFinal = saldoReal;
-        const timer = setInterval(() => {
+        saldoTimer = setInterval(() => {
             inicio += (saldoFinal - inicio) / 10;
             if (Math.abs(saldoFinal - inicio) < 0.1) { 
                 inicio = saldoFinal; 
-                clearInterval(timer); 
+                clearInterval(saldoTimer); 
             }
             
             elReal.innerText = inicio.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "€";
             
-            // TU LÓGICA DE COLOR DINÁMICO
             if (inicio > 200) elReal.style.color = '#00e5ff';
             else if (inicio >= 100) elReal.style.color = '#fbbf24';
             else elReal.style.color = '#f43f5e';
-
         }, 30);
     }
 
-    // Ajuste de tamaño y limpieza de clases
     const saldoTextoFormateado = isPrivate ? "****€" : saldoReal.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
     const fontSize = saldoTextoFormateado.length > 10 ? 'text-3xl' : 'text-4xl';
     elReal.className = `${fontSize} font-black tracking-tighter leading-tight transition-all duration-700 ease-in-out`;
     
     actualizarSaludo(saldoReal);
 
-    // --- ACTUALIZACIÓN DE VALORES SECUNDARIOS ---
+    // --- VALORES SECUNDARIOS ---
     const elPend = document.getElementById('valPend');
     const elProj = document.getElementById('valProj');
     const saldoFinalCalculado = saldoReal - gFuturos + iFuturos;
@@ -657,7 +642,6 @@ function obtenerLogo(concepto) {
     elPend.innerText = isPrivate ? "****€" : "-" + gFuturos.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
     elProj.innerText = isPrivate ? "****€" : saldoFinalCalculado.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
 
-    // Color del saldo proyectado
     if (saldoFinalCalculado < 0) {
         elProj.style.setProperty('color', '#f43f5e', 'important');
     } else {
@@ -670,17 +654,12 @@ function obtenerLogo(concepto) {
     renderRecurrentes();
     if(typeof updateChart === 'function') updateChart();
 
-const mesAct = document.getElementById('filtroMes').value;
+    const mesAct = document.getElementById('filtroMes').value;
+    const ingresosRegistrados = appData.filter(g => g.fecha.startsWith(mesAct) && categIngresos.includes(g.categoria)).reduce((sum, g) => sum + Math.abs(g.importe), 0);
+    const ingresosMes = ingresosRegistrados > 0 ? ingresosRegistrados : 700;
+    document.getElementById('valor-limite').innerText = ingresosMes.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
 
-// 1. Calculas lo que hay en la base de datos
-const ingresosRegistrados = appData.filter(g => g.fecha.startsWith(mesAct) && categIngresos.includes(g.categoria)).reduce((sum, g) => sum + Math.abs(g.importe), 0);
-
-// 2. Aplicas el "comodín" de los 1000€ si no hay ingresos
-const ingresosMes = ingresosRegistrados > 0 ? ingresosRegistrados : 700;
-document.getElementById('valor-limite').innerText = ingresosMes.toLocaleString('de-DE', {minimumFractionDigits:2}) + "€";
-
-// 3. Los gastos se quedan igual
-const gastosMes = appData.filter(g => g.fecha.startsWith(mesAct) && !categIngresos.includes(g.categoria)).reduce((sum, g) => sum + Math.abs(g.importe), 0);
+    const gastosMes = appData.filter(g => g.fecha.startsWith(mesAct) && !categIngresos.includes(g.categoria)).reduce((sum, g) => sum + Math.abs(g.importe), 0);
 
     const bPresupuesto = document.getElementById('barra-presupuesto');
     const tLimite = document.getElementById('txt-limite');
@@ -690,108 +669,27 @@ const gastosMes = appData.filter(g => g.fecha.startsWith(mesAct) && !categIngres
         const pct = Math.min((gastosMes / ingresosMes) * 100, 100);
         bPresupuesto.style.width = `${pct}%`;
         tLimite.innerText = `${Math.round(pct)}%`;
-                if (pct >= 90) {
-            // ROJO
+        if (pct >= 90) {
             bPresupuesto.className = "h-full rounded-full bg-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.7)] animate-pulse";
             mPresupuesto.innerText = `¡LÍMITE! -${gastosMes.toLocaleString('de-DE', {minimumFractionDigits:2})}€`;
             mPresupuesto.style.color = "#fb7185";
         } else if (pct >= 70) {
-            // AMARILLO
             bPresupuesto.className = "h-full rounded-full bg-amber-400";
             mPresupuesto.innerText = `OJO: -${gastosMes.toLocaleString('de-DE', {minimumFractionDigits:2})}€`;
             mPresupuesto.style.color = "#fbbf24";
         } else {
-            // AZUL
             bPresupuesto.className = "h-full rounded-full bg-cyan-400";
             mPresupuesto.innerText = `GASTADO: -${gastosMes.toLocaleString('de-DE', {minimumFractionDigits:2})}€`;
             mPresupuesto.style.color = "rgba(0, 229, 255, 0.6)";
         }
-
     } else {
         bPresupuesto.style.width = "0%";
         tLimite.innerText = "0%";
         mPresupuesto.innerText = "Sin ingresos este mes";
     }
 }
-                // --- MOTOR DE ENVÍO Y GUARDADO (CORREGIDO) ---
-        document.getElementById('mainForm').onsubmit = async (e) => {
-            e.preventDefault();
-            
-            const concepto = document.getElementById('in-concepto').value;
-            const importe = parseFloat(document.getElementById('in-importe').value);
-            const categoria = document.getElementById('in-categoria').value;
-            const fecha = document.getElementById('in-fecha').value;
-            const checkEl = document.getElementById('check-recurrente');
-            const esRecurrente = checkEl ? checkEl.checked : false;
 
-            try {
-                // 1. Enviar a la nube (Render)
-                if (editMode && editId) {
-                    await fetch(`${API_URL}/${editId}`, {
-                        method: 'DELETE',
-                        headers: { 'x-api-key': SECURE_KEY }
-                    });
-                }
-                
-                await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'x-api-key': SECURE_KEY },
-                    body: JSON.stringify({ concepto, importe, categoria, fecha })
-                });
-
-                  // 2. SI ES RECURRENTE -> Guardar o Actualizar en el teléfono
-                if (esRecurrente) {
-                    let fijos = JSON.parse(localStorage.getItem('recurrentes') || "[]");
-                    
-                    // Comprobamos si ya existía un fijo con el mismo concepto para no duplicarlo
-                    const indiceExistente = fijos.findIndex(p => p.concepto.trim().toLowerCase() === concepto.trim().toLowerCase());
-                    
-                    const datosFijo = {
-                        id: indiceExistente !== -1 ? fijos[indiceExistente].id : Date.now(), // Mantiene el ID si ya existía
-                        concepto: concepto,
-                        importe: importe,
-                        categoria: categoria,
-                        dia: fecha.split('-')[2]
-                    };
-
-                    if (indiceExistente !== -1) {
-                        fijos[indiceExistente] = datosFijo; // Actualiza el existente
-                    } else {
-                        fijos.push(datosFijo); // Añade uno nuevo si no existía
-                    }
-                    
-                    localStorage.setItem('recurrentes', JSON.stringify(fijos));
-                }
-
-
-                // 3. Feedback visual
-                showToast(esRecurrente ? "Pago Fijo Registrado" : "Operación confirmada");
-
-                // 4. Limpiar y Resetear todo
-                editMode = false;
-                editId = null;
-                e.target.reset();
-                localStorage.removeItem('appData_cache'); 
-                
-                // Forzamos actualización de todo
-                await renderApp(); 
-                renderRecurrentes(); 
-                
-                goToTab(0); // Volver al inicio
-
-            } catch (error) {
-                console.error("Error crítico:", error);
-                showToast("Error de conexión", "delete");
-            }
-        };
-
-
-
- 
-
-
-
-                      function updateChart() {
+function updateChart() {
     const canvas = document.getElementById('gastosChart');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -821,37 +719,32 @@ const gastosMes = appData.filter(g => g.fecha.startsWith(mesAct) && !categIngres
             maintainAspectRatio: false, 
             cutout: '75%', 
             plugins: { 
-    legend: { 
-        position: 'right', 
-        align: 'center', 
-        labels: { 
-            color: 'white', 
-            font: { size: 10 }, 
-            boxWidth: 12,
-            padding: 15, 
-            usePointStyle: true
-        } 
-    } 
-},
-
-                        // --- ESTE ES EL APARTADO DOS ---
+                legend: { 
+                    position: 'right', 
+                    align: 'center', 
+                    labels: { 
+                        color: 'white', 
+                        font: { size: 10 }, 
+                        boxWidth: 12,
+                        padding: 15, 
+                        usePointStyle: true
+                    } 
+                } 
+            },
             onClick: (evt, item) => {
                 if (item.length > 0) {
                     const index = item[0].index;
                     const categoriaPulsada = gastosChart.data.labels[index];
                     
-                    goToTab(3); // Salta a la pestaña de Movimientos
+                    goToTab(3); 
                     
                     setTimeout(() => {
-                        // SUBIR EL SCROLL AL INICIO
                         const tabMovs = document.querySelectorAll('.tab-content')[3];
                         if(tabMovs) tabMovs.scrollTop = 0;
 
-                        // OCULTAR FECHAS
                         const fechas = document.querySelectorAll('.fecha-separador');
                         fechas.forEach(f => f.style.display = 'none');
 
-                        // FILTRAR MOVIMIENTOS
                         const elementos = document.querySelectorAll('#listaPasado .bbva-card');
                         elementos.forEach(el => {
                             if (el.getAttribute('data-cat') === categoriaPulsada) {
@@ -862,19 +755,19 @@ const gastosMes = appData.filter(g => g.fecha.startsWith(mesAct) && !categIngres
                             }
                         });
 
-                        // BOTÓN LIMPIAR
+                        // SOLUCCIÓN AL COLOR DEL BOTÓN: Cambiamos text-navy-900 por el color hexadecimal real corporativo #072146
                         if(!document.getElementById('btn-quitar-filtro')) {
                             const btn = document.createElement('button');
                             btn.id = 'btn-quitar-filtro';
                             btn.innerHTML = `Limpiar filtro: ${categoriaPulsada} ✕`;
-                            btn.className = "fixed bottom-24 left-1/2 -translate-x-1/2 bg-white text-navy-900 px-6 py-3 rounded-full font-black text-[10px] uppercase shadow-2xl z-[50] border-2 border-cyan-400";
-                            btn.style.color = "#072146";
+                            btn.className = "fixed bottom-24 left-1/2 -translate-x-1/2 bg-white px-6 py-3 rounded-full font-black text-[10px] uppercase shadow-2xl z-[50] border-2 border-cyan-400";
+                            btn.style.color = "#072146"; 
                             btn.onclick = () => {
                                 elementos.forEach(el => {
                                     el.style.display = 'flex';
                                     el.style.borderLeft = "none";
                                 });
-                                fechas.forEach(f => f.style.display = 'block'); // Vuelven las fechas
+                                fechas.forEach(f => f.style.display = 'block'); 
                                 btn.remove();
                             };
                             document.body.appendChild(btn);
@@ -882,11 +775,10 @@ const gastosMes = appData.filter(g => g.fecha.startsWith(mesAct) && !categIngres
                     }, 400);
                 }
             }
-
         }
     });
 }
-
+ 
   
 
 
