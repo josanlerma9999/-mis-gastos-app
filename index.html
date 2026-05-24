@@ -879,24 +879,34 @@ function updateChart() {
         }
 
         function prepararEdicion(id) {
-            const gasto = appData.find(g => g._id === id);
-            if (!gasto) return;
+    const gasto = appData.find(g => g._id === id);
+    if (!gasto) return;
 
-            document.getElementById('in-concepto').value = gasto.concepto;
-            document.getElementById('in-importe').value = Math.abs(gasto.importe);
-            document.getElementById('in-categoria').value = gasto.categoria;
-            document.getElementById('in-fecha').value = gasto.fecha;
+    document.getElementById('in-concepto').value = gasto.concepto;
+    document.getElementById('in-importe').value = Math.abs(gasto.importe);
+    document.getElementById('in-categoria').value = gasto.categoria;
+    document.getElementById('in-fecha').value = gasto.fecha;
 
-            editMode = true;
-            editId = id;
+    editMode = true;
+    editId = id;
 
-            const btnForm = document.querySelector('#mainForm button[type="submit"]');
-            btnForm.innerText = "Guardar Cambios";
-            btnForm.style.backgroundColor = "#fbbf24"; // Color ámbar para diferenciar
-            btnForm.style.color = "#000";
+    // Comprobamos si el gasto que editas ya era un pago fijo para marcar la casilla automáticamente
+    const checkEl = document.getElementById('check-recurrente');
+    if (checkEl) {
+        let fijos = JSON.parse(localStorage.getItem('recurrentes') || "[]");
+        checkEl.checked = fijos.some(p => p.concepto.trim().toLowerCase() === gasto.concepto.trim().toLowerCase());
+    }
 
-            goToTab(5); // Te lleva a la pestaña de "Operar"
-        }
+    const btnForm = document.querySelector('#mainForm button[type="submit"]');
+    btnForm.innerText = "Guardar Cambios";
+    btnForm.style.backgroundColor = "#fbbf24"; // Color ámbar para diferenciar
+    btnForm.style.color = "#000";
+
+    // SOLUCIÓN AL ATASCO: Sincronizamos el índice táctil con la pestaña 5 antes de viajar
+    currentTabIndex = 5; 
+    goToTab(5); // Te lleva a la pestaña de "Operar" de forma limpia
+}
+
 
         async function deleteGasto(id) {
             if (!confirm("¿Eliminar este movimiento?")) return; 
