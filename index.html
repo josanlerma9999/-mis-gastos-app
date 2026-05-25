@@ -1057,7 +1057,12 @@ document.getElementById('mainForm').addEventListener('submit', async (e) => {
 
     try {
         if (editMode && editId) {
-            // Lógica para ACTUALIZAR (PUT)
+            // 1. ACTUALIZACIÓN LOCAL INMEDIATA (Para evitar el retraso del servidor)
+            appData = appData.map(g => g._id === editId ? { ...g, concepto, importe: parseFloat(importe), categoria, fecha } : g);
+            localStorage.setItem('appData_cache', JSON.stringify(appData));
+            actualizarInterfaz(); // Pinta el cambio en movimientos ya mismo
+
+            // 2. Lógica para ACTUALIZAR en el servidor (PUT)
             await fetch(`${API_URL}/${editId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json', 'x-api-key': SECURE_KEY },
@@ -1074,17 +1079,17 @@ document.getElementById('mainForm').addEventListener('submit', async (e) => {
             showToast("Operación registrada con éxito", "success");
         }
 
-                // --- LÓGICA PARA PAGOS RECURRENTES ---
+        // --- LÓGICA PARA PAGOS RECURRENTES ---
         let recs = JSON.parse(localStorage.getItem('recurrentes') || "[]");
 
         if (esRecurrente && !categIngresos.includes(categoria)) {
-            const diaPago = fecha.split('-')[2]; // Extrae el día exacto
+            const diaPago = fecha.split('-')[2]; // Extrae el día exacto (ej: "26")
             
             // Buscamos la posición del pago en el array
             const indexRec = recs.findIndex(r => r.concepto.toLowerCase() === concepto.toLowerCase());
 
             if (indexRec !== -1) {
-                // ¡EXISTE! Estamos editando, así que ACTUALIZAMOS el día, importe y categoría
+                // ¡EXISTE! Actualizamos el día, importe y categoría en Pagos Fijos
                 recs[indexRec].dia = diaPago;
                 recs[indexRec].importe = importe;
                 recs[indexRec].categoria = categoria;
@@ -1101,11 +1106,10 @@ document.getElementById('mainForm').addEventListener('submit', async (e) => {
             localStorage.setItem('recurrentes', JSON.stringify(recs));
             
         } else if (!esRecurrente && editMode) {
-            // MEJORA: Si editas un gasto y le quitas el "check" de recurrente, lo borra de la lista de fijos
+            // Si le quitas el "check", lo borra de la lista de fijos
             recs = recs.filter(r => r.concepto.toLowerCase() !== concepto.toLowerCase());
             localStorage.setItem('recurrentes', JSON.stringify(recs));
         }
-
 
         // Limpiar el formulario y resetear el modo edición
         document.getElementById('mainForm').reset();
@@ -1113,13 +1117,18 @@ document.getElementById('mainForm').addEventListener('submit', async (e) => {
         editId = null;
         
         const btnForm = document.querySelector('#mainForm button[type="submit"]');
-        btnForm.innerText = "Confirmar Operación";
-        btnForm.style.backgroundColor = "#00e5ff";
-        btnForm.style.color = "#000";
+        if(btnForm) {
+            btnForm.innerText = "Confirmar Operación";
+            btnForm.style.backgroundColor = "#00e5ff";
+            btnForm.style.color = "#000";
+        }
 
-        // Refrescar los datos de la app y volver a la pestaña de inicio
-        await renderApp();
+        // Forzamos el repintado de fijos con los datos locales recién guardados
+        actualizarInterfaz();
+
+        // Volvemos a inicio y dejamos 600ms al servidor antes de pedir los datos limpios
         goToTab(0); 
+        setTimeout(renderApp, 600);
 
     } catch (error) {
         console.error("Error al procesar el formulario:", error);
