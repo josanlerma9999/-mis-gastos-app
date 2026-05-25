@@ -1044,9 +1044,8 @@ function renderCardChart(cat) {
 }
 // --- CONTROLADOR DEL FORMULARIO DE OPERACIONES ---
 document.getElementById('mainForm').addEventListener('submit', async (e) => {
-    e.preventDefault(); // Bloquea la recarga de la página
+    e.preventDefault(); 
 
-    // Capturar valores
     const concepto = document.getElementById('in-concepto').value;
     const importe = document.getElementById('in-importe').value;
     const categoria = document.getElementById('in-categoria').value;
@@ -1054,24 +1053,32 @@ document.getElementById('mainForm').addEventListener('submit', async (e) => {
     const esRecurrente = document.getElementById('check-recurrente').checked;
 
     const payload = { concepto, importe, categoria, fecha };
+    
+    console.log("=== DATOS ENVIADOS DESDE EL FORMULARIO ===");
+    console.log("EditMode:", editMode, "ID:", editId);
+    console.log("Payload que se envía:", payload);
 
     try {
         if (editMode && editId) {
-            // 1. ACTUALIZACIÓN LOCAL INMEDIATA (Para evitar el retraso del servidor)
+            // 1. Forzar cambio local en la memoria de la App
             appData = appData.map(g => g._id === editId ? { ...g, concepto, importe: parseFloat(importe), categoria, fecha } : g);
             localStorage.setItem('appData_cache', JSON.stringify(appData));
-            actualizarInterfaz(); // Pinta el cambio en movimientos ya mismo
+            
+            console.log("AppData local actualizada antes del envío:", appData.find(g => g._id === editId));
 
-            // 2. Lógica para ACTUALIZAR en el servidor (PUT)
-            await fetch(`${API_URL}/${editId}`, {
+            // 2. Enviar actualización al servidor
+            const response = await fetch(`${API_URL}/${editId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json', 'x-api-key': SECURE_KEY },
                 body: JSON.stringify(payload)
             });
+            
+            const resData = await response.json();
+            console.log("Respuesta del servidor (PUT):", resData);
+            
             showToast("Operación actualizada con éxito", "success");
         } else {
-            // Lógica para CREAR (POST)
-            await fetch(API_URL, {
+            const response = await fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'x-api-key': SECURE_KEY },
                 body: JSON.stringify(payload)
@@ -1081,37 +1088,22 @@ document.getElementById('mainForm').addEventListener('submit', async (e) => {
 
         // --- LÓGICA PARA PAGOS RECURRENTES ---
         let recs = JSON.parse(localStorage.getItem('recurrentes') || "[]");
-
         if (esRecurrente && !categIngresos.includes(categoria)) {
-            const diaPago = fecha.split('-')[2]; // Extrae el día exacto (ej: "26")
-            
-            // Buscamos la posición del pago en el array
+            const diaPago = fecha.split('-')[2];
             const indexRec = recs.findIndex(r => r.concepto.toLowerCase() === concepto.toLowerCase());
-
             if (indexRec !== -1) {
-                // ¡EXISTE! Actualizamos el día, importe y categoría en Pagos Fijos
                 recs[indexRec].dia = diaPago;
                 recs[indexRec].importe = importe;
                 recs[indexRec].categoria = categoria;
             } else {
-                // NO EXISTE. Lo creamos nuevo
-                recs.push({ 
-                    id: Date.now(), 
-                    concepto: concepto, 
-                    importe: importe, 
-                    categoria: categoria, 
-                    dia: diaPago 
-                });
+                recs.push({ id: Date.now(), concepto, importe, categoria, dia: diaPago });
             }
             localStorage.setItem('recurrentes', JSON.stringify(recs));
-            
         } else if (!esRecurrente && editMode) {
-            // Si le quitas el "check", lo borra de la lista de fijos
             recs = recs.filter(r => r.concepto.toLowerCase() !== concepto.toLowerCase());
             localStorage.setItem('recurrentes', JSON.stringify(recs));
         }
 
-        // Limpiar el formulario y resetear el modo edición
         document.getElementById('mainForm').reset();
         editMode = false;
         editId = null;
@@ -1123,15 +1115,19 @@ document.getElementById('mainForm').addEventListener('submit', async (e) => {
             btnForm.style.color = "#000";
         }
 
-        // Forzamos el repintado de fijos con los datos locales recién guardados
+        // Pintamos la interfaz con la memoria local mutada
         actualizarInterfaz();
-
-        // Volvemos a inicio y dejamos 600ms al servidor antes de pedir los datos limpios
         goToTab(0); 
-        setTimeout(renderApp, 600);
+
+        // Esperamos un poco y volvemos a descargar todo para asegurar
+        setTimeout(async () => {
+            console.log("Ejecutando renderApp diferido...");
+            await renderApp();
+            console.log("renderApp finalizado. Datos actuales en appData:", appData);
+        }, 1000);
 
     } catch (error) {
-        console.error("Error al procesar el formulario:", error);
+        console.error("Error crítico en el formulario:", error);
         showToast("Error de conexión al guardar", "delete");
     }
 });
