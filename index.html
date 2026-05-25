@@ -1074,13 +1074,22 @@ document.getElementById('mainForm').addEventListener('submit', async (e) => {
             showToast("Operación registrada con éxito", "success");
         }
 
-        // --- LÓGICA PARA PAGOS RECURRENTES ---
+                // --- LÓGICA PARA PAGOS RECURRENTES ---
+        let recs = JSON.parse(localStorage.getItem('recurrentes') || "[]");
+
         if (esRecurrente && !categIngresos.includes(categoria)) {
-            let recs = JSON.parse(localStorage.getItem('recurrentes') || "[]");
-            const diaPago = fecha.split('-')[2]; // Saca el día exacto de la fecha (YYYY-MM-DD)
+            const diaPago = fecha.split('-')[2]; // Extrae el día exacto
             
-            // Solo lo añade si no existe ya un pago fijo con ese concepto
-            if (!recs.some(r => r.concepto.toLowerCase() === concepto.toLowerCase())) {
+            // Buscamos la posición del pago en el array
+            const indexRec = recs.findIndex(r => r.concepto.toLowerCase() === concepto.toLowerCase());
+
+            if (indexRec !== -1) {
+                // ¡EXISTE! Estamos editando, así que ACTUALIZAMOS el día, importe y categoría
+                recs[indexRec].dia = diaPago;
+                recs[indexRec].importe = importe;
+                recs[indexRec].categoria = categoria;
+            } else {
+                // NO EXISTE. Lo creamos nuevo
                 recs.push({ 
                     id: Date.now(), 
                     concepto: concepto, 
@@ -1088,9 +1097,15 @@ document.getElementById('mainForm').addEventListener('submit', async (e) => {
                     categoria: categoria, 
                     dia: diaPago 
                 });
-                localStorage.setItem('recurrentes', JSON.stringify(recs));
             }
+            localStorage.setItem('recurrentes', JSON.stringify(recs));
+            
+        } else if (!esRecurrente && editMode) {
+            // MEJORA: Si editas un gasto y le quitas el "check" de recurrente, lo borra de la lista de fijos
+            recs = recs.filter(r => r.concepto.toLowerCase() !== concepto.toLowerCase());
+            localStorage.setItem('recurrentes', JSON.stringify(recs));
         }
+
 
         // Limpiar el formulario y resetear el modo edición
         document.getElementById('mainForm').reset();
