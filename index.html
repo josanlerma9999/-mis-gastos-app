@@ -1046,43 +1046,43 @@ function renderCardChart(cat) {
 document.getElementById('mainForm').addEventListener('submit', async (e) => {
     e.preventDefault(); 
 
-    const concepto = document.getElementById('in-concepto').value;
-    const importe = document.getElementById('in-importe').value;
+    const concepto = document.getElementById('in-concepto').value.trim();
+    // Forzamos el parseo a número decimal desde el principio
+    const importe = parseFloat(document.getElementById('in-importe').value);
     const categoria = document.getElementById('in-categoria').value;
     const fecha = document.getElementById('in-fecha').value;
     const esRecurrente = document.getElementById('check-recurrente').checked;
 
+    // Payload limpio con tipos de datos correctos
     const payload = { concepto, importe, categoria, fecha };
     
-    console.log("=== DATOS ENVIADOS DESDE EL FORMULARIO ===");
-    console.log("EditMode:", editMode, "ID:", editId);
-    console.log("Payload que se envía:", payload);
+    console.log("=== ENVIANDO DATOS ===", { editMode, editId, payload });
 
     try {
         if (editMode && editId) {
-            // 1. Forzar cambio local en la memoria de la App
-            appData = appData.map(g => g._id === editId ? { ...g, concepto, importe: parseFloat(importe), categoria, fecha } : g);
+            // 1. Mutación optimista local (UI inmediata)
+            appData = appData.map(g => g._id === editId ? { ...g, concepto, importe, categoria, fecha } : g);
             localStorage.setItem('appData_cache', JSON.stringify(appData));
-            
-            console.log("AppData local actualizada antes del envío:", appData.find(g => g._id === editId));
+            actualizarInterfaz();
 
-            // 2. Enviar actualización al servidor
+            // 2. Envío al servidor
             const response = await fetch(`${API_URL}/${editId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json', 'x-api-key': SECURE_KEY },
                 body: JSON.stringify(payload)
             });
             
-            const resData = await response.json();
-            console.log("Respuesta del servidor (PUT):", resData);
-            
+            if (!response.ok) throw new Error("Respuesta de servidor no válida");
             showToast("Operación actualizada con éxito", "success");
         } else {
+            // Lógica para Crear
             const response = await fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'x-api-key': SECURE_KEY },
                 body: JSON.stringify(payload)
             });
+            
+            if (!response.ok) throw new Error("Error al crear registro");
             showToast("Operación registrada con éxito", "success");
         }
 
@@ -1093,10 +1093,10 @@ document.getElementById('mainForm').addEventListener('submit', async (e) => {
             const indexRec = recs.findIndex(r => r.concepto.toLowerCase() === concepto.toLowerCase());
             if (indexRec !== -1) {
                 recs[indexRec].dia = diaPago;
-                recs[indexRec].importe = importe;
+                recs[indexRec].importe = importe.toString();
                 recs[indexRec].categoria = categoria;
             } else {
-                recs.push({ id: Date.now(), concepto, importe, categoria, dia: diaPago });
+                recs.push({ id: Date.now(), concepto, importe: importe.toString(), categoria, dia: diaPago });
             }
             localStorage.setItem('recurrentes', JSON.stringify(recs));
         } else if (!esRecurrente && editMode) {
@@ -1104,6 +1104,7 @@ document.getElementById('mainForm').addEventListener('submit', async (e) => {
             localStorage.setItem('recurrentes', JSON.stringify(recs));
         }
 
+        // Resetear formulario
         document.getElementById('mainForm').reset();
         editMode = false;
         editId = null;
@@ -1115,19 +1116,16 @@ document.getElementById('mainForm').addEventListener('submit', async (e) => {
             btnForm.style.color = "#000";
         }
 
-        // Pintamos la interfaz con la memoria local mutada
-        actualizarInterfaz();
+        // Viajar a pestaña inicio
         goToTab(0); 
 
-        // Esperamos un poco y volvemos a descargar todo para asegurar
+        // Actualización silenciosa de respaldo
         setTimeout(async () => {
-            console.log("Ejecutando renderApp diferido...");
             await renderApp();
-            console.log("renderApp finalizado. Datos actuales en appData:", appData);
-        }, 1000);
+        }, 1200);
 
     } catch (error) {
-        console.error("Error crítico en el formulario:", error);
+        console.error("Error crítico procesando formulario:", error);
         showToast("Error de conexión al guardar", "delete");
     }
 });
