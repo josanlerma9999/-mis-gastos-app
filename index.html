@@ -1047,43 +1047,52 @@ document.getElementById('mainForm').addEventListener('submit', async (e) => {
     e.preventDefault(); 
 
     const concepto = document.getElementById('in-concepto').value.trim();
-    // Forzamos el parseo a número decimal desde el principio
     const importe = parseFloat(document.getElementById('in-importe').value);
     const categoria = document.getElementById('in-categoria').value;
     const fecha = document.getElementById('in-fecha').value;
     const esRecurrente = document.getElementById('check-recurrente').checked;
 
-    // Payload limpio con tipos de datos correctos
     const payload = { concepto, importe, categoria, fecha };
-    
-    console.log("=== ENVIANDO DATOS ===", { editMode, editId, payload });
 
     try {
         if (editMode && editId) {
-            // 1. Mutación optimista local (UI inmediata)
-            appData = appData.map(g => g._id === editId ? { ...g, concepto, importe, categoria, fecha } : g);
+            // OPTIMIZACIÓN MÓVIL (PLAN B): En lugar de PUT, borramos el viejo y creamos el nuevo corregido
+            
+            // 1. Borrado e inserción optimista en local para que sea instantáneo
+            appData = appData.filter(g => g._id !== editId); // Quitamos el viejo
+            const tempId = "temp_" + Date.now();
+            appData.push({ _id: tempId, ...payload }); // Metemos el nuevo con los datos cambiados
             localStorage.setItem('appData_cache', JSON.stringify(appData));
             actualizarInterfaz();
+            goToTab(0);
 
-            // 2. Envío al servidor
-            const response = await fetch(`${API_URL}/${editId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json', 'x-api-key': SECURE_KEY },
-                body: JSON.stringify(payload)
+            // 2. Mandamos las peticiones reales al servidor
+            // Primero borramos el registro antiguo con el ID viejo
+            await fetch(`${API_URL}/${editId}`, { 
+                method: 'DELETE', 
+                headers: { 'x-api-key': SECURE_KEY } 
             });
-            
-            if (!response.ok) throw new Error("Respuesta de servidor no válida");
-            showToast("Operación actualizada con éxito", "success");
-        } else {
-            // Lógica para Crear
+
+            // Segundo creamos el nuevo con la fecha/datos actualizados
             const response = await fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'x-api-key': SECURE_KEY },
                 body: JSON.stringify(payload)
             });
-            
-            if (!response.ok) throw new Error("Error al crear registro");
+
+            if (!response.ok) throw new Error("Error en réplica");
+            showToast("Operación actualizada con éxito", "success");
+
+        } else {
+            // Lógica normal para CREAR un gasto nuevo de cero
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'x-api-key': SECURE_KEY },
+                body: JSON.stringify(payload)
+            });
+            if (!response.ok) throw new Error("Error al crear");
             showToast("Operación registrada con éxito", "success");
+            goToTab(0);
         }
 
         // --- LÓGICA PARA PAGOS RECURRENTES ---
@@ -1104,7 +1113,7 @@ document.getElementById('mainForm').addEventListener('submit', async (e) => {
             localStorage.setItem('recurrentes', JSON.stringify(recs));
         }
 
-        // Resetear formulario
+        // Resetear el formulario completamente
         document.getElementById('mainForm').reset();
         editMode = false;
         editId = null;
@@ -1116,16 +1125,13 @@ document.getElementById('mainForm').addEventListener('submit', async (e) => {
             btnForm.style.color = "#000";
         }
 
-        // Viajar a pestaña inicio
-        goToTab(0); 
-
-        // Actualización silenciosa de respaldo
+        // Traemos los datos limpios finales del servidor pasados 1.5 segundos
         setTimeout(async () => {
             await renderApp();
-        }, 1200);
+        }, 1500);
 
     } catch (error) {
-        console.error("Error crítico procesando formulario:", error);
+        console.error("Error crítico en proceso alternativo:", error);
         showToast("Error de conexión al guardar", "delete");
     }
 });
