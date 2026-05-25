@@ -1045,6 +1045,13 @@ function renderCardChart(cat) {
 // --- CONTROLADOR DEL FORMULARIO DE OPERACIONES ---
 document.getElementById('mainForm').addEventListener('submit', async (e) => {
     e.preventDefault(); 
+    
+    // 1. BLOQUEAMOS EL BOTÓN PARA EVITAR DOBLE CLIC Y DUPLICADOS
+    const btnForm = document.querySelector('#mainForm button[type="submit"]');
+    const textoOriginal = btnForm.innerText;
+    btnForm.disabled = true;
+    btnForm.innerText = "Guardando...";
+    btnForm.style.opacity = "0.5";
 
     const concepto = document.getElementById('in-concepto').value.trim();
     const importe = parseFloat(document.getElementById('in-importe').value);
@@ -1056,46 +1063,31 @@ document.getElementById('mainForm').addEventListener('submit', async (e) => {
 
     try {
         if (editMode && editId) {
-            // OPTIMIZACIÓN MÓVIL (PLAN B): En lugar de PUT, borramos el viejo y creamos el nuevo corregido
-            
-            // 1. Borrado e inserción optimista en local para que sea instantáneo
-            appData = appData.filter(g => g._id !== editId); // Quitamos el viejo
-            const tempId = "temp_" + Date.now();
-            appData.push({ _id: tempId, ...payload }); // Metemos el nuevo con los datos cambiados
-            localStorage.setItem('appData_cache', JSON.stringify(appData));
-            actualizarInterfaz();
-            goToTab(0);
-
-            // 2. Mandamos las peticiones reales al servidor
-            // Primero borramos el registro antiguo con el ID viejo
+            // BORRAMOS EL VIEJO Y ESPERAMOS
             await fetch(`${API_URL}/${editId}`, { 
                 method: 'DELETE', 
                 headers: { 'x-api-key': SECURE_KEY } 
             });
 
-            // Segundo creamos el nuevo con la fecha/datos actualizados
-            const response = await fetch(API_URL, {
+            // SUBIMOS EL NUEVO ACTUALIZADO Y ESPERAMOS
+            await fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'x-api-key': SECURE_KEY },
                 body: JSON.stringify(payload)
             });
 
-            if (!response.ok) throw new Error("Error en réplica");
-            showToast("Operación actualizada con éxito", "success");
-
+            showToast("Operación actualizada", "success");
         } else {
-            // Lógica normal para CREAR un gasto nuevo de cero
-            const response = await fetch(API_URL, {
+            // CREAMOS UNO NUEVO NORMAL
+            await fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'x-api-key': SECURE_KEY },
                 body: JSON.stringify(payload)
             });
-            if (!response.ok) throw new Error("Error al crear");
-            showToast("Operación registrada con éxito", "success");
-            goToTab(0);
+            showToast("Operación registrada", "success");
         }
 
-        // --- LÓGICA PARA PAGOS RECURRENTES ---
+        // --- LÓGICA PARA PAGOS RECURRENTES (FIJOS) ---
         let recs = JSON.parse(localStorage.getItem('recurrentes') || "[]");
         if (esRecurrente && !categIngresos.includes(categoria)) {
             const diaPago = fecha.split('-')[2];
@@ -1113,26 +1105,31 @@ document.getElementById('mainForm').addEventListener('submit', async (e) => {
             localStorage.setItem('recurrentes', JSON.stringify(recs));
         }
 
-        // Resetear el formulario completamente
+        // LIMPIAMOS FORMULARIO
         document.getElementById('mainForm').reset();
         editMode = false;
         editId = null;
-        
-        const btnForm = document.querySelector('#mainForm button[type="submit"]');
-        if(btnForm) {
-            btnForm.innerText = "Confirmar Operación";
-            btnForm.style.backgroundColor = "#00e5ff";
-            btnForm.style.color = "#000";
-        }
 
-        // Traemos los datos limpios finales del servidor pasados 1.5 segundos
-        setTimeout(async () => {
-            await renderApp();
-        }, 1500);
+        // DESCARGAMOS LA VERDAD ABSOLUTA DEL SERVIDOR (Evita duplicados visuales)
+        await renderApp();
+        
+        // RESTAURAMOS EL BOTÓN Y VIAJAMOS A INICIO
+        btnForm.disabled = false;
+        btnForm.innerText = "Confirmar Operación";
+        btnForm.style.opacity = "1";
+        btnForm.style.backgroundColor = "#00e5ff";
+        btnForm.style.color = "#000";
+        
+        goToTab(0);
 
     } catch (error) {
-        console.error("Error crítico en proceso alternativo:", error);
-        showToast("Error de conexión al guardar", "delete");
+        console.error("Error al guardar:", error);
+        showToast("Error de conexión", "delete");
+        
+        // SI FALLA, DESBLOQUEAMOS EL BOTÓN PARA VOLVER A INTENTARLO
+        btnForm.disabled = false;
+        btnForm.innerText = textoOriginal;
+        btnForm.style.opacity = "1";
     }
 });
 
