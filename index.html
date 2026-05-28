@@ -339,14 +339,7 @@ let saldoTimer = null; // Control global para evitar el parpadeo del saldo
         }); 
 
                 function goToTab(i) {
-    // PROTECCIÓN DE SEGURIDAD: Si la app está bloqueada en modo privado (isPrivate),
-    // bloqueamos el acceso y no permitimos viajar a ninguna pestaña que no sea la del PIN (la 4).
-    // Si tu pestaña del candado es otra, cambia este "4" por el número de tu pestaña.
-    if (isPrivate && i !== 4) {
-        showToast("Acceso Bloqueado. Introduce PIN", "delete");
-        return; 
-    }
-
+    // Corregido: Eliminada la restricción que bloqueaba las pestañas al activar el modo privado (ojo)
     currentTabIndex = i;
     document.getElementById('main-view').style.transform = `translateX(-${i * 16.666}%)`; 
     document.querySelectorAll('.nav-btn').forEach((b, idx) => idx === i ? b.classList.add('active-tab') : b.classList.remove('active-tab'));
@@ -360,13 +353,14 @@ let saldoTimer = null; // Control global para evitar el parpadeo del saldo
         const btnForm = document.querySelector('#mainForm button[type="submit"]');
         if(btnForm) {
             btnForm.innerText = "Confirmar Operación";
-            btnForm.style.backgroundColor = "#00e5ff"; // Vuelve al cian original
+            btnForm.style.backgroundColor = "#00e5ff"; 
             btnForm.style.color = "#000";
         }
         const form = document.getElementById('mainForm');
         if(form) form.reset();
     }
 }
+
 
          function showToast(msj, tipo = 'success') {
             const container = document.getElementById('toast-container');
