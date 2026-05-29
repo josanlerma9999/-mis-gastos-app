@@ -1040,10 +1040,6 @@ function renderCardChart(cat) {
 document.getElementById('mainForm').addEventListener('submit', async (e) => {
     e.preventDefault(); 
     
-    // 1. BLOQUEAMOS EL BOTÓN PARA EVITAR DOBLE CLIC Y DUPLICADOS
-   document.getElementById('mainForm').addEventListener('submit', async (e) => {
-    e.preventDefault(); 
-    
     // 1. BLOQUEAMOS EL BOTÓN PARA EVITAR DOBLE CLIC
     const btnForm = document.querySelector('#mainForm button[type="submit"]');
     const textoOriginal = btnForm.innerText;
@@ -1154,6 +1150,7 @@ document.getElementById('mainForm').addEventListener('submit', async (e) => {
     }
 });
 
+   
 
 function actualizarSaludo(saldo) {
     const hora = new Date().getHours();
