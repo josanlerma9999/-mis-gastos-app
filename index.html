@@ -1041,6 +1041,10 @@ document.getElementById('mainForm').addEventListener('submit', async (e) => {
     e.preventDefault(); 
     
     // 1. BLOQUEAMOS EL BOTÓN PARA EVITAR DOBLE CLIC Y DUPLICADOS
+   document.getElementById('mainForm').addEventListener('submit', async (e) => {
+    e.preventDefault(); 
+    
+    // 1. BLOQUEAMOS EL BOTÓN PARA EVITAR DOBLE CLIC
     const btnForm = document.querySelector('#mainForm button[type="submit"]');
     const textoOriginal = btnForm.innerText;
     btnForm.disabled = true;
@@ -1053,31 +1057,48 @@ document.getElementById('mainForm').addEventListener('submit', async (e) => {
     const fecha = document.getElementById('in-fecha').value;
     const esRecurrente = document.getElementById('check-recurrente').checked;
 
+    // Capturamos el concepto antiguo por si estamos editando
+    let conceptoAnterior = concepto;
+    if (editMode && editId) {
+        const gastoAntiguo = appData.find(g => g._id === editId);
+        if (gastoAntiguo) {
+            conceptoAnterior = gastoAntiguo.concepto;
+        }
+    }
+
     const payload = { concepto, importe, categoria, fecha };
 
     try {
         if (editMode && editId) {
-            // BORRAMOS EL VIEJO Y ESPERAMOS
-            await fetch(`${API_URL}/${editId}`, { 
+            // INTENTAMOS BORRAR EL VIEJO
+            const deleteRes = await fetch(`${API_URL}/${editId}`, { 
                 method: 'DELETE', 
                 headers: { 'x-api-key': SECURE_KEY } 
             });
 
-            // SUBIMOS EL NUEVO ACTUALIZADO Y ESPERAMOS
-            await fetch(API_URL, {
+            // Si falla el borrado, cortamos aquí para no duplicar
+            if (!deleteRes.ok) throw new Error("Fallo al borrar el registro antiguo.");
+
+            // SUBIMOS EL NUEVO ACTUALIZADO
+            const postRes = await fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'x-api-key': SECURE_KEY },
                 body: JSON.stringify(payload)
             });
 
+            if (!postRes.ok) throw new Error("Fallo al guardar el nuevo registro.");
+            
             showToast("Operación actualizada", "success");
         } else {
             // CREAMOS UNO NUEVO NORMAL
-            await fetch(API_URL, {
+            const postRes = await fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'x-api-key': SECURE_KEY },
                 body: JSON.stringify(payload)
             });
+            
+            if (!postRes.ok) throw new Error("Fallo al crear el registro.");
+            
             showToast("Operación registrada", "success");
         }
 
@@ -1085,8 +1106,11 @@ document.getElementById('mainForm').addEventListener('submit', async (e) => {
         let recs = JSON.parse(localStorage.getItem('recurrentes') || "[]");
         if (esRecurrente && !categIngresos.includes(categoria)) {
             const diaPago = fecha.split('-')[2];
-            const indexRec = recs.findIndex(r => r.concepto.toLowerCase() === concepto.toLowerCase());
+            
+            const indexRec = recs.findIndex(r => r.concepto.trim().toLowerCase() === conceptoAnterior.trim().toLowerCase());
+            
             if (indexRec !== -1) {
+                recs[indexRec].concepto = concepto; 
                 recs[indexRec].dia = diaPago;
                 recs[indexRec].importe = importe.toString();
                 recs[indexRec].categoria = categoria;
@@ -1095,7 +1119,7 @@ document.getElementById('mainForm').addEventListener('submit', async (e) => {
             }
             localStorage.setItem('recurrentes', JSON.stringify(recs));
         } else if (!esRecurrente && editMode) {
-            recs = recs.filter(r => r.concepto.toLowerCase() !== concepto.toLowerCase());
+            recs = recs.filter(r => r.concepto.trim().toLowerCase() !== conceptoAnterior.trim().toLowerCase());
             localStorage.setItem('recurrentes', JSON.stringify(recs));
         }
 
@@ -1104,10 +1128,13 @@ document.getElementById('mainForm').addEventListener('submit', async (e) => {
         editMode = false;
         editId = null;
 
-        // DESCARGAMOS LA VERDAD ABSOLUTA DEL SERVIDOR (Evita duplicados visuales)
+        // TIEMPO DE CORTESÍA PARA QUE EL SERVIDOR RESPIRE (800ms)
+        await new Promise(resolve => setTimeout(resolve, 800));
+
+        // DESCARGAMOS LA VERDAD ABSOLUTA DEL SERVIDOR
         await renderApp();
         
-        // RESTAURAMOS EL BOTÓN Y VIAJAMOS A INICIO
+        // RESTAURAMOS EL BOTÓN
         btnForm.disabled = false;
         btnForm.innerText = "Confirmar Operación";
         btnForm.style.opacity = "1";
@@ -1118,14 +1145,15 @@ document.getElementById('mainForm').addEventListener('submit', async (e) => {
 
     } catch (error) {
         console.error("Error al guardar:", error);
-        showToast("Error de conexión", "delete");
+        showToast("Error de conexión, intenta de nuevo", "delete");
         
-        // SI FALLA, DESBLOQUEAMOS EL BOTÓN PARA VOLVER A INTENTARLO
+        // DESBLOQUEAMOS EL BOTÓN SI ALGO SALIÓ MAL
         btnForm.disabled = false;
         btnForm.innerText = textoOriginal;
         btnForm.style.opacity = "1";
     }
 });
+
 
 function actualizarSaludo(saldo) {
     const hora = new Date().getHours();
