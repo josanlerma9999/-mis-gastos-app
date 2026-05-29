@@ -320,7 +320,8 @@
     </div> 
 
     <script>
-const API_URL = 'https://mis-gastos-app.onrender.com/api/gastos'; const SECURE_KEY = 'YakoNala99'; 
+const API_URL = 'https://mis-gastos-app.onrender.com/api/gastos'; 
+const SECURE_KEY = 'YakoNala99'; 
 let editMode = false; 
 let editId = null;
 let touchstartX = 0, touchendX = 0, currentTabIndex = 0;
@@ -328,27 +329,47 @@ let pin = "", isPrivate = false, appData = [];
 const categIngresos = ["Sueldo", "Otros Ingresos"];
 let gastosChart = null; 
 let pagosProcesados = false; 
-let saldoTimer = null; // Control global para evitar el parpadeo del saldo
+let saldoTimer = null; 
+let cardCharts = {};
 
+// --- PIN PAD ---
+[1,2,3,4,5,6,7,8,9,'C',0,'DEL'].forEach(v => {
+    const b = document.createElement('button'); b.className = "num-btn"; b.innerText = v;
+    b.onclick = () => {
+        if(v === 'C') pin = ""; else if(v === 'DEL') pin = pin.slice(0,-1); else if(pin.length < 4) pin += v;
+        document.querySelectorAll('#pin-dots div').forEach((d, i) => d.style.background = i < pin.length ? '#00e5ff' : 'transparent');
+        if(pin === "1763") { document.getElementById('pin-screen').remove(); document.getElementById('app-content').classList.remove('hidden'); renderApp(); }
+    };
+    document.getElementById('pin-pad').appendChild(b);
+}); 
 
-        // PIN PAD
-        [1,2,3,4,5,6,7,8,9,'C',0,'DEL'].forEach(v => {
-            const b = document.createElement('button'); b.className = "num-btn"; b.innerText = v;
-            b.onclick = () => {
-                if(v === 'C') pin = ""; else if(v === 'DEL') pin = pin.slice(0,-1); else if(pin.length < 4) pin += v;
-                document.querySelectorAll('#pin-dots div').forEach((d, i) => d.style.background = i < pin.length ? '#00e5ff' : 'transparent');
-                if(pin === "1763") { document.getElementById('pin-screen').remove(); document.getElementById('app-content').classList.remove('hidden'); renderApp(); }
-            };
-            document.getElementById('pin-pad').appendChild(b);
-        }); 
+// --- FUNCIONES CORE ---
 
-                function goToTab(i) {
-    // Corregido: Eliminada la restricción que bloqueaba las pestañas al activar el modo privado (ojo)
+function obtenerLogo(concepto) {
+    const c = concepto.toLowerCase();
+    const reglas = [
+        ['nala', '#FFC0CB', '🐶'],
+        ['sueldo', '#22c55e', '💵'], 
+        ['nomina', '#22c55e', '💵'],
+        ['ingreso', '#22c55e', '💵'],
+        ['abono', '#10b981', '🔄'],
+        ['gasolina', '#4b5563', '⛽'],
+        ['tarjeta', '#00e5ff', '💳'], 
+        ['amazon', '#FF9900', 'A'],
+    ];
+    
+    const match = reglas.find(r => c.includes(r[0]));
+    if (match) return `<div class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg" style="background:${match[1]}">${match[2]}</div>`;
+    
+    return `<div class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg bg-slate-700 shadow-lg">${concepto.charAt(0).toUpperCase()}</div>`;
+}
+
+function goToTab(i) {
     currentTabIndex = i;
     document.getElementById('main-view').style.transform = `translateX(-${i * 16.666}%)`; 
     document.querySelectorAll('.nav-btn').forEach((b, idx) => idx === i ? b.classList.add('active-tab') : b.classList.remove('active-tab'));
-    
     if(i === 0) setTimeout(updateChart, 100);
+}
 
     // Si entras a cualquier pestaña que NO sea "Operar" (la 5), reseteamos el botón de edición
     if (i !== 5) {
@@ -457,37 +478,6 @@ let saldoTimer = null; // Control global para evitar el parpadeo del saldo
                 console.error("Error cargando datos:", e); 
             }
         }
-   
-
-function obtenerLogo(concepto) {
-    const c = concepto.toLowerCase();
-    const reglas = [
-        ['nala', '#FFC0CB', '🐶'],
-        ['sueldo', '#22c55e', '💵'], 
-        ['nomina', '#22c55e', '💵'],
-        ['ingreso', '#22c55e', '💵'],
-        ['extra', '#22c55e', '💵'],
-        ['abono', '#10b981', '🔄'], // <-- NUEVA REGLA
-        ['devolución', '#10b981', '🔄'], // <-- NUEVA REGLA
-        ['gasolina', '#4b5563', '⛽'],
-        ['recarga', '#0070f3', '⚡'],
-        ['portátil', '#475569', '💻'], 
-        ['tarjeta', '#00e5ff', '💳'], 
-        ['amazon', '#FF9900', 'A'],
-        ['gasto', '#ef4444', '💸'],
-    ];
-    
-    const match = reglas.find(r => c.includes(r[0]));
-    if (match) return `<div class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg" style="background:${match[1]}">${match[2]}</div>`;
-    
-    if (c.includes("sueldo") || c.includes("ingreso") || c.includes("abono")) {
-        return `<div class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg bg-green-500 shadow-lg">💵</div>`;
-    }
-
-    return `<div class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg bg-slate-700 shadow-lg">${concepto.charAt(0).toUpperCase()}</div>`;
-}
-
-    
     // Si no encuentra palabra clave, pero es un ingreso (color verde por defecto)
     if (c.includes("sueldo") || c.includes("ingreso")) {
         return `<div class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg bg-green-500 shadow-lg">💵</div>`;
