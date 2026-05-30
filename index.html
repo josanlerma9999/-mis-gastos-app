@@ -815,6 +815,7 @@ function updateChart() {
         }
     });
 }
+
 function renderRecurrentes() {
     const container = document.getElementById('listaRecurrentes');
     if (!container) return;
@@ -828,17 +829,35 @@ function renderRecurrentes() {
 
     container.innerHTML = recs.map(p => {
         const importe = parseFloat(p.importe).toLocaleString('de-DE', {minimumFractionDigits:2});
-        return `<div class="bbva-card p-4 flex justify-between items-center border-l-4 border-purple-600 mb-3 shadow-lg">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-purple-900/30 flex items-center justify-center text-xl shadow-inner">${p.categoria.includes('Tarjeta') ? '💳' : '🏦'}</div>
-                <div>
-                    <p class="font-black text-white text-sm">${p.dia} • ${p.categoria}</p>
+        
+        // Asignamos un pequeño icono de apoyo según la categoría
+        const iconoContexto = p.categoria.includes('Tarjeta') ? '💳' : (p.categoria.includes('PayPal') ? '💙' : '🏦');
+        
+        return `
+        <div class="relative overflow-hidden bg-white/5 border border-white/10 rounded-2xl p-4 flex items-center gap-4 mb-3 shadow-[0_8px_30px_rgb(0,0,0,0.3)] backdrop-blur-md transition-all active:scale-95">
+            
+            <div class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-cyan-400 to-purple-600 rounded-l-2xl opacity-80"></div>
+
+            <div class="flex flex-col items-center justify-center min-w-[3.5rem] h-14 bg-gradient-to-b from-white/10 to-transparent rounded-xl border border-white/5 shadow-inner">
+                <span class="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Día</span>
+                <span class="text-xl font-black text-white leading-none">${p.dia}</span>
+            </div>
+            
+            <div class="flex-1 min-w-0">
+                <p class="font-black text-white text-[15px] truncate">${p.concepto}</p>
+                <div class="flex items-center gap-1.5 mt-1">
+                    <span class="text-[10px]">${iconoContexto}</span>
+                    <p class="text-[9px] font-bold text-cyan-400 uppercase tracking-widest truncate">${p.categoria}</p>
                 </div>
             </div>
-            <div class="flex items-center gap-3">
-                <p class="font-black text-amber-200/90 drop-shadow-[0_0_5px_rgba(251,191,36,0.2)]">-${importe}€</p>
-                <button onclick="borrarRecurrente(${p.id})" class="btn-action text-rose-500/50 hover:text-rose-500"> 🗑️ </button>
+            
+            <div class="flex flex-col items-end justify-center gap-2">
+                <p class="font-black text-[#fbbf24] text-lg drop-shadow-[0_0_10px_rgba(251,191,36,0.2)]">-${importe}€</p>
+                <button onclick="borrarRecurrente('${p.id}')" class="group flex items-center justify-center w-8 h-8 rounded-full bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 transition-colors">
+                    <span class="text-sm opacity-70 group-hover:opacity-100 transition-opacity">🗑️</span>
+                </button>
             </div>
+            
         </div>`;
     }).join('');
 }
