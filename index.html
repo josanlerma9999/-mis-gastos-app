@@ -824,7 +824,10 @@ function renderRecurrentes() {
         container.innerHTML = `<div class="text-center py-10 opacity-30"> <span class="text-4xl">🔄</span> <p class="text-[10px] font-bold uppercase mt-2 tracking-widest">No hay pagos fijos configurados</p> </div>`;
         return;
     }
-recs.sort((a, b) => parseInt(a.dia) - parseInt(b.dia));
+
+    // --- NUEVA LÍNEA: Ordenamos la lista de pagos de menor a mayor por el día ---
+    recs.sort((a, b) => parseInt(a.dia) - parseInt(b.dia));
+
     container.innerHTML = recs.map(p => {
         const importe = parseFloat(p.importe).toLocaleString('de-DE', {minimumFractionDigits:2});
         
@@ -859,6 +862,7 @@ recs.sort((a, b) => parseInt(a.dia) - parseInt(b.dia));
         </div>`;
     }).join('');
 }
+
 
 
 
