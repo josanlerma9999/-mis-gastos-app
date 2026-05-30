@@ -346,7 +346,7 @@ document.getElementById('pin-pad').appendChild(b);
 function goToTab(i) {
 // Corregido: Eliminada la restricción que bloqueaba las pestañas al activar el modo privado (ojo)
 currentTabIndex = i;
-document.getElementById('main-view').style.transform = translateX(-${i * 16.666}%)`;
+document.getElementById('main-view').style.transform = `translateX(-${i * 16.666}%)`;
 document.querySelectorAll('.nav-btn').forEach((b, idx) => idx === i ? b.classList.add('active-tab') : b.classList.remove('active-tab'));
 
 if(i === 0) setTimeout(updateChart, 100);
@@ -375,7 +375,8 @@ const toast = document.createElement('div');
 const colorBorder = tipo === 'success' ? 'border-cyan-400' : 'border-rose-500';
 const icono = tipo === 'success' ? '✅' : '🗑️';
 
-toast.className = bg-black/80 backdrop-blur-md border-l-4${colorBorder} text-white text-[10px] font-bold uppercase tracking-widest p-4 rounded-r-xl shadow-2xl transform translate-y-10 opacity-0 transition-all duration-500 flex items-center gap-3; toast.innerHTML =<span> {msj}</span>`;
+toast.className = `bg-black/80 backdrop-blur-md border-l-4 ${colorBorder} text-white text-[10px] font-bold uppercase tracking-widest p-4 rounded-r-xl shadow-2xl transform translate-y-10 opacity-0 transition-all duration-500 flex items-center gap-3`;
+toast.innerHTML = `<span> ${msj}</span>`;
 
 container.appendChild(toast);
 
@@ -815,29 +816,33 @@ function updateChart() {
     });
 }
 function renderRecurrentes() {
-const container = document.getElementById('listaRecurrentes');
-if (!container) return;
+    const container = document.getElementById('listaRecurrentes');
+    if (!container) return;
 
-let recs = JSON.parse(localStorage.getItem('recurrentes') || "[]");
+    let recs = JSON.parse(localStorage.getItem('recurrentes') || "[]");
 
-if (recs.length === 0) {
-container.innerHTML = &lt;div class="text-center py-10 opacity-30"&gt; &lt;span class="text-4xl"&gt;🔄&lt;/span&gt; &lt;p class="text-[10px] font-bold uppercase mt-2 tracking-widest"&gt;No hay pagos fijos configurados&lt;/p&gt; &lt;/div>;
-return;
+    if (recs.length === 0) {
+        container.innerHTML = `<div class="text-center py-10 opacity-30"> <span class="text-4xl">🔄</span> <p class="text-[10px] font-bold uppercase mt-2 tracking-widest">No hay pagos fijos configurados</p> </div>`;
+        return;
+    }
+
+    container.innerHTML = recs.map(p => {
+        const importe = parseFloat(p.importe).toLocaleString('de-DE', {minimumFractionDigits:2});
+        return `<div class="bbva-card p-4 flex justify-between items-center border-l-4 border-purple-600 mb-3 shadow-lg">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-purple-900/30 flex items-center justify-center text-xl shadow-inner">${p.categoria.includes('Tarjeta') ? '💳' : '🏦'}</div>
+                <div>
+                    <p class="font-black text-white text-sm">${p.dia} • ${p.categoria}</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <p class="font-black text-amber-200/90 drop-shadow-[0_0_5px_rgba(251,191,36,0.2)]">-${importe}€</p>
+                <button onclick="borrarRecurrente(${p.id})" class="btn-action text-rose-500/50 hover:text-rose-500"> 🗑️ </button>
+            </div>
+        </div>`;
+    }).join('');
 }
 
-container.innerHTML = recs.map(p => {
-const importe = parseFloat(p.importe).toLocaleString('de-DE', {minimumFractionDigits:2});
-return &lt;div class="bbva-card p-4 flex justify-between items-center border-l-4 border-purple-600 mb-3 shadow-lg"&gt; &lt;div class="flex items-center gap-3"&gt; &lt;div class="w-10 h-10 rounded-full bg-purple-900/30 flex items-center justify-center text-xl shadow-inner"&gt;${p.categoria.includes('Tarjeta') ? '💳' : '🏦'}
-</div>
-<div>
-<p class="font-black text-white text-sm"> {p.dia} • latex
-{p.categoria}&lt;/p&gt; &lt;/div&gt; &lt;/div&gt; &lt;div class="flex items-center gap-3"&gt; &lt;p class="font-black text-amber-200/90 drop-shadow-[0_0_5px_rgba(251,191,36,0.2)]"&gt;-
-
-{importe}€</p>
-
-<button onclick="borrarRecurrente(${p.id})" class="btn-action text-rose-500/50 hover:text-rose-500"&gt; 🗑️ &lt;/button&gt; &lt;/div&gt; &lt;/div&gt;;
-}).join('');
-}
 
 
 async function procesarPagosAutomaticos() {
@@ -849,7 +854,7 @@ let recs = JSON.parse(localStorage.getItem('recurrentes') || "[]");
 
 // 1. Filtramos qué pagos faltan por registrar este mes
 const pagosPendientes = recs.filter(p => {
-const fechaPago = ``${mesActual}-${p.dia.padStart(2, '0')};
+const fechaPago = `${mesActual}-${p.dia.padStart(2, '0')}`;
 return hoy.getDate() >= parseInt(p.dia) &&
 !appData.some(g => g.concepto === p.concepto && g.fecha === fechaPago);
 });
@@ -862,7 +867,7 @@ return;
 // 2. Ejecutamos todos los pagos pendientes en paralelo (Batch)
 try {
 const promesas = pagosPendientes.map(p => {
-const f = ``${mesActual}-${p.dia.padStart(2, '0')};
+const f = `${mesActual}-${p.dia.padStart(2, '0')}`;
 return fetch(API_URL, {
 method: 'POST',
 headers: { 'Content-Type': 'application/json', 'x-api-key': SECURE_KEY },
@@ -931,7 +936,7 @@ appData = appData.filter(g => g._id !== id);
 localStorage.setItem('appData_cache', JSON.stringify(appData));
 actualizarInterfaz();
 try {
-await fetch(``${API_URL}/${id}, {
+await fetch(`${API_URL}/${id}`, {
 method: 'DELETE',
 headers: {
 'x-api-key': SECURE_KEY
@@ -1078,7 +1083,7 @@ const payload = { concepto, importe, categoria, fecha };
 try {
 if (editMode && editId) {
 // INTENTAMOS BORRAR EL VIEJO
-const deleteRes = await fetch(``${API_URL}/${editId}, {
+const deleteRes = await fetch(`${API_URL}/${editId}`, {
 method: 'DELETE',
 headers: { 'x-api-key': SECURE_KEY }
 });
@@ -1177,7 +1182,7 @@ else { emoji = "💀"; mensaje = "Estado: Saldo en rojo"; }
 const elTexto = document.getElementById('saludo-texto');
 const elAnimo = document.getElementById('animo-financiero');
 if(elTexto && elAnimo) {
-elTexto.innerText = ``${texto} ${emoji}`;
+elTexto.innerText = `${texto} ${emoji}`;
 elAnimo.innerText = mensaje;
 }
 }
