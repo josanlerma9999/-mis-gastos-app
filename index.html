@@ -560,14 +560,27 @@ document.getElementById('listaPasado').insertAdjacentHTML('beforeend', `<div cla
 const listaFuturo = document.getElementById('listaFuturo');
 listaFuturo.innerHTML = '';
 let fechaUltimoGrupoFuturo = "";
+
+// 1. Filtramos los movimientos normales futuros del servidor para el mes seleccionado
 let movsParaLista = appData.filter(g => g.fecha > hoyStr && g.fecha.startsWith(mesSel));
 
+// 2. Procesamos los pagos fijos adaptándolos al mes que estás consultando
 recs.forEach(p => {
-const fechaP = `${mesActualStr}-${p.dia.padStart(2, '0')}`;
-if (parseInt(p.dia) > hoy.getDate() && !appData.some(g => g.concepto === p.concepto && g.fecha === fechaP)) {
-movsParaLista.push({ concepto: p.concepto, importe: parseFloat(p.importe), categoria: p.categoria, fecha: fechaP, esFijo: true });
-}
+    // Construimos la fecha usando el mes seleccionado en el filtro (mesSel)
+    const fechaP = `${mesSel}-${p.dia.padStart(2, '0')}`;
+    
+    // Lo añadimos a la previsión si es una fecha futura Y si aún no se ha registrado/pagado en appData
+    if (fechaP > hoyStr && !appData.some(g => g.concepto === p.concepto && g.fecha === fechaP)) {
+        movsParaLista.push({ 
+            concepto: p.concepto, 
+            importe: parseFloat(p.importe), 
+            categoria: p.categoria, 
+            fecha: fechaP, 
+            esFijo: true 
+        });
+    }
 });
+
 
 movsParaLista.sort((a, b) => a.fecha.localeCompare(b.fecha)).forEach(g => {
     const val = Math.abs(g.importe);
