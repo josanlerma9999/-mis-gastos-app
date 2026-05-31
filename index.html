@@ -578,8 +578,9 @@ movsParaLista.sort((a, b) => a.fecha.localeCompare(b.fecha)).forEach(g => {
         fechaUltimoGrupoFuturo = g.fecha; 
     } 
     
-    // Aquí comprobamos si g.esFijo es true. Si lo es, pintamos la etiqueta. Si no, la dejamos vacía.
-    const etiquetaFijo = g.esFijo ? `<span style="color:#fde68a; font-size:8px; margin-left:4px; font-weight:900; filter:drop-shadow(0 0 5px rgba(251,191,36,0.2))">FIJO</span>` : '';
+    // NUEVA COMPROBACIÓN: Es fijo si tiene la propiedad esFijo, o si existe en tu lista local de recurrentes (recs)
+    const esTrulyFijo = g.esFijo || recs.some(p => p.concepto.trim().toLowerCase() === g.concepto.trim().toLowerCase());
+    const etiquetaFijo = esTrulyFijo ? `<span style="color:#fde68a; font-size:8px; margin-left:4px; font-weight:900; filter:drop-shadow(0 0 5px rgba(251,191,36,0.2))">FIJO</span>` : '';
 
     listaFuturo.insertAdjacentHTML('beforeend',
     `<div class="bbva-card p-4 flex justify-between items-center gap-3 border-l-4 border-cyan-400/30 mx-2 mb-2">
