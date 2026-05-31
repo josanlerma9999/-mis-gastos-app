@@ -887,15 +887,19 @@ console.error("Error en pagos automáticos:", e);
 }
 
 async function borrarRecurrente(id) {
-if(!confirm("¿Borrar de fijos y movimientos de este mes?")) return;
-let recs = JSON.parse(localStorage.getItem('recurrentes') || "[]");
-recs = recs.filter(p => p.id !== id);
-localStorage.setItem('recurrentes', JSON.stringify(recs));
+    if(!confirm("¿Borrar de fijos y movimientos de este mes?")) return;
+    
+    let recs = JSON.parse(localStorage.getItem('recurrentes') || "[]");
+    
+    // CORRECCIÓN: Convertimos ambos ID a String para que no falle la comparación
+    recs = recs.filter(p => String(p.id) !== String(id));
+    
+    localStorage.setItem('recurrentes', JSON.stringify(recs));
 
-
-await renderApp();
-showToast("Pago fijo eliminado");
+    await renderApp();
+    showToast("Pago fijo eliminado");
 }
+
 
 function prepararEdicion(id) {
 const gasto = appData.find(g => g._id === id);
