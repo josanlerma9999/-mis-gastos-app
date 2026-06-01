@@ -498,20 +498,18 @@ const fechaG = new Date(g.fecha + "T00:00:00");
 const fechaGRef = fechaG.getTime();
 const esP = fechaGRef <= hoyRef;
 
-const mesActual = hoy.getMonth();
-const anioActual = hoy.getFullYear();
+const mesFiltro = parseInt(mesSel.split('-')[1]) - 1; // Extraemos el mes del selector
+const anioFiltro = parseInt(mesSel.split('-')[0]);    // Extraemos el año del selector
 
 
-if (g.categoria === "Tarjeta Aqua" && fechaG.getMonth() === mesActual && fechaG.getFullYear() === anioActual) deudaAqua += val;
-if (g.categoria === "Tarjeta Explora" && fechaG.getMonth() === mesActual && fechaG.getFullYear() === anioActual) deudaExplora += val;
+if (g.categoria === "Tarjeta Aqua" && fechaG.getMonth() === mesFiltro && fechaG.getFullYear() === anioFiltro) deudaAqua += val;
+if (g.categoria === "Tarjeta Explora" && fechaG.getMonth() === mesFiltro && fechaG.getFullYear() === anioFiltro) deudaExplora += val;
+
+if (g.categoria === "Abono Aqua" && fechaG.getMonth() === mesFiltro && fechaG.getFullYear() === anioFiltro) deudaAqua -= val;
+if (g.categoria === "Abono Explora" && fechaG.getMonth() === mesFiltro && fechaG.getFullYear() === anioFiltro) deudaExplora -= val;
 
 
-if (g.categoria === "Abono Aqua" && fechaG.getMonth() === mesActual && fechaG.getFullYear() === anioActual) deudaAqua -= val;
-if (g.categoria === "Abono Explora" && fechaG.getMonth() === mesActual && fechaG.getFullYear() === anioActual) deudaExplora -= val;
 
-
-if (deudaAqua < 0) deudaAqua = 0;
-if (deudaExplora < 0) deudaExplora = 0;
 
 if (esI) {
 if (esP) saldoReal += val; else iFuturos += val;
@@ -556,7 +554,8 @@ document.getElementById('listaPasado').insertAdjacentHTML('beforeend', `<div cla
 <button onclick="deleteGasto('${g._id}')" class="btn-action text-[#ff0040] drop-shadow-[0_0_8px_rgba(255,0,64,0.4)]">🗑️</button> </div> </div> </div>`);
 }
 });
-
+if (deudaAqua < 0) deudaAqua = 0;
+if (deudaExplora < 0) deudaExplora = 0;
 const listaFuturo = document.getElementById('listaFuturo');
 listaFuturo.innerHTML = '';
 let fechaUltimoGrupoFuturo = "";
