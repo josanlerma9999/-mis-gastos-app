@@ -466,6 +466,8 @@ const mesSel = document.getElementById('filtroMes').value;
 localStorage.setItem('ultimo_mes_consultado', mesSel);
 
 const hoy = new Date();
+const mesActual = hoy.getMonth();
+    const anioActual = hoy.getFullYear();
 const yyyy = hoy.getFullYear();
 const mm = String(hoy.getMonth() + 1).padStart(2, '0');
 const dd = String(hoy.getDate()).padStart(2, '0');
