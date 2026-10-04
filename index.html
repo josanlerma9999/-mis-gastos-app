@@ -1001,16 +1001,14 @@ function flipCard(el, categoria) {
   const inner = el.querySelector('.card-inner');
   inner.classList.toggle('is-flipped');
 
+  // Forzamos el renderizado asegurando que el DOM haya terminado la animación 3D
   if(inner.classList.contains('is-flipped')) {
     setTimeout(() => {
       renderCardChart(categoria);
-      if(cardCharts[categoria]) {
-        cardCharts[categoria].resize();
-        cardCharts[categoria].update();
-      }
-    }, 350); // Espera a que termine la animación de giro de la tarjeta
+    }, 400); // 400ms da tiempo exacto a que la tarjeta termine de girar y tenga el tamaño real en pantalla
   }
 }
+
 
 
 function renderCardChart(cat) {
