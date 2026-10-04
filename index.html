@@ -1001,19 +1001,16 @@ function flipCard(el, categoria) {
   const inner = el.querySelector('.card-inner');
   inner.classList.toggle('is-flipped');
 
-  // Forzamos el renderizado asegurando que el DOM haya terminado la animación 3D
   if(inner.classList.contains('is-flipped')) {
     setTimeout(() => {
-      renderCardChart(categoria);
-    }, 400); // 400ms da tiempo exacto a que la tarjeta termine de girar y tenga el tamaño real en pantalla
+      renderCardChart(el, categoria);
+    }, 350);
   }
 }
 
-
-
-function renderCardChart(cat) {
-  const canvasId = cat === 'Tarjeta Explora' ? 'chart-Explora' : 'chart-Aqua';
-  const canvasEl = document.getElementById(canvasId);
+function renderCardChart(cardElement, cat) {
+  // Buscamos el canvas de forma local dentro de la tarjeta exacta que se giró
+  const canvasEl = cardElement.querySelector(cat === 'Tarjeta Explora' ? '.card-canvas-explora' : '.card-canvas-aqua');
   if (!canvasEl) return;
   
   const ctx = canvasEl.getContext('2d');
@@ -1037,7 +1034,9 @@ function renderCardChart(cat) {
     return nombresMeses[numeroMes - 1];
   });
 
-  if (cardCharts[cat]) cardCharts[cat].destroy();
+  if (cardCharts[cat]) {
+    cardCharts[cat].destroy();
+  }
 
   cardCharts[cat] = new Chart(ctx, {
     type: 'bar',
@@ -1090,6 +1089,7 @@ function renderCardChart(cat) {
     }
   });
 }
+
 
 document.getElementById('mainForm').addEventListener('submit', async (e) => {
 e.preventDefault();
