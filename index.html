@@ -1231,6 +1231,37 @@ elTexto.innerText = `${texto} ${emoji}`;
 elAnimo.innerText = mensaje;
 }
 }
+function actualizarGastosCuatroMeses(nombreTarjeta) {
+    const hoy = new Date();
+    let meses = [];
+
+    for (let i = 3; i >= 0; i--) {
+        let d = new Date(hoy.getFullYear(), hoy.getMonth() - i, 1);
+        meses.push({
+            year: d.getFullYear(),
+            month: d.getMonth(),
+            nombre: d.toLocaleString('es-ES', { month: 'short' }),
+            total: 0
+        });
+    }
+
+    if (typeof movimientos !== 'undefined') {
+        movimientos.forEach(m => {
+            if (m.tarjeta === nombreTarjeta) {
+                let fechaMov = new Date(m.fecha);
+                let mesIndex = meses.findIndex(item => item.year === fechaMov.getFullYear() && item.month === fechaMov.getMonth());
+                if (mesIndex !== -1) {
+                    meses[mesIndex].total += Number(m.importe);
+                }
+            }
+        });
+    }
+
+    for (let i = 0; i < 4; i++) {
+        document.getElementById(`mes-${i}-label`).textContent = meses[i].nombre;
+        document.getElementById(`mes-${i}-val`).textContent = meses[i].total.toFixed(2) + ' €';
+    }
+}
 
 </script>
 <div id="toast-container" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-[10000] flex flex-col gap-2 w-64"></div>
