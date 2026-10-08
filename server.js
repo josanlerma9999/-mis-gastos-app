@@ -1,60 +1,45 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const cors = require('cors');
+const crypto = require('crypto');
 const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ============================================================
-// CONFIGURACIÓN
-// ============================================================
-
 const MONGO_URI = process.env.MONGO_URI;
-const MI_LLAVE_SECRETA = process.env.MI_LLAVE_SECRETA;
+const APP_PIN = process.env.APP_PIN;
+const SESSION_SECRET = process.env.SESSION_SECRET;
 
-// Comprobar variables imprescindibles al arrancar
 if (!MONGO_URI) {
-    console.error('❌ ERROR: Falta la variable de entorno MONGO_URI');
+    console.error('❌ ERROR: Falta la variable MONGO_URI');
     process.exit(1);
 }
 
-if (!MI_LLAVE_SECRETA) {
-    console.error('❌ ERROR: Falta la variable de entorno MI_LLAVE_SECRETA');
+if (!APP_PIN) {
+    console.error('❌ ERROR: Falta la variable APP_PIN');
     process.exit(1);
 }
 
-// ============================================================
-// MIDDLEWARES
-// ============================================================
+if (!SESSION_SECRET || SESSION_SECRET.length < 32) {
+    console.error('❌ ERROR: SESSION_SECRET debe existir y tener al menos 32 caracteres');
+    process.exit(1);
+}
 
-// CORS
-app.use(cors({
-    origin: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'x-api-key']
-}));
+// Render funciona detrás de un proxy HTTPS
+app.set('trust proxy', 1);
 
-// JSON
 app.use(express.json({ limit: '100kb' }));
-
-// Archivos estáticos
 app.use(express.static(__dirname));
 
-// ============================================================
-// CONEXIÓN A MONGODB
-// ============================================================
+// =========================
+// MONGODB
+// =========================
 
 mongoose.connect(MONGO_URI)
-    .then(() => {
-        console.log('✅ DB Conectada correctamente');
-    })
-    .catch((err) => {
-        console.error('❌ Error conectando a MongoDB:', err.message);
-    });
+    .then(() => console.log('✅ DB Conectada correctamente'))
+    .catch(err => console.error('❌ Error conectando a MongoDB:', err.message));
 
-// Eventos de conexión para detectar problemas posteriores
-mongoose.connection.on('error', (err) => {
+mongoose.connection.on('error', err => {
     console.error('❌ Error de MongoDB:', err.message);
 });
 
@@ -66,332 +51,577 @@ mongoose.connection.on('reconnected', () => {
     console.log('🔄 MongoDB reconectada');
 });
 
-// ============================================================
-// MODELO
-// ============================================================
+// =========================
+// MODELO GASTOS
+// =========================
 
-const gastoSchema = new mongoose.Schema(
-    {
-        concepto: {
-            type: String,
-            required: true,
-            trim: true,
-            maxlength: 200
-        },
-
-        importe: {
-            type: Number,
-            required: true,
-            finite: true
-        },
-
-        categoria: {
-            type: String,
-            required: true,
-            trim: true,
-            maxlength: 100
-        },
-
-        fecha: {
-            type: String,
-            required: true,
-            trim: true
-        }
+const gastoSchema = new mongoose.Schema({
+    concepto: {
+        type: String,
+        required: true,
+        trim: true,
+        maxlength: 200
     },
-    {
-        timestamps: true
+    importe: {
+        type: Number,
+        required: true,
+        finite: true
+    },
+    categoria: {
+        type: String,
+        required: true,
+        trim: true,
+        maxlength: 100
+    },
+    fecha: {
+        type: String,
+        required: true,
+        trim: true
     }
-);
+}, {
+    timestamps: true
+});
 
 const Gasto = mongoose.model('Gasto', gastoSchema);
 
-// ============================================================
-// PORTERO / API KEY
-// ============================================================
+// =========================
+// SESIONES
+// =========================
 
-app.use('/api', (req, res, next) => {
-    const llaveEnviada = req.headers['x-api-key'];
+const COOKIE_NAME = 'bbva_session';
+const SESSION_DURATION = 7 * 24 * 60 * 60 * 1000;
 
-    if (!llaveEnviada) {
-        console.log(`❌ Acceso bloqueado: falta API Key (${req.method} ${req.path})`);
+function obtenerCookie(req, nombre) {
+    const header = req.headers.cookie;
 
-        return res.status(401).json({
-            error: 'Falta la API Key'
-        });
+    if (!header) return null;
+
+    for (const cookie of header.split(';')) {
+        const partes = cookie.trim().split('=');
+        const clave = partes.shift();
+
+        if (clave === nombre) {
+            return decodeURIComponent(partes.join('='));
+        }
     }
 
-    if (llaveEnviada !== MI_LLAVE_SECRETA) {
-        console.log(`❌ Acceso bloqueado: API Key incorrecta (${req.method} ${req.path})`);
+    return null;
+}
 
-        return res.status(403).json({
-            error: 'API Key no válida'
+function firmarSesion(valor) {
+    return crypto
+        .createHmac('sha256', SESSION_SECRET)
+        .update(valor)
+        .digest('hex');
+}
+
+function crearTokenSesion() {
+    const expira = Date.now() + SESSION_DURATION;
+
+    const nonce = crypto
+        .randomBytes(32)
+        .toString('hex');
+
+    const contenido = `${expira}.${nonce}`;
+
+    const firma = firmarSesion(contenido);
+
+    return `${contenido}.${firma}`;
+}
+
+function validarTokenSesion(token) {
+
+    if (!token || typeof token !== 'string') {
+        return false;
+    }
+
+    const partes = token.split('.');
+
+    if (partes.length !== 3) {
+        return false;
+    }
+
+    const [expiraTexto, nonce, firma] = partes;
+
+    if (!expiraTexto || !nonce || !firma) {
+        return false;
+    }
+
+    const expira = Number(expiraTexto);
+
+    if (!Number.isFinite(expira)) {
+        return false;
+    }
+
+    if (Date.now() > expira) {
+        return false;
+    }
+
+    const contenido = `${expiraTexto}.${nonce}`;
+
+    const firmaEsperada = firmarSesion(contenido);
+
+    if (firma.length !== firmaEsperada.length) {
+        return false;
+    }
+
+    try {
+
+        return crypto.timingSafeEqual(
+            Buffer.from(firma, 'utf8'),
+            Buffer.from(firmaEsperada, 'utf8')
+        );
+
+    } catch {
+
+        return false;
+    }
+}
+
+function establecerCookieSesion(req, res, token) {
+
+    const esHttps =
+        req.secure ||
+        req.headers['x-forwarded-proto'] === 'https';
+
+    const secure = esHttps ? '; Secure' : '';
+
+    res.setHeader(
+        'Set-Cookie',
+        `${COOKIE_NAME}=${encodeURIComponent(token)}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${Math.floor(SESSION_DURATION / 1000)}${secure}`
+    );
+}
+
+function eliminarCookieSesion(req, res) {
+
+    const esHttps =
+        req.secure ||
+        req.headers['x-forwarded-proto'] === 'https';
+
+    const secure = esHttps ? '; Secure' : '';
+
+    res.setHeader(
+        'Set-Cookie',
+        `${COOKIE_NAME}=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0${secure}`
+    );
+}
+
+// =========================
+// LOGIN
+// =========================
+
+app.post('/api/login', (req, res) => {
+
+    try {
+
+        const pinRecibido = String(
+            req.body?.pin ?? ''
+        );
+
+        if (!pinRecibido) {
+
+            return res.status(400).json({
+                error: 'PIN requerido'
+            });
+
+        }
+
+        if (pinRecibido !== String(APP_PIN)) {
+
+            console.log('❌ Intento de login incorrecto');
+
+            return res.status(401).json({
+                error: 'PIN incorrecto'
+            });
+
+        }
+
+        const token = crearTokenSesion();
+
+        establecerCookieSesion(
+            req,
+            res,
+            token
+        );
+
+        console.log('✅ Login correcto');
+
+        res.json({
+            ok: true
+        });
+
+    } catch (error) {
+
+        console.error(
+            '❌ Error POST /api/login:',
+            error
+        );
+
+        res.status(500).json({
+            error: 'No se pudo iniciar sesión'
+        });
+    }
+});
+
+// =========================
+// LOGOUT
+// =========================
+
+app.post('/api/logout', (req, res) => {
+
+    eliminarCookieSesion(req, res);
+
+    console.log('👋 Sesión cerrada');
+
+    res.json({
+        ok: true
+    });
+});
+
+// =========================
+// PROTEGER API
+// =========================
+
+app.use('/api', (req, res, next) => {
+
+    if (
+        req.path === '/login' ||
+        req.path === '/logout'
+    ) {
+        return next();
+    }
+
+    const token = obtenerCookie(
+        req,
+        COOKIE_NAME
+    );
+
+    if (!validarTokenSesion(token)) {
+
+        console.log(
+            `❌ Sesión no válida (${req.method} ${req.path})`
+        );
+
+        return res.status(401).json({
+            error: 'Sesión no válida o expirada'
         });
     }
 
     next();
 });
 
-// ============================================================
-// GET - OBTENER TODOS LOS GASTOS
-// ============================================================
+// =========================
+// GET GASTOS
+// =========================
 
 app.get('/api/gastos', async (req, res) => {
+
     try {
-        const gastos = await Gasto.find()
-            .sort({ fecha: -1, createdAt: -1 });
+
+        const gastos = await Gasto
+            .find()
+            .sort({
+                fecha: -1,
+                createdAt: -1
+            });
 
         res.json(gastos);
 
-    } catch (e) {
-        console.error('❌ Error GET /api/gastos:', e);
+    } catch (error) {
 
-        res.status(500).json({
-            error: 'No se pudieron obtener los gastos'
-        });
-    }
-});
-
-// ============================================================
-// POST - CREAR GASTO
-// ============================================================
-
-app.post('/api/gastos', async (req, res) => {
-    try {
-        const { concepto, importe, categoria, fecha } = req.body;
-
-        // Validaciones básicas
-        if (
-            typeof concepto !== 'string' ||
-            !concepto.trim()
-        ) {
-            return res.status(400).json({
-                error: 'El concepto es obligatorio'
-            });
-        }
-
-        if (
-            importe === undefined ||
-            importe === null ||
-            importe === '' ||
-            !Number.isFinite(Number(importe))
-        ) {
-            return res.status(400).json({
-                error: 'El importe debe ser un número válido'
-            });
-        }
-
-        if (
-            typeof categoria !== 'string' ||
-            !categoria.trim()
-        ) {
-            return res.status(400).json({
-                error: 'La categoría es obligatoria'
-            });
-        }
-
-        if (
-            typeof fecha !== 'string' ||
-            !fecha.trim()
-        ) {
-            return res.status(400).json({
-                error: 'La fecha es obligatoria'
-            });
-        }
-
-        const nuevoGasto = new Gasto({
-            concepto: concepto.trim(),
-            importe: Number(importe),
-            categoria: categoria.trim(),
-            fecha: fecha.trim()
-        });
-
-        await nuevoGasto.save();
-
-        console.log(`✅ Gasto creado: ${nuevoGasto._id}`);
-
-        res.status(201).json(nuevoGasto);
-
-    } catch (e) {
-        console.error('❌ Error POST /api/gastos:', e);
-
-        res.status(500).json({
-            error: 'No se pudo crear el gasto'
-        });
-    }
-});
-
-// ============================================================
-// PUT - EDITAR GASTO
-// ============================================================
-
-app.put('/api/gastos/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
-
-        // Comprobar que el ID de MongoDB es válido
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({
-                error: 'ID de gasto no válido'
-            });
-        }
-
-        const { concepto, importe, categoria, fecha } = req.body;
-
-        // Validaciones
-        if (
-            typeof concepto !== 'string' ||
-            !concepto.trim()
-        ) {
-            return res.status(400).json({
-                error: 'El concepto es obligatorio'
-            });
-        }
-
-        if (
-            importe === undefined ||
-            importe === null ||
-            importe === '' ||
-            !Number.isFinite(Number(importe))
-        ) {
-            return res.status(400).json({
-                error: 'El importe debe ser un número válido'
-            });
-        }
-
-        if (
-            typeof categoria !== 'string' ||
-            !categoria.trim()
-        ) {
-            return res.status(400).json({
-                error: 'La categoría es obligatoria'
-            });
-        }
-
-        if (
-            typeof fecha !== 'string' ||
-            !fecha.trim()
-        ) {
-            return res.status(400).json({
-                error: 'La fecha es obligatoria'
-            });
-        }
-
-        const gastoActualizado = await Gasto.findByIdAndUpdate(
-            id,
-            {
-                concepto: concepto.trim(),
-                importe: Number(importe),
-                categoria: categoria.trim(),
-                fecha: fecha.trim()
-            },
-            {
-                new: true,
-                runValidators: true
-            }
+        console.error(
+            '❌ Error GET /api/gastos:',
+            error
         );
 
-        // No existe
+        res.status(500).json({
+            error: 'Error al obtener los gastos'
+        });
+    }
+});
+
+// =========================
+// POST GASTO
+// =========================
+
+app.post('/api/gastos', async (req, res) => {
+
+    try {
+
+        const {
+            concepto,
+            importe,
+            categoria,
+            fecha
+        } = req.body;
+
+        if (
+            typeof concepto !== 'string' ||
+            !concepto.trim() ||
+            concepto.length > 200
+        ) {
+
+            return res.status(400).json({
+                error: 'Concepto no válido'
+            });
+        }
+
+        const importeNumero = Number(importe);
+
+        if (!Number.isFinite(importeNumero)) {
+
+            return res.status(400).json({
+                error: 'Importe no válido'
+            });
+        }
+
+        if (
+            typeof categoria !== 'string' ||
+            !categoria.trim() ||
+            categoria.length > 100
+        ) {
+
+            return res.status(400).json({
+                error: 'Categoría no válida'
+            });
+        }
+
+        if (
+            typeof fecha !== 'string' ||
+            !fecha.trim()
+        ) {
+
+            return res.status(400).json({
+                error: 'Fecha no válida'
+            });
+        }
+
+        const gasto = await Gasto.create({
+
+            concepto: concepto.trim(),
+
+            importe: importeNumero,
+
+            categoria: categoria.trim(),
+
+            fecha: fecha.trim()
+
+        });
+
+        res.status(201).json(gasto);
+
+    } catch (error) {
+
+        console.error(
+            '❌ Error POST /api/gastos:',
+            error
+        );
+
+        res.status(500).json({
+            error: 'Error al crear el gasto'
+        });
+    }
+});
+
+// =========================
+// PUT GASTO
+// =========================
+
+app.put('/api/gastos/:id', async (req, res) => {
+
+    try {
+
+        const { id } = req.params;
+
+        const {
+            concepto,
+            importe,
+            categoria,
+            fecha
+        } = req.body;
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+
+            return res.status(400).json({
+                error: 'ID no válido'
+            });
+        }
+
+        if (
+            typeof concepto !== 'string' ||
+            !concepto.trim() ||
+            concepto.length > 200
+        ) {
+
+            return res.status(400).json({
+                error: 'Concepto no válido'
+            });
+        }
+
+        const importeNumero = Number(importe);
+
+        if (!Number.isFinite(importeNumero)) {
+
+            return res.status(400).json({
+                error: 'Importe no válido'
+            });
+        }
+
+        if (
+            typeof categoria !== 'string' ||
+            !categoria.trim() ||
+            categoria.length > 100
+        ) {
+
+            return res.status(400).json({
+                error: 'Categoría no válida'
+            });
+        }
+
+        if (
+            typeof fecha !== 'string' ||
+            !fecha.trim()
+        ) {
+
+            return res.status(400).json({
+                error: 'Fecha no válida'
+            });
+        }
+
+        const gastoActualizado =
+            await Gasto.findByIdAndUpdate(
+
+                id,
+
+                {
+                    concepto: concepto.trim(),
+
+                    importe: importeNumero,
+
+                    categoria: categoria.trim(),
+
+                    fecha: fecha.trim()
+                },
+
+                {
+                    new: true,
+                    runValidators: true
+                }
+            );
+
         if (!gastoActualizado) {
+
             return res.status(404).json({
                 error: 'Gasto no encontrado'
             });
         }
-
-        console.log(`✏️ Gasto actualizado: ${id}`);
 
         res.json(gastoActualizado);
 
-    } catch (e) {
-        console.error('❌ Error PUT /api/gastos/:id:', e);
+    } catch (error) {
+
+        console.error(
+            '❌ Error PUT /api/gastos/:id:',
+            error
+        );
 
         res.status(500).json({
-            error: 'No se pudo actualizar el gasto'
+            error: 'Error al actualizar el gasto'
         });
     }
 });
 
-// ============================================================
-// DELETE - ELIMINAR GASTO
-// ============================================================
+// =========================
+// DELETE GASTO
+// =========================
 
 app.delete('/api/gastos/:id', async (req, res) => {
+
     try {
+
         const { id } = req.params;
 
-        // Comprobar ID
         if (!mongoose.Types.ObjectId.isValid(id)) {
+
             return res.status(400).json({
-                error: 'ID de gasto no válido'
+                error: 'ID no válido'
             });
         }
 
-        const gastoEliminado = await Gasto.findByIdAndDelete(id);
+        const gastoEliminado =
+            await Gasto.findByIdAndDelete(id);
 
-        // No existe
         if (!gastoEliminado) {
+
             return res.status(404).json({
                 error: 'Gasto no encontrado'
             });
         }
 
-        console.log(`🗑️ Gasto eliminado: ${id}`);
-
         res.json({
-            message: 'Gasto eliminado correctamente',
-            id: id
+            ok: true,
+            id
         });
 
-    } catch (e) {
-        console.error('❌ Error DELETE /api/gastos/:id:', e);
+    } catch (error) {
+
+        console.error(
+            '❌ Error DELETE /api/gastos/:id:',
+            error
+        );
 
         res.status(500).json({
-            error: 'No se pudo eliminar el gasto'
+            error: 'Error al eliminar el gasto'
         });
     }
 });
 
-// ============================================================
-// RUTA PRINCIPAL - CARGAR LA WEB
-// ============================================================
+// =========================
+// WEB
+// =========================
 
-// Esta ruta NO pasa por el portero porque el portero está
-// limitado a /api
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
+
+    res.sendFile(
+        path.join(__dirname, 'index.html')
+    );
 });
 
-// ============================================================
-// 404 PARA API
-// ============================================================
+// =========================
+// API 404
+// =========================
 
 app.use('/api', (req, res) => {
+
     res.status(404).json({
         error: 'Ruta API no encontrada'
     });
 });
 
-// ============================================================
-// MANEJADOR GLOBAL DE ERRORES
-// ============================================================
+// =========================
+// ERROR GLOBAL
+// =========================
 
-app.use((err, req, res, next) => {
-    console.error('❌ Error no controlado:', err);
+app.use((error, req, res, next) => {
 
-    if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
-        return res.status(400).json({
-            error: 'JSON inválido'
-        });
-    }
+    console.error(
+        '❌ Error global:',
+        error
+    );
 
     res.status(500).json({
         error: 'Error interno del servidor'
     });
 });
 
-// ============================================================
+// =========================
 // ARRANQUE
-// ============================================================
+// =========================
 
 app.listen(PORT, () => {
-    console.log(`🚀 Servidor iniciado en puerto ${PORT}`);
+
+    console.log(
+        `🚀 Servidor escuchando en puerto ${PORT}`
+    );
+
 });
