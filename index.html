@@ -1654,6 +1654,12 @@ function actualizarInterfaz() {
 
     recs.forEach(p => {
 
+        // La previsión debe respetar también la duración del pago fijo
+        // para el mes que el usuario está consultando, no solo el mes actual.
+        if (!pagoFijoDentroDelPlazo(p, mesSel)) {
+            return;
+        }
+
         const dia =
             String(
                 p.dia
