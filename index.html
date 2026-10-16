@@ -701,18 +701,18 @@ nav {
 
                     <div class="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/10">
 
-                        <input
-                            type="checkbox"
-                            id="check-recurrente"
-                            class="w-5 h-5 accent-cyan-400">
+    <select
+        id="check-recurrente"
+        class="bbva-input font-bold text-xs bg-transparent text-white">
+        <option value="no" class="bg-black text-white">Puntual (Sin repetición)</option>
+        <option value="indefinido" class="bg-black text-white" selected>Fijo mensual (Indefinido)</option>
+        <option value="3" class="bg-black text-white">Fijo durante 3 meses</option>
+        <option value="6" class="bg-black text-white">Fijo durante 6 meses</option>
+        <option value="12" class="bg-black text-white">Fijo durante 12 meses</option>
+    </select>
 
-                        <label
-                            for="check-recurrente"
-                            class="text-[10px] font-black uppercase text-slate-400">
-                            Convertir en pago fijo mensual
-                        </label>
+</div>
 
-                    </div>
 
                     <button
                         type="submit"
@@ -4207,10 +4207,15 @@ document
                 ).value;
 
 
-            const esRecurrente =
-                document.getElementById(
-                    'check-recurrente'
-                ).checked;
+            
+const modoRecurrente =
+    document.getElementById(
+        'check-recurrente'
+    ).value;
+
+const esRecurrente =
+    modoRecurrente !== 'no';
+
 
 
             if (
@@ -4428,19 +4433,23 @@ document
 
                         recs.push({
 
-                            id:
-                                Date.now(),
+    id:
+        Date.now(),
 
-                            concepto,
+    concepto,
 
-                            importe:
-                                importe.toString(),
+    importe:
+        importe.toString(),
 
-                            categoria,
+    categoria,
 
-                            dia:
-                                diaPago
-                        });
+    dia:
+        diaPago,
+
+    duracion:
+        modoRecurrente // 'indefinido', '3', '6' o '12'
+});
+
                     }
 
 
