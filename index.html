@@ -707,7 +707,14 @@ nav {
         <option value="no" class="bg-black text-white">Puntual (Sin repetición)</option>
         <option value="indefinido" class="bg-black text-white" selected>Fijo mensual (Indefinido)</option>
         <option value="3" class="bg-black text-white">Fijo durante 3 meses</option>
+        <option value="4" class="bg-black text-white">Fijo durante 4 meses</option>
+        <option value="5" class="bg-black text-white">Fijo durante 5 meses</option>
         <option value="6" class="bg-black text-white">Fijo durante 6 meses</option>
+        <option value="7" class="bg-black text-white">Fijo durante 7 meses</option>
+        <option value="8" class="bg-black text-white">Fijo durante 8 meses</option>
+        <option value="9" class="bg-black text-white">Fijo durante 9 meses</option>
+        <option value="10" class="bg-black text-white">Fijo durante 10 meses</option>
+        <option value="11" class="bg-black text-white">Fijo durante 11 meses</option>
         <option value="12" class="bg-black text-white">Fijo durante 12 meses</option>
     </select>
 
@@ -3253,6 +3260,25 @@ function renderRecurrentes() {
    PAGOS AUTOMÁTICOS
 ========================================================= */
 
+function pagoFijoDentroDelPlazo(p, mesActual) {
+    // Los pagos antiguos sin plazo siguen siendo indefinidos.
+    const duracion = String(p.duracion || 'indefinido');
+    if (duracion === 'indefinido' || !p.mesInicio) return true;
+
+    const inicio = String(p.mesInicio);
+    if (!/^\d{4}-\d{2}$/.test(inicio) || !/^\d{4}-\d{2}$/.test(mesActual)) return true;
+
+    const [anioInicio, mesInicio] = inicio.split('-').map(Number);
+    const [anioActual, mesActualNum] = mesActual.split('-').map(Number);
+    const mesesTranscurridos = (anioActual - anioInicio) * 12 + (mesActualNum - mesInicio);
+    const meses = Number(duracion);
+    if (!Number.isInteger(meses) || meses < 3 || meses > 12) return true;
+
+    // El mes de inicio cuenta como el primero: 3 meses = mes inicio, +1 y +2.
+    return mesesTranscurridos >= 0 && mesesTranscurridos < meses;
+}
+
+
 async function procesarPagosAutomaticos() {
 
     const hoy =
@@ -3280,6 +3306,10 @@ async function procesarPagosAutomaticos() {
 
     const pagosPendientes =
         recs.filter(p => {
+
+            if (!pagoFijoDentroDelPlazo(p, mesActual)) {
+                return false;
+            }
 
             const dia =
                 parseInt(
@@ -4425,7 +4455,13 @@ const esRecurrente =
                             importe:
                                 importe.toString(),
 
-                            categoria
+                            categoria,
+
+                            duracion: modoRecurrente,
+
+                            mesInicio: modoRecurrente === 'indefinido'
+                                ? null
+                                : (recs[indexRec].mesInicio || fecha.slice(0, 7))
                         };
 
 
@@ -4447,7 +4483,11 @@ const esRecurrente =
         diaPago,
 
     duracion:
-        modoRecurrente // 'indefinido', '3', '6' o '12'
+        modoRecurrente,
+
+    // El plazo comienza en el mes de la fecha elegida en el formulario.
+    mesInicio:
+        modoRecurrente === 'indefinido' ? null : fecha.slice(0, 7)
 });
 
                     }
