@@ -1049,6 +1049,43 @@ function guardarRecurrentes(recs) {
 
 
 /*
+ * Elimina de Pagos fijos las programaciones con duración finita
+ * cuando ya ha pasado todo su plazo. No toca los movimientos históricos.
+ */
+function limpiarPagosFijosCaducados() {
+    const recs = obtenerRecurrentes();
+    const mesActual = fechaLocalYYYYMM();
+    let cambio = false;
+
+    const activos = recs.filter(p => {
+        const duracion = Number(p.duracion);
+        const inicio = String(p.mesInicio || '');
+
+        // Los pagos indefinidos y los antiguos sin plazo se conservan.
+        if (String(p.duracion || 'indefinido') === 'indefinido' ||
+            !Number.isInteger(duracion) || duracion < 3 || duracion > 12 ||
+            !/^\d{4}-\d{2}$/.test(inicio) ||
+            !/^\d{4}-\d{2}$/.test(mesActual)) {
+            return true;
+        }
+
+        const [anioInicio, mesInicio] = inicio.split('-').map(Number);
+        const [anioActual, mesActualNum] = mesActual.split('-').map(Number);
+        const mesesTranscurridos = (anioActual - anioInicio) * 12 + (mesActualNum - mesInicio);
+
+        if (mesesTranscurridos >= duracion) {
+            cambio = true;
+            return false;
+        }
+        return true;
+    });
+
+    if (cambio) guardarRecurrentes(activos);
+    return activos;
+}
+
+
+/*
  * Comprueba si un movimiento ya representa
  * un pago recurrente concreto.
  */
@@ -1641,7 +1678,7 @@ function actualizarInterfaz() {
 
 
     const recs =
-        obtenerRecurrentes();
+        limpiarPagosFijosCaducados();
 
 
     const mesActualStr =
@@ -3082,6 +3119,8 @@ function updateChart() {
 
 function renderRecurrentes() {
 
+    limpiarPagosFijosCaducados();
+
     const container =
         document.getElementById(
             'listaRecurrentes'
@@ -3286,6 +3325,8 @@ function pagoFijoDentroDelPlazo(p, mesActual) {
 
 
 async function procesarPagosAutomaticos() {
+
+    limpiarPagosFijosCaducados();
 
     const hoy =
         new Date();
