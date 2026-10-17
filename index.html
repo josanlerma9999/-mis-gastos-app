@@ -3217,7 +3217,13 @@ function renderRecurrentes() {
                 const ahora = new Date();
                 const mesesTranscurridos = (ahora.getFullYear() - partesInicio[0]) * 12 + ((ahora.getMonth() + 1) - partesInicio[1]);
                 const totalMeses = Number(duracionPago);
-                const mesesRestantes = totalMeses - Math.max(0, mesesTranscurridos);
+                // El mes actual descuenta una cuota solo cuando ya existe su movimiento pagado.
+                const mesActualPago = fechaLocalYYYYMM(ahora);
+                const diaPagoActual = String(p.dia || '').padStart(2, '0');
+                const fechaPagoActual = `${mesActualPago}-${diaPagoActual}`;
+                const cuotaActualPagada = Number.isInteger(Number(p.dia)) && Number(p.dia) >= 1 && Number(p.dia) <= 31 &&
+                    appData.some(g => movimientoCoincideRecurrente(g, p, fechaPagoActual));
+                const mesesRestantes = totalMeses - Math.max(0, mesesTranscurridos) - (cuotaActualPagada ? 1 : 0);
                 estadoPlazo = `
                     <span class="inline-flex items-center gap-1 mt-1 text-[10px] font-bold text-amber-300">
                         <span>◷</span> ${mesesRestantes > 0 ? `${mesesRestantes} ${mesesRestantes === 1 ? 'mes pendiente' : 'meses pendientes'}` : 'Plazo cumplido'}
