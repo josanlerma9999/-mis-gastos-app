@@ -3203,6 +3203,26 @@ function renderRecurrentes() {
                     categoria
                 );
 
+            // Estado visible del plazo: el mes de inicio cuenta como el primero.
+            const duracionPago = String(p.duracion || 'indefinido');
+            let estadoPlazo;
+            if (duracionPago === 'indefinido' || !p.mesInicio) {
+                estadoPlazo = `
+                    <span class="inline-flex items-center gap-1 mt-1 text-[10px] font-bold text-emerald-300">
+                        <span>∞</span> Indefinido
+                    </span>`;
+            } else {
+                const inicioPlazo = String(p.mesInicio);
+                const partesInicio = inicioPlazo.split('-').map(Number);
+                const ahora = new Date();
+                const mesesTranscurridos = (ahora.getFullYear() - partesInicio[0]) * 12 + ((ahora.getMonth() + 1) - partesInicio[1]);
+                const totalMeses = Number(duracionPago);
+                const mesesRestantes = totalMeses - Math.max(0, mesesTranscurridos);
+                estadoPlazo = `
+                    <span class="inline-flex items-center gap-1 mt-1 text-[10px] font-bold text-amber-300">
+                        <span>◷</span> ${mesesRestantes > 0 ? `${mesesRestantes} ${mesesRestantes === 1 ? 'mes pendiente' : 'meses pendientes'}` : 'Plazo cumplido'}
+                    </span>`;
+            }
 
             const idSeguro =
                 encodeURIComponent(
@@ -3266,6 +3286,8 @@ function renderRecurrentes() {
                         </p>
 
                     </div>
+
+                    ${estadoPlazo}
 
                 </div>
 
