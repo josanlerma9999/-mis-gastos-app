@@ -3215,15 +3215,28 @@ function renderRecurrentes() {
                 const inicioPlazo = String(p.mesInicio);
                 const partesInicio = inicioPlazo.split('-').map(Number);
                 const ahora = new Date();
-                const mesesTranscurridos = (ahora.getFullYear() - partesInicio[0]) * 12 + ((ahora.getMonth() + 1) - partesInicio[1]);
                 const totalMeses = Number(duracionPago);
-                // El mes actual descuenta una cuota solo cuando ya existe su movimiento pagado.
-                const mesActualPago = fechaLocalYYYYMM(ahora);
-                const diaPagoActual = String(p.dia || '').padStart(2, '0');
-                const fechaPagoActual = `${mesActualPago}-${diaPagoActual}`;
-                const cuotaActualPagada = Number.isInteger(Number(p.dia)) && Number(p.dia) >= 1 && Number(p.dia) <= 31 &&
-                    appData.some(g => movimientoCoincideRecurrente(g, p, fechaPagoActual));
-                const mesesRestantes = totalMeses - Math.max(0, mesesTranscurridos) - (cuotaActualPagada ? 1 : 0);
+                const diaValido = Number.isInteger(Number(p.dia)) && Number(p.dia) >= 1 && Number(p.dia) <= 31;
+
+                // Solo descontamos cuotas que estén realmente registradas como movimientos.
+                // No restamos meses simplemente porque haya empezado un mes nuevo o haya pasado el día de cobro.
+                let cuotasRegistradas = 0;
+                if (diaValido && Number.isInteger(totalMeses) && totalMeses >= 3 && totalMeses <= 12) {
+                    const fechaInicio = new Date(partesInicio[0], partesInicio[1] - 1, 1);
+                    const primerMes = fechaInicio.getFullYear() * 12 + fechaInicio.getMonth();
+                    const mesActualIndice = ahora.getFullYear() * 12 + ahora.getMonth();
+                    const limiteMeses = Math.min(totalMeses, Math.max(0, mesActualIndice - primerMes + 1));
+                    for (let i = 0; i < limiteMeses; i++) {
+                        const fechaCuota = new Date(partesInicio[0], partesInicio[1] - 1 + i, 1);
+                        const mesCuota = `${fechaCuota.getFullYear()}-${String(fechaCuota.getMonth() + 1).padStart(2, '0')}`;
+                        const diaCuota = String(p.dia).padStart(2, '0');
+                        const fechaPago = `${mesCuota}-${diaCuota}`;
+                        if (fechaPago <= fechaLocalYYYYMMDD(ahora) && appData.some(g => movimientoCoincideRecurrente(g, p, fechaPago))) {
+                            cuotasRegistradas++;
+                        }
+                    }
+                }
+                const mesesRestantes = Math.max(0, totalMeses - cuotasRegistradas);
                 estadoPlazo = `
                     <span class="inline-flex items-center gap-1 mt-1 text-[10px] font-bold text-amber-300">
                         <span>◷</span> ${mesesRestantes > 0 ? `${mesesRestantes} ${mesesRestantes === 1 ? 'mes pendiente' : 'meses pendientes'}` : 'Plazo cumplido'}
