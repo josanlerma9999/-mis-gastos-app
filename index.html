@@ -1703,8 +1703,10 @@ function actualizarInterfaz() {
             ).padStart(2,'0');
 
 
+        // La fecha prevista debe pertenecer al mes que se está consultando
+        // (mesSel), no al mes actual del sistema.
         const fechaPagoFijo =
-            `${mesActualStr}-${dia}`;
+            `${mesSel}-${dia}`;
 
 
         const importe =
@@ -1724,19 +1726,13 @@ function actualizarInterfaz() {
             );
 
 
-        if (
-            parseInt(
-                p.dia,
-                10
-            ) > hoy.getDate()
-        ) {
-
-            if (!yaRegistrado) {
-                gFuturos += importe;
-            }
-
-        } else if (!yaRegistrado) {
-
+        // Compara la fecha completa para que un cargo del 30 de noviembre
+        // no aparezca como si venciera el 30 de octubre.
+        if (fechaPagoFijo >= hoyStr && !yaRegistrado) {
+            gFuturos += importe;
+        } else if (fechaPagoFijo < hoyStr && !yaRegistrado) {
+            // Si el cargo del mes consultado ya venció y no está registrado,
+            // también se mantiene visible como pendiente.
             gFuturos += importe;
         }
     });
