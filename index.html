@@ -2157,6 +2157,12 @@ function actualizarInterfaz() {
 
     recs.forEach(p => {
 
+        // No mostrar cargos en meses anteriores al inicio del pago fijo
+        // ni fuera de su duración configurada.
+        if (!pagoFijoDentroDelPlazo(p, mesSel)) {
+            return;
+        }
+
         const dia =
             String(
                 p.dia
