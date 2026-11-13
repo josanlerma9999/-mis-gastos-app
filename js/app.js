@@ -195,14 +195,13 @@ const vp = document.getElementById('viewport');
 if (vp) {
     vp.addEventListener('touchstart', e => {
         state.ui.touchstartX = e.changedTouches[0].screenX;
-        state.ui.touchstartY = e.changedTouches[0].screenY; // Guardar Y para medir scroll
+        state.ui.touchstartY = e.changedTouches[0].screenY;
     }, { passive: true });
 
     vp.addEventListener('touchend', e => {
         const dx = e.changedTouches[0].screenX - state.ui.touchstartX;
         const dy = e.changedTouches[0].screenY - state.ui.touchstartY;
         
-        // Mejorado: Solo cambiar pestaña si el movimiento horizontal es claro (mayor que el vertical)
         if (Math.abs(dx) > 80 && Math.abs(dx) > Math.abs(dy)) {
             if (dx < 0 && state.ui.currentTabIndex < 5) {
                 goToTab(state.ui.currentTabIndex + 1);
@@ -338,7 +337,6 @@ async function renderApp() {
     }
 }
 
-// Filtro expuesto al objeto window para el input type="month"
 window.actualizarInterfaz = function() {
     const filtro = document.getElementById('filtroMes');
     if (!filtro) return;
@@ -356,24 +354,27 @@ window.actualizarInterfaz = function() {
     let saldoReal = 0, gFuturos = 0, iFuturos = 0;
     let deudaAqua = 0, deudaExplora = 0;
     const recs = limpiarPagosFijosCaducados();
-    const mesActualStr = fechaLocalYYYYMM(hoy);
 
-    // PAGOS FUTUROS
+    // PAGOS E INGRESOS FIJOS FUTUROS
     recs.forEach(p => {
         if (!pagoFijoDentroDelPlazo(p, mesSel)) return;
         const dia = String(p.dia).padStart(2, '0');
         const fechaPagoFijo = `${mesSel}-${dia}`;
-        const importe = numeroSeguro(p.importe);
+        const importe = Math.abs(numeroSeguro(p.importe));
+        const catRec = String(p.categoria || '');
+        const esIngresoRec = INGRESOS_LISTA.includes(catRec) || catRec.includes("Abono");
         const yaRegistrado = state.data.appData.some(g => movimientoCoincideRecurrente(g, p, fechaPagoFijo));
 
-        if (fechaPagoFijo >= hoyStr && !yaRegistrado) {
-            gFuturos += importe;
-        } else if (fechaPagoFijo < hoyStr && !yaRegistrado) {
-            gFuturos += importe;
+        if (!yaRegistrado) {
+            if (esIngresoRec) {
+                iFuturos += importe;
+            } else {
+                gFuturos += importe;
+            }
         }
     });
 
-    // HISTORIAL (Optimizado usando arrays para inserción HTML)
+    // HISTORIAL
     const listaPasado = document.getElementById('listaPasado');
     let listaPasadoHTML = [];
     let fechaUltimoGrupo = "";
@@ -448,7 +449,6 @@ window.actualizarInterfaz = function() {
         }
     });
     
-    // Inserción en batch (Mucho más eficiente)
     listaPasado.innerHTML = listaPasadoHTML.join('');
 
     deudaAqua = Math.max(0, deudaAqua);
@@ -475,6 +475,8 @@ window.actualizarInterfaz = function() {
     movsParaLista.sort((a, b) => a.fecha.localeCompare(b.fecha)).forEach(g => {
         const val = Math.abs(numeroSeguro(g.importe));
         const disp = state.ui.isPrivate ? "****€" : val.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "€";
+        const catFuturo = String(g.categoria || '');
+        const esIngresoFuturo = INGRESOS_LISTA.includes(catFuturo) || catFuturo.includes("Abono");
 
         if (g.fecha !== fechaUltimoGrupoFuturo) {
             const fLabel = parsearFecha(g.fecha).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' });
@@ -486,15 +488,15 @@ window.actualizarInterfaz = function() {
         const etiquetaFijo = esTrulyFijo ? `<span style="color:#fde68a;font-size:8px;margin-left:4px;font-weight:900;">FIJO</span>` : '';
 
         listaFuturoHTML.push(`
-            <div class="bbva-card p-4 flex justify-between items-center gap-3 border-l-4 border-cyan-400/30 mx-2 mb-2">
+            <div class="bbva-card p-4 flex justify-between items-center gap-3 border-l-4 ${esIngresoFuturo ? 'border-emerald-400/40' : 'border-cyan-400/30'} mx-2 mb-2">
                 <div class="flex items-center gap-3 flex-1 overflow-hidden">
                     ${obtenerLogo(g.concepto)}
                     <div class="truncate">
                         <p class="text-sm font-bold text-white truncate">${escapeHtml(g.concepto)} ${etiquetaFijo}</p>
-                        <p class="text-[9px] text-slate-500 uppercase mt-1">${escapeHtml(g.categoria)}</p>
+                        <p class="text-[9px] text-slate-500 uppercase mt-1">${escapeHtml(catFuturo)}</p>
                     </div>
                 </div>
-                <p class="font-black text-white">-${disp}</p>
+                <p class="font-black ${esIngresoFuturo ? 'text-emerald-400' : 'text-white'}">${esIngresoFuturo ? '+' : '-'}${disp}</p>
             </div>
         `);
     });
@@ -712,14 +714,17 @@ function renderRecurrentes() {
     const recs = obtenerRecurrentes().sort((a, b) => parseInt(a.dia, 10) - parseInt(b.dia, 10));
 
     if (!recs.length) {
-        container.innerHTML = `<div class="text-center py-10 opacity-30"><span class="text-4xl">🔄</span><p class="text-[10px] font-bold uppercase mt-2 tracking-widest">No hay pagos fijos configurados</p></div>`;
+        container.innerHTML = `<div class="text-center py-10 opacity-30"><span class="text-4xl">🔄</span><p class="text-[10px] font-bold uppercase mt-2 tracking-widest">No hay movimientos fijos configurados</p></div>`;
         return;
     }
 
     container.innerHTML = recs.map(p => {
-        const importe = numeroSeguro(p.importe).toLocaleString('de-DE', { minimumFractionDigits: 2 });
+        const importe = Math.abs(numeroSeguro(p.importe)).toLocaleString('de-DE', { minimumFractionDigits: 2 });
         const categoria = String(p.categoria || '');
-        const iconoContexto = categoria.includes('Tarjeta') ? '💳' : categoria.includes('PayPal') ? '💙' : '🏦';
+        const esIngreso = INGRESOS_LISTA.includes(categoria) || categoria.includes('Abono');
+        const iconoContexto = esIngreso
+            ? (categoria.includes('Abono') ? '🔄' : '💰')
+            : (categoria.includes('Tarjeta') ? '💳' : categoria.includes('PayPal') ? '💙' : '🏦');
 
         const duracionPago = String(p.duracion || 'indefinido');
         let estadoPlazo;
@@ -752,10 +757,13 @@ function renderRecurrentes() {
         }
 
         const idSeguro = encodeURIComponent(String(p.id ?? ''));
+        const barraColor = esIngreso ? 'from-emerald-400 to-cyan-500' : 'from-cyan-400 to-purple-600';
+        const importeColor = esIngreso ? 'text-emerald-400' : 'text-[#fbbf24]';
+        const signoImporte = esIngreso ? '+' : '-';
 
         return `
         <div class="relative overflow-hidden bg-white/5 border border-white/10 rounded-2xl p-4 flex items-center gap-4 mb-3 shadow-[0_8px_30px_rgb(0,0,0,0.3)] backdrop-blur-md transition-all">
-            <div class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-cyan-400 to-purple-600 rounded-l-2xl opacity-80"></div>
+            <div class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b ${barraColor} rounded-l-2xl opacity-80"></div>
             <div class="flex flex-col items-center justify-center min-w-[3.5rem] h-14 bg-gradient-to-b from-white/10 to-transparent rounded-xl border border-white/5 shadow-inner">
                 <span class="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Día</span>
                 <span class="text-xl font-black text-white leading-none">${escapeHtml(p.dia)}</span>
@@ -769,7 +777,7 @@ function renderRecurrentes() {
                 ${estadoPlazo}
             </div>
             <div class="flex flex-col items-end justify-center gap-2">
-                <p class="font-black text-[#fbbf24] text-lg">-${importe}€</p>
+                <p class="font-black ${importeColor} text-lg">${signoImporte}${importe}€</p>
                 <button onclick="borrarRecurrente(decodeURIComponent('${idSeguro}'))" class="group flex items-center justify-center w-8 h-8 rounded-full bg-rose-500/10 border border-rose-500/20">
                     <span class="text-sm">🗑️</span>
                 </button>
@@ -818,7 +826,7 @@ async function procesarPagosAutomaticos() {
             const res = await apiFetch(CONFIG.API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ concepto: p.concepto, importe: numeroSeguro(p.importe), categoria: p.categoria, fecha: fechaPago })
+                body: JSON.stringify({ concepto: p.concepto, importe: Math.abs(numeroSeguro(p.importe)), categoria: p.categoria, fecha: fechaPago })
             });
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
         }
@@ -828,12 +836,12 @@ async function procesarPagosAutomaticos() {
 }
 
 window.borrarRecurrente = function(id) {
-    if (!confirm("¿Eliminar este pago de la lista de pagos fijos?")) return;
+    if (!confirm("¿Eliminar este movimiento de la lista de fijos?")) return;
     let recs = obtenerRecurrentes().filter(p => String(p.id) !== String(id));
     guardarRecurrentes(recs);
     renderRecurrentes();
     actualizarInterfaz();
-    showToast("Pago fijo eliminado", "success");
+    showToast("Movimiento fijo eliminado", "success");
 };
 
 // ----------------------
@@ -852,7 +860,10 @@ window.prepararEdicion = function(id) {
     state.ui.editId = id;
 
     const checkEl = document.getElementById('check-recurrente');
-    if (checkEl) checkEl.checked = obtenerRecurrentes().some(p => claveRecurrente(p.concepto, p.categoria) === claveRecurrente(gasto.concepto, gasto.categoria));
+    if (checkEl) {
+        const recExistente = obtenerRecurrentes().find(p => claveRecurrente(p.concepto, p.categoria) === claveRecurrente(gasto.concepto, gasto.categoria));
+        checkEl.value = recExistente ? (recExistente.duracion || 'indefinido') : 'no';
+    }
 
     const btnForm = document.querySelector('#mainForm button[type="submit"]');
     if (btnForm) {
@@ -889,7 +900,7 @@ document.getElementById('mainForm').addEventListener('submit', async e => {
     btnForm.style.opacity = "0.5";
 
     const concepto = document.getElementById('in-concepto').value.trim();
-    const importe = numeroSeguro(document.getElementById('in-importe').value);
+    const importe = Math.abs(numeroSeguro(document.getElementById('in-importe').value));
     const categoria = document.getElementById('in-categoria').value;
     const fecha = document.getElementById('in-fecha').value;
     const modoRecurrente = document.getElementById('check-recurrente').value;
@@ -925,7 +936,7 @@ document.getElementById('mainForm').addEventListener('submit', async e => {
         }
 
         let recs = obtenerRecurrentes();
-        if (esRecurrente && !INGRESOS_LISTA.includes(categoria)) {
+        if (esRecurrente) {
             const diaPago = fecha.split('-')[2];
             const indexRec = recs.findIndex(r => claveRecurrente(r.concepto, r.categoria) === claveRecurrente(conceptoAnterior, categoriaAnterior));
             
