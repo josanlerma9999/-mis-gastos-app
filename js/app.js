@@ -27,6 +27,8 @@ const state = {
         pin: "",
         editMode: false,
         editId: null,
+        editWasRecurrent: false,
+        filtroCategoria: null,
         touchstartX: 0,
         touchstartY: 0
     },
@@ -85,6 +87,14 @@ function fechaLocalYYYYMMDD(fecha = new Date()) {
     return `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${String(fecha.getDate()).padStart(2, '0')}`;
 }
 
+// Ajusta días 29/30/31 al último día real del mes (ej: 31 en febrero -> 28/29)
+function obtenerFechaPagoMes(mesSel, dia) {
+    const [anio, mes] = String(mesSel || fechaLocalYYYYMM()).split('-').map(Number);
+    const diasEnMes = new Date(anio, mes, 0).getDate();
+    const diaInt = Math.max(1, Math.min(parseInt(dia, 10) || 1, diasEnMes));
+    return `${mesSel}-${String(diaInt).padStart(2, '0')}`;
+}
+
 function numeroSeguro(valor) {
     const n = Number.parseFloat(valor);
     return Number.isFinite(n) ? n : 0;
@@ -123,6 +133,21 @@ function guardarRecurrentes(recs) {
     localStorage.setItem('recurrentes', JSON.stringify(recs));
 }
 
+function resetearFormularioOperar() {
+    const form = document.getElementById('mainForm');
+    if (form) form.reset();
+    const inFecha = document.getElementById('in-fecha');
+    if (inFecha) inFecha.value = fechaLocalYYYYMMDD();
+    const checkExtra = document.getElementById('check-extra');
+    if (checkExtra) checkExtra.checked = false;
+    const btnForm = document.querySelector('#mainForm button[type="submit"]');
+    if (btnForm) {
+        btnForm.innerText = "Confirmar Operación";
+        btnForm.style.backgroundColor = "#00e5ff";
+        btnForm.style.color = "#000";
+    }
+}
+
 /* =========================================================
    4. INICIALIZACIÓN PIN
 ========================================================= */
@@ -154,6 +179,7 @@ pinPadKeys.forEach(v => {
                 await iniciarSesion(state.ui.pin);
                 document.getElementById('pin-screen').remove();
                 document.getElementById('app-content').classList.remove('hidden');
+                resetearFormularioOperar();
                 await renderApp();
             } catch (error) {
                 console.error('❌ Error de login:', error);
@@ -169,7 +195,7 @@ pinPadKeys.forEach(v => {
 });
 
 /* =========================================================
-   5. NAVEGACIÓN Y SWIPE (Optimizado)
+   5. NAVEGACIÓN Y SWIPE
 ========================================================= */
 window.goToTab = function(i) {
     state.ui.currentTabIndex = i;
@@ -182,19 +208,27 @@ window.goToTab = function(i) {
 
     if (i === 0) setTimeout(updateChart, 100);
 
-    // Reset del form si salimos de "Operar"
+    if (i === 5 && !state.ui.editMode) {
+        const inFecha = document.getElementById('in-fecha');
+        if (inFecha && !inFecha.value) inFecha.value = fechaLocalYYYYMMDD();
+    }
+
     if (i !== 5) {
         state.ui.editMode = false;
         state.ui.editId = null;
-        const btnForm = document.querySelector('#mainForm button[type="submit"]');
-        if (btnForm) {
-            btnForm.innerText = "Confirmar Operación";
-            btnForm.style.backgroundColor = "#00e5ff";
-            btnForm.style.color = "#000";
-        }
-        const form = document.getElementById('mainForm');
-        if (form) form.reset();
+        state.ui.editWasRecurrent = false;
+        resetearFormularioOperar();
     }
+};
+
+window.cambiarMes = function(delta) {
+    const filtro = document.getElementById('filtroMes');
+    if (!filtro) return;
+    const actual = filtro.value || fechaLocalYYYYMM();
+    const [anio, mes] = actual.split('-').map(Number);
+    const nuevaFecha = new Date(anio, mes - 1 + delta, 1);
+    filtro.value = fechaLocalYYYYMM(nuevaFecha);
+    actualizarInterfaz();
 };
 
 const vp = document.getElementById('viewport');
@@ -351,6 +385,15 @@ window.actualizarInterfaz = function() {
     filtro.value = mesSel;
     localStorage.setItem('ultimo_mes_consultado', mesSel);
 
+    const [anioFiltro, mesFiltroNumero] = mesSel.split('-').map(Number);
+    const mesFiltro = mesFiltroNumero - 1;
+
+    const elMesLabel = document.getElementById('mes-actual-label');
+    if (elMesLabel) {
+        const fechaLabel = new Date(anioFiltro, mesFiltro, 1);
+        elMesLabel.innerText = fechaLabel.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+    }
+
     const hoy = new Date();
     const mesActual = hoy.getMonth();
     const anioActual = hoy.getFullYear();
@@ -364,19 +407,15 @@ window.actualizarInterfaz = function() {
     // PAGOS E INGRESOS FIJOS FUTUROS
     recs.forEach(p => {
         if (!pagoFijoDentroDelPlazo(p, mesSel)) return;
-        const dia = String(p.dia).padStart(2, '0');
-        const fechaPagoFijo = `${mesSel}-${dia}`;
+        const fechaPagoFijo = obtenerFechaPagoMes(mesSel, p.dia);
         const importe = Math.abs(numeroSeguro(p.importe));
         const catRec = String(p.categoria || '');
         const esIngresoRec = INGRESOS_LISTA.includes(catRec) || catRec.includes("Abono");
         const yaRegistrado = state.data.appData.some(g => movimientoCoincideRecurrente(g, p, fechaPagoFijo));
 
         if (!yaRegistrado) {
-            if (esIngresoRec) {
-                iFuturos += importe;
-            } else {
-                gFuturos += importe;
-            }
+            if (esIngresoRec) iFuturos += importe;
+            else gFuturos += importe;
         }
     });
 
@@ -384,9 +423,6 @@ window.actualizarInterfaz = function() {
     const listaPasado = document.getElementById('listaPasado');
     let listaPasadoHTML = [];
     let fechaUltimoGrupo = "";
-    
-    const [anioFiltro, mesFiltroNumero] = mesSel.split('-').map(Number);
-    const mesFiltro = mesFiltroNumero - 1;
 
     state.data.appData.forEach(g => {
         const val = Math.abs(numeroSeguro(g.importe));
@@ -433,13 +469,16 @@ window.actualizarInterfaz = function() {
             const disp = state.ui.isPrivate ? "****€" : val.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "€";
             const esPositivo = esI || esAbono;
             const idSeguro = encodeURIComponent(String(g._id ?? ''));
+            const badgeExtra = (!esPositivo && esGastoExtraordinario(g.concepto))
+                ? `<span class="text-[8px] font-black uppercase px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 ml-1">EXTRA</span>`
+                : '';
 
             listaPasadoHTML.push(`
-                <div class="bbva-card p-4 flex justify-between items-center gap-3 ${estiloFuturo}" data-cat="${escapeHtml(categoria)}">
+                <div class="bbva-card p-4 flex justify-between items-center gap-3 ${estiloFuturo}" data-cat="${escapeHtml(categoria)}" data-search="${escapeHtml(normalizarTexto(g.concepto + ' ' + categoria))}">
                     <div class="flex items-center gap-3 flex-1 overflow-hidden">
                         ${obtenerLogo(g.concepto)}
                         <div class="truncate">
-                            <p class="text-sm font-bold text-white truncate">${escapeHtml(g.concepto)}</p>
+                            <p class="text-sm font-bold text-white truncate">${escapeHtml(g.concepto)}${badgeExtra}</p>
                             <p class="text-[9px] text-slate-500 uppercase mt-1">${escapeHtml(categoria)}</p>
                         </div>
                     </div>
@@ -456,6 +495,7 @@ window.actualizarInterfaz = function() {
     });
     
     listaPasado.innerHTML = listaPasadoHTML.join('');
+    aplicarFiltrosMovimientos();
 
     deudaAqua = Math.max(0, deudaAqua);
     deudaExplora = Math.max(0, deudaExplora);
@@ -469,8 +509,7 @@ window.actualizarInterfaz = function() {
 
     recs.forEach(p => {
         if (!pagoFijoDentroDelPlazo(p, mesSel)) return;
-        const dia = String(p.dia).padStart(2, '0');
-        const fechaP = `${mesSel}-${dia}`;
+        const fechaP = obtenerFechaPagoMes(mesSel, p.dia);
         const yaRegistrado = state.data.appData.some(g => movimientoCoincideRecurrente(g, p, fechaP));
 
         if (fechaP > hoyStr && !yaRegistrado) {
@@ -544,7 +583,36 @@ window.actualizarInterfaz = function() {
     renderRecurrentes();
     updateChart();
     calcularPresupuesto(mesSel);
-}
+};
+
+window.aplicarFiltrosMovimientos = function() {
+    const buscador = document.getElementById('buscadorMovs');
+    const texto = normalizarTexto(buscador ? buscador.value : '');
+    const catFiltro = state.ui.filtroCategoria;
+    const hayFiltroActivo = Boolean(texto || catFiltro);
+
+    document.querySelectorAll('.fecha-separador').forEach(f => {
+        f.style.display = hayFiltroActivo ? 'none' : 'block';
+    });
+
+    const elementos = document.querySelectorAll('#listaPasado .bbva-card');
+    elementos.forEach(el => {
+        const cat = el.getAttribute('data-cat');
+        const searchStr = el.getAttribute('data-search') || '';
+
+        const cumpleCat = !catFiltro || cat === catFiltro ||
+            (catFiltro === CATEGORIAS.AQUA && cat === CATEGORIAS.ABONO_AQUA) ||
+            (catFiltro === CATEGORIAS.EXPLORA && cat === CATEGORIAS.ABONO_EXPLORA);
+        const cumpleTexto = !texto || searchStr.includes(texto);
+
+        if (cumpleCat && cumpleTexto) {
+            el.style.display = 'flex';
+            if (catFiltro) el.style.borderLeft = "4px solid #00e5ff";
+        } else {
+            el.style.display = 'none';
+        }
+    });
+};
 
 function calcularPresupuesto(mesSel) {
     const bPresupuesto = document.getElementById('barra-presupuesto');
@@ -559,7 +627,7 @@ function calcularPresupuesto(mesSel) {
 
     const recsActivos = obtenerRecurrentes().filter(p => pagoFijoDentroDelPlazo(p, mesSel));
 
-    // 1. INGRESOS DEL MES (Registrados + Fijos pendientes de entrar)
+    // 1. INGRESOS DEL MES
     const ingresosRegistrados = state.data.appData
         .filter(g => String(g.fecha || '').startsWith(mesSel) && INGRESOS_LISTA.includes(g.categoria))
         .reduce((sum, g) => sum + Math.abs(numeroSeguro(g.importe)), 0);
@@ -568,7 +636,7 @@ function calcularPresupuesto(mesSel) {
         .filter(p => {
             const cat = String(p.categoria || '');
             if (!INGRESOS_LISTA.includes(cat)) return false;
-            const fechaP = `${mesSel}-${String(p.dia).padStart(2, '0')}`;
+            const fechaP = obtenerFechaPagoMes(mesSel, p.dia);
             return !state.data.appData.some(g => movimientoCoincideRecurrente(g, p, fechaP));
         })
         .reduce((sum, p) => sum + Math.abs(numeroSeguro(p.importe)), 0);
@@ -577,7 +645,7 @@ function calcularPresupuesto(mesSel) {
         ? (ingresosRegistrados + ingresosFijosPendientes)
         : 700;
 
-    // 2. SEPARAR GASTOS FIJOS (comprometidos) VS. VARIABLES (día a día)
+    // 2. GASTOS FIJOS VS. VARIABLES
     const recsGasto = recsActivos.filter(p => {
         const cat = String(p.categoria || '');
         return !INGRESOS_LISTA.includes(cat) && !cat.includes("Abono");
@@ -585,17 +653,15 @@ function calcularPresupuesto(mesSel) {
 
     const clavesFijos = new Set(recsGasto.map(p => claveRecurrente(p.concepto, p.categoria)));
 
-    // Total de fijos del mes (si ya se cobró toma el importe real; si no, el previsto)
     let totalFijosMes = 0;
     recsGasto.forEach(p => {
-        const fechaP = `${mesSel}-${String(p.dia).padStart(2, '0')}`;
+        const fechaP = obtenerFechaPagoMes(mesSel, p.dia);
         const movReal = state.data.appData.find(g => movimientoCoincideRecurrente(g, p, fechaP));
         totalFijosMes += movReal
             ? Math.abs(numeroSeguro(movReal.importe))
             : Math.abs(numeroSeguro(p.importe));
     });
 
-    // Solo sumamos a la barra los gastos que NO son fijos ni extraordinarios (Hacienda / #extra)
     const gastosVariablesBrutos = state.data.appData
         .filter(g => {
             if (!String(g.fecha || '').startsWith(mesSel)) return false;
@@ -612,7 +678,7 @@ function calcularPresupuesto(mesSel) {
 
     const gastosVariables = Math.max(0, gastosVariablesBrutos - abonosMes);
 
-    // 3. MARGEN REAL DISPONIBLE PARA GASTO VARIABLE
+    // 3. MARGEN REAL DISPONIBLE
     const limiteVariable = Math.max(0, ingresosTotales - totalFijosMes);
     vLimite.innerText = fmt(limiteVariable);
 
@@ -711,33 +777,26 @@ function updateChart() {
             maintainAspectRatio: false,
             cutout: '75%',
             plugins: {
-                legend: { position: 'right', align: 'center', labels: { color: 'white', font: { size: 10 }, boxWidth: 12, padding: 15, usePointStyle: true } }
+                legend: { position: 'right', align: 'center', labels: { color: 'white', font: { size: 10 }, boxWidth: 12, padding: 15, usePointStyle: true } },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => state.ui.isPrivate
+                            ? ` ${ctx.label}: ****€`
+                            : ` ${ctx.label}: ${Number(ctx.raw).toLocaleString('de-DE', { minimumFractionDigits: 2 })}€`
+                    }
+                }
             },
             onClick: (evt, item) => {
                 if (!item.length) return;
                 const index = item[0].index;
                 const categoriaPulsada = state.data.gastosChart.data.labels[index];
+                state.ui.filtroCategoria = categoriaPulsada;
                 
                 goToTab(3);
                 setTimeout(() => {
                     const tabMovs = document.querySelectorAll('.tab-content')[3];
                     if (tabMovs) tabMovs.scrollTop = 0;
-                    
-                    document.querySelectorAll('.fecha-separador').forEach(f => f.style.display = 'none');
-                    const elementos = document.querySelectorAll('#listaPasado .bbva-card');
-                    
-                    elementos.forEach(el => {
-                        const cat = el.getAttribute('data-cat');
-                        const pertenece = cat === categoriaPulsada || 
-                                          (categoriaPulsada === CATEGORIAS.AQUA && cat === CATEGORIAS.ABONO_AQUA) || 
-                                          (categoriaPulsada === CATEGORIAS.EXPLORA && cat === CATEGORIAS.ABONO_EXPLORA);
-                        if (pertenece) {
-                            el.style.display = 'flex';
-                            el.style.borderLeft = "4px solid #00e5ff";
-                        } else {
-                            el.style.display = 'none';
-                        }
-                    });
+                    aplicarFiltrosMovimientos();
 
                     const btnExistente = document.getElementById('btn-quitar-filtro');
                     if (btnExistente) btnExistente.remove();
@@ -748,8 +807,9 @@ function updateChart() {
                     btn.className = "fixed bottom-24 left-1/2 -translate-x-1/2 bg-white px-6 py-3 rounded-full font-black text-[10px] uppercase shadow-2xl z-[50] border-2 border-cyan-400";
                     btn.style.color = "#072146";
                     btn.onclick = () => {
-                        elementos.forEach(el => { el.style.display = 'flex'; el.style.borderLeft = "none"; });
-                        document.querySelectorAll('.fecha-separador').forEach(f => f.style.display = 'block');
+                        state.ui.filtroCategoria = null;
+                        document.querySelectorAll('#listaPasado .bbva-card').forEach(el => { el.style.borderLeft = "none"; });
+                        aplicarFiltrosMovimientos();
                         btn.remove();
                     };
                     document.body.appendChild(btn);
@@ -760,8 +820,48 @@ function updateChart() {
 }
 
 // ----------------------
-// GESTION RECURRENTES
+// GESTION RECURRENTES + BACKUP
 // ----------------------
+window.exportarRecurrentes = function() {
+    const recs = obtenerRecurrentes();
+    if (!recs.length) {
+        showToast("No hay fijos para exportar", "error");
+        return;
+    }
+    const blob = new Blob([JSON.stringify(recs, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `bbva-fijos-${fechaLocalYYYYMMDD()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    showToast("Copia de fijos descargada", "success");
+};
+
+window.importarRecurrentes = function(event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        try {
+            const datos = JSON.parse(e.target.result);
+            if (!Array.isArray(datos)) throw new Error("Formato inválido");
+            const validos = datos.filter(item => item && item.concepto && item.categoria && item.dia);
+            if (!validos.length) throw new Error("Sin registros válidos");
+            guardarRecurrentes(validos);
+            actualizarInterfaz();
+            showToast(`${validos.length} fijos restaurados`, "success");
+        } catch {
+            showToast("Archivo de copia inválido", "error");
+        } finally {
+            event.target.value = '';
+        }
+    };
+    reader.readAsText(file);
+};
+
 function limpiarPagosFijosCaducados() {
     const recs = obtenerRecurrentes();
     const mesActual = fechaLocalYYYYMM();
@@ -803,7 +903,9 @@ function renderRecurrentes() {
     }
 
     container.innerHTML = recs.map(p => {
-        const importe = Math.abs(numeroSeguro(p.importe)).toLocaleString('de-DE', { minimumFractionDigits: 2 });
+        const importe = state.ui.isPrivate
+            ? "****€"
+            : Math.abs(numeroSeguro(p.importe)).toLocaleString('de-DE', { minimumFractionDigits: 2 }) + "€";
         const categoria = String(p.categoria || '');
         const esIngreso = INGRESOS_LISTA.includes(categoria) || categoria.includes('Abono');
         const iconoContexto = esIngreso
@@ -829,8 +931,7 @@ function renderRecurrentes() {
                 for (let i = 0; i < limiteMeses; i++) {
                     const fechaCuota = new Date(partesInicio[0], partesInicio[1] - 1 + i, 1);
                     const mesCuota = `${fechaCuota.getFullYear()}-${String(fechaCuota.getMonth() + 1).padStart(2, '0')}`;
-                    const diaCuota = String(p.dia).padStart(2, '0');
-                    const fechaPago = `${mesCuota}-${diaCuota}`;
+                    const fechaPago = obtenerFechaPagoMes(mesCuota, p.dia);
                     if (fechaPago <= fechaLocalYYYYMMDD(ahora) && state.data.appData.some(g => movimientoCoincideRecurrente(g, p, fechaPago))) {
                         cuotasRegistradas++;
                     }
@@ -843,7 +944,7 @@ function renderRecurrentes() {
         const idSeguro = encodeURIComponent(String(p.id ?? ''));
         const barraColor = esIngreso ? 'from-emerald-400 to-cyan-500' : 'from-cyan-400 to-purple-600';
         const importeColor = esIngreso ? 'text-emerald-400' : 'text-[#fbbf24]';
-        const signoImporte = esIngreso ? '+' : '-';
+        const signoImporte = state.ui.isPrivate ? '' : (esIngreso ? '+' : '-');
 
         return `
         <div class="relative overflow-hidden bg-white/5 border border-white/10 rounded-2xl p-4 flex items-center gap-4 mb-3 shadow-[0_8px_30px_rgb(0,0,0,0.3)] backdrop-blur-md transition-all">
@@ -861,7 +962,7 @@ function renderRecurrentes() {
                 ${estadoPlazo}
             </div>
             <div class="flex flex-col items-end justify-center gap-2">
-                <p class="font-black ${importeColor} text-lg">${signoImporte}${importe}€</p>
+                <p class="font-black ${importeColor} text-lg">${signoImporte}${importe}</p>
                 <button onclick="borrarRecurrente(decodeURIComponent('${idSeguro}'))" class="group flex items-center justify-center w-8 h-8 rounded-full bg-rose-500/10 border border-rose-500/20">
                     <span class="text-sm">🗑️</span>
                 </button>
@@ -894,9 +995,10 @@ async function procesarPagosAutomaticos() {
         if (!pagoFijoDentroDelPlazo(p, mesActual)) return false;
         const dia = parseInt(p.dia, 10);
         if (!Number.isFinite(dia) || dia < 1 || dia > 31) return false;
-        const fechaPago = `${mesActual}-${String(dia).padStart(2, '0')}`;
+        const fechaPago = obtenerFechaPagoMes(mesActual, dia);
+        const diaEfectivo = parseInt(fechaPago.split('-')[2], 10);
         const yaExiste = state.data.appData.some(g => movimientoCoincideRecurrente(g, p, fechaPago));
-        return (hoy.getDate() >= dia && !yaExiste);
+        return (hoy.getDate() >= diaEfectivo && !yaExiste);
     });
 
     if (!pagosPendientes.length) {
@@ -906,7 +1008,7 @@ async function procesarPagosAutomaticos() {
 
     try {
         for (const p of pagosPendientes) {
-            const fechaPago = `${mesActual}-${String(p.dia).padStart(2, '0')}`;
+            const fechaPago = obtenerFechaPagoMes(mesActual, p.dia);
             const res = await apiFetch(CONFIG.API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -935,17 +1037,25 @@ window.prepararEdicion = function(id) {
     const gasto = state.data.appData.find(g => String(g._id) === String(id));
     if (!gasto) return;
 
-    document.getElementById('in-concepto').value = gasto.concepto || '';
+    const conceptoOriginal = String(gasto.concepto || '');
+    const esExtra = esGastoExtraordinario(conceptoOriginal);
+    const conceptoLimpio = conceptoOriginal.replace(/\s*#extra\b/gi, '').trim();
+
+    document.getElementById('in-concepto').value = conceptoLimpio;
     document.getElementById('in-importe').value = Math.abs(numeroSeguro(gasto.importe));
     document.getElementById('in-categoria').value = gasto.categoria || '';
-    document.getElementById('in-fecha').value = gasto.fecha || '';
+    document.getElementById('in-fecha').value = gasto.fecha || fechaLocalYYYYMMDD();
+
+    const checkExtra = document.getElementById('check-extra');
+    if (checkExtra) checkExtra.checked = esExtra;
     
     state.ui.editMode = true;
     state.ui.editId = id;
 
     const checkEl = document.getElementById('check-recurrente');
+    const recExistente = obtenerRecurrentes().find(p => claveRecurrente(p.concepto, p.categoria) === claveRecurrente(conceptoOriginal, gasto.categoria));
+    state.ui.editWasRecurrent = Boolean(recExistente);
     if (checkEl) {
-        const recExistente = obtenerRecurrentes().find(p => claveRecurrente(p.concepto, p.categoria) === claveRecurrente(gasto.concepto, gasto.categoria));
         checkEl.value = recExistente ? (recExistente.duracion || 'indefinido') : 'no';
     }
 
@@ -983,7 +1093,12 @@ document.getElementById('mainForm').addEventListener('submit', async e => {
     btnForm.innerText = "Guardando...";
     btnForm.style.opacity = "0.5";
 
-    const concepto = document.getElementById('in-concepto').value.trim();
+    let concepto = document.getElementById('in-concepto').value.trim();
+    const checkExtra = document.getElementById('check-extra');
+    if (checkExtra && checkExtra.checked && concepto && !esGastoExtraordinario(concepto)) {
+        concepto = `${concepto} #extra`;
+    }
+
     const importe = Math.abs(numeroSeguro(document.getElementById('in-importe').value));
     const categoria = document.getElementById('in-categoria').value;
     const fecha = document.getElementById('in-fecha').value;
@@ -1029,23 +1144,20 @@ document.getElementById('mainForm').addEventListener('submit', async e => {
             } else {
                 recs.push({ id: Date.now(), concepto, importe: importe.toString(), categoria, dia: diaPago, duracion: modoRecurrente, mesInicio: modoRecurrente === 'indefinido' ? null : fecha.slice(0, 7) });
             }
-        } else if (!esRecurrente && state.ui.editMode) {
+        } else if (!esRecurrente && state.ui.editMode && state.ui.editWasRecurrent) {
             recs = recs.filter(r => claveRecurrente(r.concepto, r.categoria) !== claveRecurrente(conceptoAnterior, categoriaAnterior));
         }
 
         guardarRecurrentes(recs);
-        document.getElementById('mainForm').reset();
-        
         state.ui.editMode = false;
         state.ui.editId = null;
+        state.ui.editWasRecurrent = false;
+        resetearFormularioOperar();
         
         await renderApp();
 
         btnForm.disabled = false;
-        btnForm.innerText = "Confirmar Operación";
         btnForm.style.opacity = "1";
-        btnForm.style.backgroundColor = "#00e5ff";
-        btnForm.style.color = "#000";
         goToTab(0);
 
     } catch(error) {
@@ -1055,7 +1167,7 @@ document.getElementById('mainForm').addEventListener('submit', async e => {
 });
 
 // ----------------------
-// GRÁFICOS DE TARJETAS
+// GRÁFICOS DE TARJETAS (Con descuento de Abonos)
 // ----------------------
 window.flipCard = function(el, categoria) {
     const inner = el.querySelector('.card-inner');
@@ -1075,6 +1187,7 @@ window.flipCard = function(el, categoria) {
 
 function renderCardChart(cat) {
     const canvasId = cat === CATEGORIAS.EXPLORA ? 'chart-Explora' : 'chart-Aqua';
+    const catAbono = cat === CATEGORIAS.EXPLORA ? CATEGORIAS.ABONO_EXPLORA : CATEGORIAS.ABONO_AQUA;
     const canvasEl = document.getElementById(canvasId);
     if (!canvasEl) return;
     const ctx = canvasEl.getContext('2d');
@@ -1088,8 +1201,13 @@ function renderCardChart(cat) {
     }
 
     const datos = labelsRaw.map(mes => {
-        return state.data.appData.filter(g => g.categoria === cat && String(g.fecha || '').startsWith(mes))
+        const gastos = state.data.appData
+            .filter(g => g.categoria === cat && String(g.fecha || '').startsWith(mes))
             .reduce((sum, g) => sum + Math.abs(numeroSeguro(g.importe)), 0);
+        const abonos = state.data.appData
+            .filter(g => g.categoria === catAbono && String(g.fecha || '').startsWith(mes))
+            .reduce((sum, g) => sum + Math.abs(numeroSeguro(g.importe)), 0);
+        return Math.max(0, gastos - abonos);
     });
 
     const nombresMeses = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
@@ -1115,7 +1233,14 @@ function renderCardChart(cat) {
             layout: { padding: { top: 20 } },
             plugins: {
                 legend: { display: false },
-                tooltip: { enabled: true, callbacks: { label: ctx => Number(ctx.raw).toLocaleString('de-DE', { minimumFractionDigits: 2 }) + "€" } }
+                tooltip: {
+                    enabled: true,
+                    callbacks: {
+                        label: ctx => state.ui.isPrivate
+                            ? "****€"
+                            : Number(ctx.raw).toLocaleString('de-DE', { minimumFractionDigits: 2 }) + "€"
+                    }
+                }
             },
             scales: {
                 y: { display: false, beginAtZero: true },
@@ -1135,7 +1260,10 @@ function renderCardChart(cat) {
                         const meta = chartInstance.getDatasetMeta(i);
                         meta.data.forEach((bar, index) => {
                             const data = dataset.data[index];
-                            if (data > 0) ctx.fillText(Math.round(data) + '€', bar.x, bar.y - 4);
+                            if (data > 0) {
+                                const texto = state.ui.isPrivate ? '****' : Math.round(data) + '€';
+                                ctx.fillText(texto, bar.x, bar.y - 4);
+                            }
                         });
                     });
                     ctx.restore();
