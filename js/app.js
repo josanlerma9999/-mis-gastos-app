@@ -541,49 +541,126 @@ window.actualizarInterfaz = function() {
 }
 
 function calcularPresupuesto(mesSel) {
+    const bPresupuesto = document.getElementById('barra-presupuesto');
+    const tLimite = document.getElementById('txt-limite');
+    const mPresupuesto = document.getElementById('msg-presupuesto');
+    const vLimite = document.getElementById('valor-limite');
+    if (!bPresupuesto || !tLimite || !mPresupuesto || !vLimite) return;
+
+    const fmt = (num) => state.ui.isPrivate
+        ? "****€"
+        : num.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "€";
+
+    const recsActivos = obtenerRecurrentes().filter(p => pagoFijoDentroDelPlazo(p, mesSel));
+
+    // 1. INGRESOS DEL MES (Registrados + Fijos pendientes de entrar)
     const ingresosRegistrados = state.data.appData
         .filter(g => String(g.fecha || '').startsWith(mesSel) && INGRESOS_LISTA.includes(g.categoria))
         .reduce((sum, g) => sum + Math.abs(numeroSeguro(g.importe)), 0);
 
-    const ingresosMes = ingresosRegistrados > 0 ? ingresosRegistrados : 700;
-    document.getElementById('valor-limite').innerText = ingresosMes.toLocaleString('de-DE', { minimumFractionDigits: 2 }) + "€";
+    const ingresosFijosPendientes = recsActivos
+        .filter(p => {
+            const cat = String(p.categoria || '');
+            if (!INGRESOS_LISTA.includes(cat)) return false;
+            const fechaP = `${mesSel}-${String(p.dia).padStart(2, '0')}`;
+            return !state.data.appData.some(g => movimientoCoincideRecurrente(g, p, fechaP));
+        })
+        .reduce((sum, p) => sum + Math.abs(numeroSeguro(p.importe)), 0);
 
-    const gastosBrutos = state.data.appData
-        .filter(g => String(g.fecha || '').startsWith(mesSel) && !INGRESOS_LISTA.includes(g.categoria) && !String(g.categoria || '').includes("Abono"))
+    const ingresosTotales = (ingresosRegistrados + ingresosFijosPendientes) > 0
+        ? (ingresosRegistrados + ingresosFijosPendientes)
+        : 700;
+
+    // 2. SEPARAR GASTOS FIJOS (comprometidos) VS. VARIABLES (día a día)
+    const recsGasto = recsActivos.filter(p => {
+        const cat = String(p.categoria || '');
+        return !INGRESOS_LISTA.includes(cat) && !cat.includes("Abono");
+    });
+
+    const clavesFijos = new Set(recsGasto.map(p => claveRecurrente(p.concepto, p.categoria)));
+
+    // Total de fijos del mes (si ya se cobró toma el importe real; si no, el previsto)
+    let totalFijosMes = 0;
+    recsGasto.forEach(p => {
+        const fechaP = `${mesSel}-${String(p.dia).padStart(2, '0')}`;
+        const movReal = state.data.appData.find(g => movimientoCoincideRecurrente(g, p, fechaP));
+        totalFijosMes += movReal
+            ? Math.abs(numeroSeguro(movReal.importe))
+            : Math.abs(numeroSeguro(p.importe));
+    });
+
+    // Solo sumamos a la barra los gastos que NO son fijos (incluye Aqua, Explora y puntuales)
+    const gastosVariablesBrutos = state.data.appData
+        .filter(g => {
+            if (!String(g.fecha || '').startsWith(mesSel)) return false;
+            const cat = String(g.categoria || '');
+            if (INGRESOS_LISTA.includes(cat) || cat.includes("Abono")) return false;
+            return !clavesFijos.has(claveRecurrente(g.concepto, cat));
+        })
         .reduce((sum, g) => sum + Math.abs(numeroSeguro(g.importe)), 0);
 
     const abonosMes = state.data.appData
         .filter(g => String(g.fecha || '').startsWith(mesSel) && String(g.categoria || '').includes("Abono"))
         .reduce((sum, g) => sum + Math.abs(numeroSeguro(g.importe)), 0);
 
-    const gastosMes = Math.max(0, gastosBrutos - abonosMes);
+    const gastosVariables = Math.max(0, gastosVariablesBrutos - abonosMes);
 
-    const bPresupuesto = document.getElementById('barra-presupuesto');
-    const tLimite = document.getElementById('txt-limite');
-    const mPresupuesto = document.getElementById('msg-presupuesto');
+    // 3. MARGEN REAL DISPONIBLE PARA GASTO VARIABLE
+    const limiteVariable = Math.max(0, ingresosTotales - totalFijosMes);
+    vLimite.innerText = fmt(limiteVariable);
 
-    if (ingresosMes > 0) {
-        const pct = Math.min((gastosMes / ingresosMes) * 100, 100);
-        bPresupuesto.style.width = `${pct}%`;
-        tLimite.innerText = `${Math.round(pct)}%`;
+    if (limiteVariable <= 0) {
+        bPresupuesto.style.width = "100%";
+        bPresupuesto.className = "h-full rounded-full transition-all duration-1000 ease-out bg-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.7)] animate-pulse";
+        tLimite.innerText = "100%";
+        mPresupuesto.innerText = "Fijos cubren el 100% de ingresos";
+        mPresupuesto.style.color = "#fb7185";
+        return;
+    }
 
-        if (pct >= 90) {
-            bPresupuesto.className = "h-full rounded-full bg-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.7)] animate-pulse";
-            mPresupuesto.innerText = `¡LÍMITE! -${gastosMes.toLocaleString('de-DE', { minimumFractionDigits: 2 })}€`;
-            mPresupuesto.style.color = "#fb7185";
-        } else if (pct >= 70) {
-            bPresupuesto.className = "h-full rounded-full bg-amber-400";
-            mPresupuesto.innerText = `OJO: -${gastosMes.toLocaleString('de-DE', { minimumFractionDigits: 2 })}€`;
-            mPresupuesto.style.color = "#fbbf24";
-        } else {
-            bPresupuesto.className = "h-full rounded-full bg-cyan-400";
-            mPresupuesto.innerText = `GASTADO: -${gastosMes.toLocaleString('de-DE', { minimumFractionDigits: 2 })}€`;
-            mPresupuesto.style.color = "rgba(0,229,255,0.6)";
-        }
+    // 4. RITMO DE GASTO VS. CALENDARIO
+    const hoy = new Date();
+    const mesActualStr = fechaLocalYYYYMM(hoy);
+    const [anioSel, mesNumSel] = mesSel.split('-').map(Number);
+    const diasEnMes = new Date(anioSel, mesNumSel, 0).getDate();
+
+    let pctMesTranscurrido = 100;
+    let diasRestantes = 0;
+
+    if (mesSel === mesActualStr) {
+        const diaHoy = hoy.getDate();
+        pctMesTranscurrido = (diaHoy / diasEnMes) * 100;
+        diasRestantes = Math.max(1, diasEnMes - diaHoy + 1);
+    } else if (mesSel > mesActualStr) {
+        pctMesTranscurrido = 0;
+        diasRestantes = diasEnMes;
+    }
+
+    const pctReal = (gastosVariables / limiteVariable) * 100;
+    const pctBarra = Math.min(pctReal, 100);
+    const diferenciaRitmo = pctReal - pctMesTranscurrido;
+    const disponible = limiteVariable - gastosVariables;
+    const margenDiario = diasRestantes > 0 ? Math.max(0, disponible / diasRestantes) : 0;
+
+    bPresupuesto.style.width = `${pctBarra}%`;
+    tLimite.innerText = `${Math.round(pctReal)}%`;
+
+    if (pctReal >= 100) {
+        bPresupuesto.className = "h-full rounded-full transition-all duration-1000 ease-out bg-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.7)] animate-pulse";
+        mPresupuesto.innerText = `Excedido en ${fmt(Math.abs(disponible))}`;
+        mPresupuesto.style.color = "#fb7185";
+    } else if (pctReal >= 85 || (mesSel === mesActualStr && diferenciaRitmo > 10)) {
+        bPresupuesto.className = "h-full rounded-full transition-all duration-1000 ease-out bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.4)]";
+        mPresupuesto.innerText = diasRestantes > 0
+            ? `Ritmo alto (+${Math.round(diferenciaRitmo)}%) · ${fmt(margenDiario)}/día`
+            : `Cerrado · Sobró ${fmt(disponible)}`;
+        mPresupuesto.style.color = "#fbbf24";
     } else {
-        bPresupuesto.style.width = "0%";
-        tLimite.innerText = "0%";
-        mPresupuesto.innerText = "Sin ingresos este mes";
+        bPresupuesto.className = "h-full rounded-full transition-all duration-1000 ease-out bg-cyan-400";
+        mPresupuesto.innerText = diasRestantes > 0
+            ? `Ritmo óptimo · ${fmt(margenDiario)}/día`
+            : `Cerrado · Ahorrado ${fmt(disponible)}`;
+        mPresupuesto.style.color = "rgba(0,229,255,0.75)";
     }
 }
 
