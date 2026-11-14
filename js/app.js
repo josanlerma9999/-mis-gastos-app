@@ -2,7 +2,8 @@
    1. CONSTANTES DE LA APLICACIÓN
 ========================================================= */
 const CONFIG = {
-    API_URL: '/api/gastos'
+    API_URL: '/api/gastos',
+    PALABRAS_EXCLUIDAS_PRESUPUESTO: ['hacienda', '#extra']
 };
 
 const CATEGORIAS = {
@@ -91,6 +92,11 @@ function numeroSeguro(valor) {
 
 function normalizarTexto(valor) {
     return String(valor ?? '').trim().toLowerCase();
+}
+
+function esGastoExtraordinario(concepto) {
+    const texto = normalizarTexto(concepto);
+    return CONFIG.PALABRAS_EXCLUIDAS_PRESUPUESTO.some(palabra => texto.includes(normalizarTexto(palabra)));
 }
 
 function escapeHtml(valor) {
@@ -589,12 +595,13 @@ function calcularPresupuesto(mesSel) {
             : Math.abs(numeroSeguro(p.importe));
     });
 
-    // Solo sumamos a la barra los gastos que NO son fijos (incluye Aqua, Explora y puntuales)
+    // Solo sumamos a la barra los gastos que NO son fijos ni extraordinarios (Hacienda / #extra)
     const gastosVariablesBrutos = state.data.appData
         .filter(g => {
             if (!String(g.fecha || '').startsWith(mesSel)) return false;
             const cat = String(g.categoria || '');
             if (INGRESOS_LISTA.includes(cat) || cat.includes("Abono")) return false;
+            if (esGastoExtraordinario(g.concepto)) return false;
             return !clavesFijos.has(claveRecurrente(g.concepto, cat));
         })
         .reduce((sum, g) => sum + Math.abs(numeroSeguro(g.importe)), 0);
