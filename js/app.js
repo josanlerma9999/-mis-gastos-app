@@ -28,7 +28,9 @@ const state = {
         editMode: false,
         editId: null,
         editWasRecurrent: false,
+        editRecId: null,
         filtroCategoria: null,
+        desgloseAbierto: false,
         touchstartX: 0,
         touchstartY: 0
     },
@@ -87,7 +89,6 @@ function fechaLocalYYYYMMDD(fecha = new Date()) {
     return `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${String(fecha.getDate()).padStart(2, '0')}`;
 }
 
-// Ajusta días 29/30/31 al último día real del mes (ej: 31 en febrero -> 28/29)
 function obtenerFechaPagoMes(mesSel, dia) {
     const [anio, mes] = String(mesSel || fechaLocalYYYYMM()).split('-').map(Number);
     const diasEnMes = new Date(anio, mes, 0).getDate();
@@ -133,6 +134,17 @@ function guardarRecurrentes(recs) {
     localStorage.setItem('recurrentes', JSON.stringify(recs));
 }
 
+function obtenerLimitesTarjetas() {
+    try {
+        const lim = JSON.parse(localStorage.getItem('card_limits') || '{}');
+        return (lim && typeof lim === 'object') ? lim : {};
+    } catch { return {}; }
+}
+
+function guardarLimitesTarjetas(limites) {
+    localStorage.setItem('card_limits', JSON.stringify(limites));
+}
+
 function resetearFormularioOperar() {
     const form = document.getElementById('mainForm');
     if (form) form.reset();
@@ -140,6 +152,15 @@ function resetearFormularioOperar() {
     if (inFecha) inFecha.value = fechaLocalYYYYMMDD();
     const checkExtra = document.getElementById('check-extra');
     if (checkExtra) checkExtra.checked = false;
+    const tituloForm = document.getElementById('form-operar-titulo');
+    if (tituloForm) tituloForm.innerText = "Nueva Operación";
+
+    const selectRec = document.getElementById('check-recurrente');
+    if (selectRec) {
+        const optPuntual = selectRec.querySelector('option[value="no"]');
+        if (optPuntual) optPuntual.disabled = false;
+    }
+
     const btnForm = document.querySelector('#mainForm button[type="submit"]');
     if (btnForm) {
         btnForm.innerText = "Confirmar Operación";
@@ -208,7 +229,7 @@ window.goToTab = function(i) {
 
     if (i === 0) setTimeout(updateChart, 100);
 
-    if (i === 5 && !state.ui.editMode) {
+    if (i === 5 && !state.ui.editMode && !state.ui.editRecId) {
         const inFecha = document.getElementById('in-fecha');
         if (inFecha && !inFecha.value) inFecha.value = fechaLocalYYYYMMDD();
     }
@@ -217,6 +238,7 @@ window.goToTab = function(i) {
         state.ui.editMode = false;
         state.ui.editId = null;
         state.ui.editWasRecurrent = false;
+        state.ui.editRecId = null;
         resetearFormularioOperar();
     }
 };
@@ -253,7 +275,7 @@ if (vp) {
 }
 
 /* =========================================================
-   6. UI - TOAST & SALUDOS
+   6. UI - TOAST, SALUDOS Y AUTOCOMPLETADO
 ========================================================= */
 window.showToast = function(msj, tipo = 'success') {
     const container = document.getElementById('toast-container');
@@ -280,6 +302,14 @@ window.togglePrivacy = function() {
     actualizarInterfaz();
 };
 
+window.toggleDesglosePresupuesto = function() {
+    state.ui.desgloseAbierto = !state.ui.desgloseAbierto;
+    const panel = document.getElementById('presupuesto-desglose');
+    const icono = document.getElementById('icono-desglose-presupuesto');
+    if (panel) panel.classList.toggle('hidden', !state.ui.desgloseAbierto);
+    if (icono) icono.innerText = state.ui.desgloseAbierto ? '▲' : '▼';
+};
+
 function actualizarSaludo(saldo) {
     const hora = new Date().getHours();
     const texto = hora >= 6 && hora < 12 ? "¡Buenos días!" : hora >= 12 && hora < 21 ? "¡Buenas tardes!" : "¡Buenas noches!";
@@ -296,6 +326,35 @@ function actualizarSaludo(saldo) {
         elTexto.innerText = `${texto} ${emoji}`;
         elAnimo.innerText = mensaje;
     }
+}
+
+function actualizarAutocompletadoConceptos() {
+    const datalist = document.getElementById('conceptos-frecuentes');
+    if (!datalist) return;
+
+    const conteo = new Map();
+    const registrar = (raw, peso = 1) => {
+        const limpio = String(raw || '').replace(/\s*#extra\b/gi, '').trim();
+        if (!limpio) return;
+        const clave = normalizarTexto(limpio);
+        const actual = conteo.get(clave);
+        if (actual) {
+            actual.count += peso;
+        } else {
+            conteo.set(clave, { label: limpio, count: peso });
+        }
+    };
+
+    obtenerRecurrentes().forEach(r => registrar(r.concepto, 5));
+    state.data.appData.forEach(g => registrar(g.concepto, 1));
+
+    const ordenados = Array.from(conteo.values())
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 40);
+
+    datalist.innerHTML = ordenados
+        .map(item => `<option value="${escapeHtml(item.label)}">`)
+        .join('');
 }
 
 function obtenerLogo(concepto) {
@@ -404,14 +463,13 @@ window.actualizarInterfaz = function() {
     let deudaAqua = 0, deudaExplora = 0;
     const recs = limpiarPagosFijosCaducados();
 
-    // PAGOS E INGRESOS FIJOS FUTUROS
+    // PAGOS E INGRESOS FIJOS FUTUROS (Comprueba todo el mes por si se adelantó alguno)
     recs.forEach(p => {
         if (!pagoFijoDentroDelPlazo(p, mesSel)) return;
-        const fechaPagoFijo = obtenerFechaPagoMes(mesSel, p.dia);
         const importe = Math.abs(numeroSeguro(p.importe));
         const catRec = String(p.categoria || '');
         const esIngresoRec = INGRESOS_LISTA.includes(catRec) || catRec.includes("Abono");
-        const yaRegistrado = state.data.appData.some(g => movimientoCoincideRecurrente(g, p, fechaPagoFijo));
+        const yaRegistrado = state.data.appData.some(g => movimientoCoincideRecurrenteEnMes(g, p, mesSel));
 
         if (!yaRegistrado) {
             if (esIngresoRec) iFuturos += importe;
@@ -468,13 +526,14 @@ window.actualizarInterfaz = function() {
             const estiloFuturo = !esP ? 'opacity-40 border-l-4 border-cyan-400' : '';
             const disp = state.ui.isPrivate ? "****€" : val.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "€";
             const esPositivo = esI || esAbono;
+            const signedVal = esPositivo ? val : -val;
             const idSeguro = encodeURIComponent(String(g._id ?? ''));
             const badgeExtra = (!esPositivo && esGastoExtraordinario(g.concepto))
                 ? `<span class="text-[8px] font-black uppercase px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 ml-1">EXTRA</span>`
                 : '';
 
             listaPasadoHTML.push(`
-                <div class="bbva-card p-4 flex justify-between items-center gap-3 ${estiloFuturo}" data-cat="${escapeHtml(categoria)}" data-search="${escapeHtml(normalizarTexto(g.concepto + ' ' + categoria))}">
+                <div class="bbva-card p-4 flex justify-between items-center gap-3 ${estiloFuturo}" data-cat="${escapeHtml(categoria)}" data-search="${escapeHtml(normalizarTexto(g.concepto + ' ' + categoria))}" data-signed="${signedVal}">
                     <div class="flex items-center gap-3 flex-1 overflow-hidden">
                         ${obtenerLogo(g.concepto)}
                         <div class="truncate">
@@ -500,20 +559,29 @@ window.actualizarInterfaz = function() {
     deudaAqua = Math.max(0, deudaAqua);
     deudaExplora = Math.max(0, deudaExplora);
 
-    // PREVISIÓN
+    // PREVISIÓN (Con botón para adelantar cobro/pago a HOY)
     const listaFuturo = document.getElementById('listaFuturo');
     let listaFuturoHTML = [];
     let fechaUltimoGrupoFuturo = "";
 
-    let movsParaLista = state.data.appData.filter(g => g.fecha > hoyStr && String(g.fecha || '').startsWith(mesSel));
+    let movsParaLista = state.data.appData
+        .filter(g => g.fecha > hoyStr && String(g.fecha || '').startsWith(mesSel))
+        .map(g => ({ ...g, esFijo: false }));
 
     recs.forEach(p => {
         if (!pagoFijoDentroDelPlazo(p, mesSel)) return;
         const fechaP = obtenerFechaPagoMes(mesSel, p.dia);
-        const yaRegistrado = state.data.appData.some(g => movimientoCoincideRecurrente(g, p, fechaP));
+        const yaRegistrado = state.data.appData.some(g => movimientoCoincideRecurrenteEnMes(g, p, mesSel));
 
         if (fechaP > hoyStr && !yaRegistrado) {
-            movsParaLista.push({ concepto: p.concepto, importe: numeroSeguro(p.importe), categoria: p.categoria, fecha: fechaP, esFijo: true });
+            movsParaLista.push({
+                recId: p.id,
+                concepto: p.concepto,
+                importe: numeroSeguro(p.importe),
+                categoria: p.categoria,
+                fecha: fechaP,
+                esFijo: true
+            });
         }
     });
 
@@ -531,6 +599,8 @@ window.actualizarInterfaz = function() {
 
         const esTrulyFijo = g.esFijo || recs.some(p => claveRecurrente(p.concepto, p.categoria) === claveRecurrente(g.concepto, g.categoria));
         const etiquetaFijo = esTrulyFijo ? `<span style="color:#fde68a;font-size:8px;margin-left:4px;font-weight:900;">FIJO</span>` : '';
+        const refId = encodeURIComponent(String(g.esFijo ? (g.recId ?? '') : (g._id ?? '')));
+        const tipoAdelanto = g.esFijo ? 'fijo' : 'mov';
 
         listaFuturoHTML.push(`
             <div class="bbva-card p-4 flex justify-between items-center gap-3 border-l-4 ${esIngresoFuturo ? 'border-emerald-400/40' : 'border-cyan-400/30'} mx-2 mb-2">
@@ -541,10 +611,17 @@ window.actualizarInterfaz = function() {
                         <p class="text-[9px] text-slate-500 uppercase mt-1">${escapeHtml(catFuturo)}</p>
                     </div>
                 </div>
-                <p class="font-black ${esIngresoFuturo ? 'text-emerald-400' : 'text-white'}">${esIngresoFuturo ? '+' : '-'}${disp}</p>
+                <div class="flex flex-col items-end gap-1.5">
+                    <p class="font-black ${esIngresoFuturo ? 'text-emerald-400' : 'text-white'}">${esIngresoFuturo ? '+' : '-'}${disp}</p>
+                    <button onclick="adelantarPrevision('${tipoAdelanto}', decodeURIComponent('${refId}'))" class="px-2 py-0.5 rounded-md bg-cyan-400/15 border border-cyan-400/40 text-[8px] font-black uppercase tracking-wider text-cyan-300 active:scale-95 transition-transform">⚡ Hoy</button>
+                </div>
             </div>
         `);
     });
+
+    if (!listaFuturoHTML.length) {
+        listaFuturoHTML.push(`<div class="text-center py-10 opacity-30"><span class="text-4xl">⏳</span><p class="text-[10px] font-bold uppercase mt-2 tracking-widest">Sin movimientos pendientes este mes</p></div>`);
+    }
     listaFuturo.innerHTML = listaFuturoHTML.join('');
 
     // ACTUALIZAR SALDOS Y UI TEXTOS
@@ -579,12 +656,78 @@ window.actualizarInterfaz = function() {
 
     document.getElementById('card-aqua-val').innerText = state.ui.isPrivate ? "****€" : deudaAqua.toLocaleString('de-DE', { minimumFractionDigits: 2 }) + "€";
     document.getElementById('card-explora-val').innerText = state.ui.isPrivate ? "****€" : deudaExplora.toLocaleString('de-DE', { minimumFractionDigits: 2 }) + "€";
+    actualizarBarrasLimitesTarjetas(deudaExplora, deudaAqua);
 
-    renderRecurrentes();
+    actualizarAutocompletadoConceptos();
+    renderRecurrentes(mesSel);
     updateChart();
     calcularPresupuesto(mesSel);
 };
 
+/* =========================================================
+   8. LÍMITES VISUALES DE TARJETAS
+========================================================= */
+function actualizarBarrasLimitesTarjetas(deudaExplora, deudaAqua) {
+    const limites = obtenerLimitesTarjetas();
+    const fmt = (n) => state.ui.isPrivate
+        ? "****€"
+        : n.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "€";
+
+    const aplicar = (deuda, limite, barId, txtId) => {
+        const bar = document.getElementById(barId);
+        const txt = document.getElementById(txtId);
+        if (!bar || !txt) return;
+
+        if (!limite || limite <= 0) {
+            bar.style.width = "0%";
+            bar.className = "h-full bg-cyan-400 rounded-full transition-all duration-700";
+            txt.innerText = "Pulsa ⚙️ Límites para configurar";
+            return;
+        }
+
+        const pct = (deuda / limite) * 100;
+        const disponible = Math.max(0, limite - deuda);
+        bar.style.width = `${Math.min(pct, 100)}%`;
+
+        if (pct >= 95) {
+            bar.className = "h-full bg-rose-500 rounded-full transition-all duration-700";
+        } else if (pct >= 75) {
+            bar.className = "h-full bg-amber-400 rounded-full transition-all duration-700";
+        } else {
+            bar.className = "h-full bg-cyan-400 rounded-full transition-all duration-700";
+        }
+
+        txt.innerText = `Disp: ${fmt(disponible)} / Límite: ${fmt(limite)} (${Math.round(pct)}%)`;
+    };
+
+    aplicar(deudaExplora, numeroSeguro(limites[CATEGORIAS.EXPLORA]), 'bar-explora', 'limit-explora-txt');
+    aplicar(deudaAqua, numeroSeguro(limites[CATEGORIAS.AQUA]), 'bar-aqua', 'limit-aqua-txt');
+}
+
+window.configurarLimitesTarjetas = function() {
+    const actuales = obtenerLimitesTarjetas();
+    const expActual = numeroSeguro(actuales[CATEGORIAS.EXPLORA]);
+    const aquaActual = numeroSeguro(actuales[CATEGORIAS.AQUA]);
+
+    const resExp = prompt("Límite mensual para Tarjeta Explora (€) — pon 0 para quitar:", expActual > 0 ? String(expActual) : "1000");
+    if (resExp === null) return;
+    const resAqua = prompt("Límite mensual para Tarjeta Aqua (€) — pon 0 para quitar:", aquaActual > 0 ? String(aquaActual) : "600");
+    if (resAqua === null) return;
+
+    const nuevoExp = Math.max(0, numeroSeguro(resExp.replace(',', '.')));
+    const nuevoAqua = Math.max(0, numeroSeguro(resAqua.replace(',', '.')));
+
+    guardarLimitesTarjetas({
+        [CATEGORIAS.EXPLORA]: nuevoExp,
+        [CATEGORIAS.AQUA]: nuevoAqua
+    });
+    actualizarInterfaz();
+    showToast("Límites de tarjetas guardados", "success");
+};
+
+/* =========================================================
+   9. FILTROS Y EXPORTACIÓN CSV EN MOVIMIENTOS
+========================================================= */
 window.aplicarFiltrosMovimientos = function() {
     const buscador = document.getElementById('buscadorMovs');
     const texto = normalizarTexto(buscador ? buscador.value : '');
@@ -596,9 +739,13 @@ window.aplicarFiltrosMovimientos = function() {
     });
 
     const elementos = document.querySelectorAll('#listaPasado .bbva-card');
+    let visibles = 0;
+    let totalNeto = 0;
+
     elementos.forEach(el => {
         const cat = el.getAttribute('data-cat');
         const searchStr = el.getAttribute('data-search') || '';
+        const signed = numeroSeguro(el.getAttribute('data-signed'));
 
         const cumpleCat = !catFiltro || cat === catFiltro ||
             (catFiltro === CATEGORIAS.AQUA && cat === CATEGORIAS.ABONO_AQUA) ||
@@ -608,12 +755,86 @@ window.aplicarFiltrosMovimientos = function() {
         if (cumpleCat && cumpleTexto) {
             el.style.display = 'flex';
             if (catFiltro) el.style.borderLeft = "4px solid #00e5ff";
+            visibles++;
+            totalNeto += signed;
         } else {
             el.style.display = 'none';
         }
     });
+
+    const panelResumen = document.getElementById('resumen-filtro-movs');
+    const elCount = document.getElementById('filtro-movs-count');
+    const elTotal = document.getElementById('filtro-movs-total');
+
+    if (panelResumen && elCount && elTotal) {
+        if (hayFiltroActivo) {
+            panelResumen.classList.remove('hidden');
+            elCount.innerText = `${visibles} ${visibles === 1 ? 'movimiento' : 'movimientos'}`;
+            if (state.ui.isPrivate) {
+                elTotal.innerText = "****€";
+                elTotal.className = "text-xs font-black text-white";
+            } else {
+                const signo = totalNeto > 0 ? '+' : '';
+                elTotal.innerText = `Total: ${signo}${totalNeto.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€`;
+                elTotal.className = `text-xs font-black ${totalNeto > 0 ? 'text-emerald-400' : totalNeto < 0 ? 'text-rose-400' : 'text-white'}`;
+            }
+        } else {
+            panelResumen.classList.add('hidden');
+        }
+    }
 };
 
+window.exportarMesCSV = function() {
+    const filtro = document.getElementById('filtroMes');
+    const mesSel = (filtro && filtro.value) ? filtro.value : fechaLocalYYYYMM();
+    const movsMes = state.data.appData
+        .filter(g => String(g.fecha || '').startsWith(mesSel))
+        .sort((a, b) => String(a.fecha).localeCompare(String(b.fecha)));
+
+    if (!movsMes.length) {
+        showToast("No hay movimientos en este mes", "error");
+        return;
+    }
+
+    const escaparCSV = (val) => `"${String(val ?? '').replace(/"/g, '""')}"`;
+    const lineas = ['Fecha;Concepto;Categoría;Tipo;Extraordinario;Importe'];
+
+    movsMes.forEach(g => {
+        const val = Math.abs(numeroSeguro(g.importe));
+        const cat = String(g.categoria || '');
+        const esIngreso = INGRESOS_LISTA.includes(cat);
+        const esAbono = cat.includes("Abono");
+        const tipo = esIngreso ? 'Ingreso' : esAbono ? 'Abono' : 'Gasto';
+        const extra = (!esIngreso && !esAbono && esGastoExtraordinario(g.concepto)) ? 'Sí' : 'No';
+        const importeFirmado = (esIngreso || esAbono) ? val : -val;
+        const importeStr = importeFirmado.toFixed(2).replace('.', ',');
+
+        lineas.push([
+            escaparCSV(g.fecha),
+            escaparCSV(g.concepto),
+            escaparCSV(cat),
+            escaparCSV(tipo),
+            escaparCSV(extra),
+            importeStr
+        ].join(';'));
+    });
+
+    const csvContenido = '\uFEFF' + lineas.join('\r\n');
+    const blob = new Blob([csvContenido], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `bbva-movimientos-${mesSel}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    showToast(`CSV de ${mesSel} descargado`, "success");
+};
+
+/* =========================================================
+   10. PRESUPUESTO CON DESGLOSE DETALLADO
+========================================================= */
 function calcularPresupuesto(mesSel) {
     const bPresupuesto = document.getElementById('barra-presupuesto');
     const tLimite = document.getElementById('txt-limite');
@@ -636,8 +857,7 @@ function calcularPresupuesto(mesSel) {
         .filter(p => {
             const cat = String(p.categoria || '');
             if (!INGRESOS_LISTA.includes(cat)) return false;
-            const fechaP = obtenerFechaPagoMes(mesSel, p.dia);
-            return !state.data.appData.some(g => movimientoCoincideRecurrente(g, p, fechaP));
+            return !state.data.appData.some(g => movimientoCoincideRecurrenteEnMes(g, p, mesSel));
         })
         .reduce((sum, p) => sum + Math.abs(numeroSeguro(p.importe)), 0);
 
@@ -645,7 +865,7 @@ function calcularPresupuesto(mesSel) {
         ? (ingresosRegistrados + ingresosFijosPendientes)
         : 700;
 
-    // 2. GASTOS FIJOS VS. VARIABLES
+    // 2. GASTOS FIJOS VS. VARIABLES VS. EXTRAORDINARIOS
     const recsGasto = recsActivos.filter(p => {
         const cat = String(p.categoria || '');
         return !INGRESOS_LISTA.includes(cat) && !cat.includes("Abono");
@@ -655,28 +875,43 @@ function calcularPresupuesto(mesSel) {
 
     let totalFijosMes = 0;
     recsGasto.forEach(p => {
-        const fechaP = obtenerFechaPagoMes(mesSel, p.dia);
-        const movReal = state.data.appData.find(g => movimientoCoincideRecurrente(g, p, fechaP));
+        const movReal = state.data.appData.find(g => movimientoCoincideRecurrenteEnMes(g, p, mesSel));
         totalFijosMes += movReal
             ? Math.abs(numeroSeguro(movReal.importe))
             : Math.abs(numeroSeguro(p.importe));
     });
 
-    const gastosVariablesBrutos = state.data.appData
-        .filter(g => {
-            if (!String(g.fecha || '').startsWith(mesSel)) return false;
-            const cat = String(g.categoria || '');
-            if (INGRESOS_LISTA.includes(cat) || cat.includes("Abono")) return false;
-            if (esGastoExtraordinario(g.concepto)) return false;
-            return !clavesFijos.has(claveRecurrente(g.concepto, cat));
-        })
-        .reduce((sum, g) => sum + Math.abs(numeroSeguro(g.importe)), 0);
+    let gastosVariablesBrutos = 0;
+    let totalExtraMes = 0;
+
+    state.data.appData.forEach(g => {
+        if (!String(g.fecha || '').startsWith(mesSel)) return;
+        const cat = String(g.categoria || '');
+        if (INGRESOS_LISTA.includes(cat) || cat.includes("Abono")) return;
+        const val = Math.abs(numeroSeguro(g.importe));
+
+        if (esGastoExtraordinario(g.concepto)) {
+            totalExtraMes += val;
+        } else if (!clavesFijos.has(claveRecurrente(g.concepto, cat))) {
+            gastosVariablesBrutos += val;
+        }
+    });
 
     const abonosMes = state.data.appData
         .filter(g => String(g.fecha || '').startsWith(mesSel) && String(g.categoria || '').includes("Abono"))
         .reduce((sum, g) => sum + Math.abs(numeroSeguro(g.importe)), 0);
 
     const gastosVariables = Math.max(0, gastosVariablesBrutos - abonosMes);
+
+    // Actualizar desglose desplegable
+    const elIng = document.getElementById('desglose-ingresos');
+    const elFij = document.getElementById('desglose-fijos');
+    const elVar = document.getElementById('desglose-variable');
+    const elExt = document.getElementById('desglose-extra');
+    if (elIng) elIng.innerText = state.ui.isPrivate ? "****€" : `+${fmt(ingresosTotales)}`;
+    if (elFij) elFij.innerText = state.ui.isPrivate ? "****€" : `-${fmt(totalFijosMes)}`;
+    if (elVar) elVar.innerText = state.ui.isPrivate ? "****€" : `-${fmt(gastosVariables)}`;
+    if (elExt) elExt.innerText = state.ui.isPrivate ? "****€" : `-${fmt(totalExtraMes)}`;
 
     // 3. MARGEN REAL DISPONIBLE
     const limiteVariable = Math.max(0, ingresosTotales - totalFijosMes);
@@ -737,6 +972,9 @@ function calcularPresupuesto(mesSel) {
     }
 }
 
+/* =========================================================
+   11. GRÁFICO PRINCIPAL
+========================================================= */
 function updateChart() {
     const canvas = document.getElementById('gastosChart');
     const filtro = document.getElementById('filtroMes');
@@ -819,9 +1057,99 @@ function updateChart() {
     });
 }
 
-// ----------------------
-// GESTION RECURRENTES + BACKUP
-// ----------------------
+/* =========================================================
+   12. GESTION RECURRENTES + BACKUP + PREVISIÓN
+========================================================= */
+window.adelantarPrevision = async function(tipo, id) {
+    const hoyStr = fechaLocalYYYYMMDD();
+
+    if (tipo === 'fijo') {
+        const rec = obtenerRecurrentes().find(p => String(p.id) === String(id));
+        if (!rec) return;
+        if (!confirm(`¿Registrar "${rec.concepto}" hoy (${hoyStr})?`)) return;
+
+        try {
+            const res = await apiFetch(CONFIG.API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    concepto: rec.concepto,
+                    importe: Math.abs(numeroSeguro(rec.importe)),
+                    categoria: rec.categoria,
+                    fecha: hoyStr
+                })
+            });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            showToast("Movimiento adelantado a hoy", "success");
+            await renderApp();
+        } catch {
+            showToast("No se pudo adelantar el movimiento", "error");
+        }
+    } else {
+        const mov = state.data.appData.find(g => String(g._id) === String(id));
+        if (!mov) return;
+        if (!confirm(`¿Mover "${mov.concepto}" a hoy (${hoyStr})?`)) return;
+
+        try {
+            const res = await apiFetch(`${CONFIG.API_URL}/${encodeURIComponent(id)}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    concepto: mov.concepto,
+                    importe: Math.abs(numeroSeguro(mov.importe)),
+                    categoria: mov.categoria,
+                    fecha: hoyStr
+                })
+            });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            showToast("Fecha actualizada a hoy", "success");
+            await renderApp();
+        } catch {
+            showToast("No se pudo actualizar la fecha", "error");
+        }
+    }
+};
+
+window.prepararEdicionRecurrente = function(id) {
+    const rec = obtenerRecurrentes().find(p => String(p.id) === String(id));
+    if (!rec) return;
+
+    const conceptoOriginal = String(rec.concepto || '');
+    const esExtra = esGastoExtraordinario(conceptoOriginal);
+    const conceptoLimpio = conceptoOriginal.replace(/\s*#extra\b/gi, '').trim();
+    const mesBase = (document.getElementById('filtroMes')?.value) || fechaLocalYYYYMM();
+
+    document.getElementById('in-concepto').value = conceptoLimpio;
+    document.getElementById('in-importe').value = Math.abs(numeroSeguro(rec.importe));
+    document.getElementById('in-categoria').value = rec.categoria || '';
+    document.getElementById('in-fecha').value = obtenerFechaPagoMes(mesBase, rec.dia);
+
+    const checkExtra = document.getElementById('check-extra');
+    if (checkExtra) checkExtra.checked = esExtra;
+
+    const checkEl = document.getElementById('check-recurrente');
+    if (checkEl) {
+        checkEl.value = rec.duracion || 'indefinido';
+        const optPuntual = checkEl.querySelector('option[value="no"]');
+        if (optPuntual) optPuntual.disabled = true;
+    }
+
+    state.ui.editMode = false;
+    state.ui.editId = null;
+    state.ui.editRecId = id;
+
+    const tituloForm = document.getElementById('form-operar-titulo');
+    if (tituloForm) tituloForm.innerText = "Editar Movimiento Fijo";
+
+    const btnForm = document.querySelector('#mainForm button[type="submit"]');
+    if (btnForm) {
+        btnForm.innerText = "Actualizar Fijo";
+        btnForm.style.backgroundColor = "#c084fc";
+        btnForm.style.color = "#000";
+    }
+    goToTab(5);
+};
+
 window.exportarRecurrentes = function() {
     const recs = obtenerRecurrentes();
     if (!recs.length) {
@@ -890,12 +1218,44 @@ function movimientoCoincideRecurrente(movimiento, recurrente, fecha) {
            movimiento.fecha === fecha;
 }
 
-function renderRecurrentes() {
+function movimientoCoincideRecurrenteEnMes(movimiento, recurrente, mesSel) {
+    return normalizarTexto(movimiento.concepto) === normalizarTexto(recurrente.concepto) &&
+           normalizarTexto(movimiento.categoria) === normalizarTexto(recurrente.categoria) &&
+           String(movimiento.fecha || '').startsWith(mesSel);
+}
+
+function renderRecurrentes(mesSel = fechaLocalYYYYMM()) {
     limpiarPagosFijosCaducados();
     const container = document.getElementById('listaRecurrentes');
     if (!container) return;
 
     const recs = obtenerRecurrentes().sort((a, b) => parseInt(a.dia, 10) - parseInt(b.dia, 10));
+
+    // Calcular resumen superior de fijos activos en el mes seleccionado
+    let totalIngFijos = 0;
+    let totalGasFijos = 0;
+    recs.forEach(p => {
+        if (!pagoFijoDentroDelPlazo(p, mesSel)) return;
+        const imp = Math.abs(numeroSeguro(p.importe));
+        const cat = String(p.categoria || '');
+        if (INGRESOS_LISTA.includes(cat) || cat.includes('Abono')) totalIngFijos += imp;
+        else totalGasFijos += imp;
+    });
+
+    const elIng = document.getElementById('fijos-total-ingresos');
+    const elGas = document.getElementById('fijos-total-gastos');
+    const elBal = document.getElementById('fijos-total-balance');
+    const fmt = (n) => state.ui.isPrivate
+        ? "****€"
+        : n.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "€";
+
+    if (elIng) elIng.innerText = state.ui.isPrivate ? "****€" : `+${fmt(totalIngFijos)}`;
+    if (elGas) elGas.innerText = state.ui.isPrivate ? "****€" : `-${fmt(totalGasFijos)}`;
+    if (elBal) {
+        const bal = totalIngFijos - totalGasFijos;
+        elBal.innerText = state.ui.isPrivate ? "****€" : `${bal > 0 ? '+' : ''}${fmt(bal)}`;
+        elBal.className = `text-xs font-black mt-0.5 ${bal >= 0 ? 'text-cyan-400' : 'text-rose-400'}`;
+    }
 
     if (!recs.length) {
         container.innerHTML = `<div class="text-center py-10 opacity-30"><span class="text-4xl">🔄</span><p class="text-[10px] font-bold uppercase mt-2 tracking-widest">No hay movimientos fijos configurados</p></div>`;
@@ -932,7 +1292,7 @@ function renderRecurrentes() {
                     const fechaCuota = new Date(partesInicio[0], partesInicio[1] - 1 + i, 1);
                     const mesCuota = `${fechaCuota.getFullYear()}-${String(fechaCuota.getMonth() + 1).padStart(2, '0')}`;
                     const fechaPago = obtenerFechaPagoMes(mesCuota, p.dia);
-                    if (fechaPago <= fechaLocalYYYYMMDD(ahora) && state.data.appData.some(g => movimientoCoincideRecurrente(g, p, fechaPago))) {
+                    if (fechaPago <= fechaLocalYYYYMMDD(ahora) && state.data.appData.some(g => movimientoCoincideRecurrenteEnMes(g, p, mesCuota))) {
                         cuotasRegistradas++;
                     }
                 }
@@ -963,9 +1323,14 @@ function renderRecurrentes() {
             </div>
             <div class="flex flex-col items-end justify-center gap-2">
                 <p class="font-black ${importeColor} text-lg">${signoImporte}${importe}</p>
-                <button onclick="borrarRecurrente(decodeURIComponent('${idSeguro}'))" class="group flex items-center justify-center w-8 h-8 rounded-full bg-rose-500/10 border border-rose-500/20">
-                    <span class="text-sm">🗑️</span>
-                </button>
+                <div class="flex items-center gap-1.5">
+                    <button onclick="prepararEdicionRecurrente(decodeURIComponent('${idSeguro}'))" class="flex items-center justify-center w-8 h-8 rounded-full bg-cyan-400/10 border border-cyan-400/25" title="Editar fijo">
+                        <span class="text-xs">✏️</span>
+                    </button>
+                    <button onclick="borrarRecurrente(decodeURIComponent('${idSeguro}'))" class="flex items-center justify-center w-8 h-8 rounded-full bg-rose-500/10 border border-rose-500/20" title="Eliminar fijo">
+                        <span class="text-xs">🗑️</span>
+                    </button>
+                </div>
             </div>
         </div>`;
     }).join('');
@@ -997,7 +1362,7 @@ async function procesarPagosAutomaticos() {
         if (!Number.isFinite(dia) || dia < 1 || dia > 31) return false;
         const fechaPago = obtenerFechaPagoMes(mesActual, dia);
         const diaEfectivo = parseInt(fechaPago.split('-')[2], 10);
-        const yaExiste = state.data.appData.some(g => movimientoCoincideRecurrente(g, p, fechaPago));
+        const yaExiste = state.data.appData.some(g => movimientoCoincideRecurrenteEnMes(g, p, mesActual));
         return (hoy.getDate() >= diaEfectivo && !yaExiste);
     });
 
@@ -1025,14 +1390,13 @@ window.borrarRecurrente = function(id) {
     if (!confirm("¿Eliminar este movimiento de la lista de fijos?")) return;
     let recs = obtenerRecurrentes().filter(p => String(p.id) !== String(id));
     guardarRecurrentes(recs);
-    renderRecurrentes();
     actualizarInterfaz();
     showToast("Movimiento fijo eliminado", "success");
 };
 
-// ----------------------
-// EDICIÓN / BORRADO MOVS
-// ----------------------
+/* =========================================================
+   13. EDICIÓN / BORRADO DE MOVIMIENTOS
+========================================================= */
 window.prepararEdicion = function(id) {
     const gasto = state.data.appData.find(g => String(g._id) === String(id));
     if (!gasto) return;
@@ -1051,13 +1415,19 @@ window.prepararEdicion = function(id) {
     
     state.ui.editMode = true;
     state.ui.editId = id;
+    state.ui.editRecId = null;
 
     const checkEl = document.getElementById('check-recurrente');
     const recExistente = obtenerRecurrentes().find(p => claveRecurrente(p.concepto, p.categoria) === claveRecurrente(conceptoOriginal, gasto.categoria));
     state.ui.editWasRecurrent = Boolean(recExistente);
     if (checkEl) {
+        const optPuntual = checkEl.querySelector('option[value="no"]');
+        if (optPuntual) optPuntual.disabled = false;
         checkEl.value = recExistente ? (recExistente.duracion || 'indefinido') : 'no';
     }
+
+    const tituloForm = document.getElementById('form-operar-titulo');
+    if (tituloForm) tituloForm.innerText = "Editar Movimiento";
 
     const btnForm = document.querySelector('#mainForm button[type="submit"]');
     if (btnForm) {
@@ -1081,9 +1451,9 @@ window.deleteGasto = async function(id) {
     } catch(error) { showToast("No se pudo eliminar el movimiento", "error"); }
 };
 
-// ----------------------
-// FORMULARIO PRINCIPAL
-// ----------------------
+/* =========================================================
+   14. FORMULARIO PRINCIPAL (Alta, Edición Mov y Edición Fijo)
+========================================================= */
 document.getElementById('mainForm').addEventListener('submit', async e => {
     e.preventDefault();
     const btnForm = document.querySelector('#mainForm button[type="submit"]');
@@ -1108,6 +1478,35 @@ document.getElementById('mainForm').addEventListener('submit', async e => {
     if (!concepto || !fecha || importe <= 0) {
         showToast("Revisa los datos", "error");
         btnForm.disabled = false; btnForm.innerText = textoOriginal; btnForm.style.opacity = "1";
+        return;
+    }
+
+    // MODO EDICIÓN EXCLUSIVA DE FIJO (Sin duplicar movimiento en servidor)
+    if (state.ui.editRecId) {
+        let recs = obtenerRecurrentes();
+        const idx = recs.findIndex(r => String(r.id) === String(state.ui.editRecId));
+        if (idx !== -1) {
+            const diaPago = fecha.split('-')[2];
+            const duracionFinal = modoRecurrente === 'no' ? 'indefinido' : modoRecurrente;
+            recs[idx] = {
+                ...recs[idx],
+                concepto,
+                importe: importe.toString(),
+                categoria,
+                dia: diaPago,
+                duracion: duracionFinal,
+                mesInicio: duracionFinal === 'indefinido' ? null : (recs[idx].mesInicio || fecha.slice(0, 7))
+            };
+            guardarRecurrentes(recs);
+        }
+
+        state.ui.editRecId = null;
+        resetearFormularioOperar();
+        btnForm.disabled = false;
+        btnForm.style.opacity = "1";
+        actualizarInterfaz();
+        showToast("Movimiento fijo actualizado", "success");
+        goToTab(2);
         return;
     }
 
@@ -1166,9 +1565,9 @@ document.getElementById('mainForm').addEventListener('submit', async e => {
     }
 });
 
-// ----------------------
-// GRÁFICOS DE TARJETAS (Con descuento de Abonos)
-// ----------------------
+/* =========================================================
+   15. GRÁFICOS DE TARJETAS
+========================================================= */
 window.flipCard = function(el, categoria) {
     const inner = el.querySelector('.card-inner');
     if (!inner) return;
