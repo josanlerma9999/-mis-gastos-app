@@ -114,7 +114,8 @@ const SESSION_DURATION = 7 * 24 * 60 * 60 * 1000;
 
 const MAX_INTENTOS_PIN = 5;
 const BLOQUEO_PIN_MS = 5 * 60 * 1000;
-const intentosLogin = new Map();
+let fallosPin = 0;
+let bloqueadoHasta = 0;
 
 function obtenerCookie(req, nombre) {
     const header = req.headers.cookie;
@@ -239,12 +240,10 @@ app.post('/api/login', (req, res) => {
 
     try {
 
-        const ip = req.ip || 'global';
         const ahora = Date.now();
-        const registro = intentosLogin.get(ip);
 
-        if (registro && registro.bloqueadoHasta > ahora) {
-            const minRestantes = Math.max(1, Math.ceil((registro.bloqueadoHasta - ahora) / 60000));
+        if (bloqueadoHasta > ahora) {
+            const minRestantes = Math.max(1, Math.ceil((bloqueadoHasta - ahora) / 60000));
             return res.status(429).json({
                 error: `Demasiados intentos. Espera ${minRestantes} min.`
             });
@@ -264,28 +263,18 @@ app.post('/api/login', (req, res) => {
 
         if (pinRecibido !== String(APP_PIN)) {
 
-            const fallosPrevios = (registro && registro.bloqueadoHasta <= ahora)
-                ? 0
-                : (registro?.fallos || 0);
-            const fallos = fallosPrevios + 1;
+            fallosPin += 1;
 
-            if (fallos >= MAX_INTENTOS_PIN) {
-                intentosLogin.set(ip, {
-                    fallos,
-                    bloqueadoHasta: ahora + BLOQUEO_PIN_MS
-                });
-                console.warn(`🚫 Acceso bloqueado 5 min por exceso de intentos (${ip})`);
+            if (fallosPin >= MAX_INTENTOS_PIN) {
+                bloqueadoHasta = ahora + BLOQUEO_PIN_MS;
+                fallosPin = 0;
+                console.warn('🚫 Acceso bloqueado 5 min por exceso de intentos');
                 return res.status(429).json({
                     error: 'Demasiados intentos. Espera 5 min.'
                 });
             }
 
-            intentosLogin.set(ip, {
-                fallos,
-                bloqueadoHasta: 0
-            });
-
-            console.log(`❌ Intento de login incorrecto (${fallos}/${MAX_INTENTOS_PIN})`);
+            console.log(`❌ Intento de login incorrecto (${fallosPin}/${MAX_INTENTOS_PIN})`);
 
             return res.status(401).json({
                 error: 'PIN incorrecto'
@@ -293,7 +282,8 @@ app.post('/api/login', (req, res) => {
 
         }
 
-        intentosLogin.delete(ip);
+        fallosPin = 0;
+        bloqueadoHasta = 0;
 
         const token = crearTokenSesion();
 
