@@ -3,6 +3,7 @@
 ========================================================= */
 const CONFIG = {
     API_URL: '/api/gastos',
+    CONFIG_URL: '/api/config',
     PALABRAS_EXCLUIDAS_PRESUPUESTO: ['hacienda', '#extra']
 };
 
@@ -123,6 +124,19 @@ function claveRecurrente(concepto, categoria) {
     return normalizarTexto(concepto) + '|' + normalizarTexto(categoria);
 }
 
+async function sincronizarConfigServidor(payload) {
+    try {
+        const res = await apiFetch(CONFIG.CONFIG_URL, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    } catch (e) {
+        console.error('Error sincronizando configuración con servidor:', e);
+    }
+}
+
 function obtenerRecurrentes() {
     try {
         const recs = JSON.parse(localStorage.getItem('recurrentes') || '[]');
@@ -130,8 +144,11 @@ function obtenerRecurrentes() {
     } catch { return []; }
 }
 
-function guardarRecurrentes(recs) {
+function guardarRecurrentes(recs, sincronizar = true) {
     localStorage.setItem('recurrentes', JSON.stringify(recs));
+    if (sincronizar) {
+        sincronizarConfigServidor({ recurrentes: recs });
+    }
 }
 
 function obtenerLimitesTarjetas() {
@@ -141,8 +158,11 @@ function obtenerLimitesTarjetas() {
     } catch { return {}; }
 }
 
-function guardarLimitesTarjetas(limites) {
+function guardarLimitesTarjetas(limites, sincronizar = true) {
     localStorage.setItem('card_limits', JSON.stringify(limites));
+    if (sincronizar) {
+        sincronizarConfigServidor({ card_limits: limites });
+    }
 }
 
 function resetearFormularioOperar() {
@@ -206,7 +226,10 @@ pinPadKeys.forEach(v => {
                 console.error('❌ Error de login:', error);
                 state.ui.pin = "";
                 document.querySelectorAll('#pin-dots div').forEach(d => d.style.background = 'transparent');
-                showToast(error.message === 'PIN incorrecto' ? 'PIN incorrecto' : 'No se pudo iniciar sesión', 'error');
+                const msgError = (error.message === 'PIN incorrecto' || String(error.message || '').startsWith('Demasiados intentos'))
+                    ? error.message
+                    : 'No se pudo iniciar sesión';
+                showToast(msgError, 'error');
             } finally {
                 botones.forEach(boton => boton.disabled = false);
             }
@@ -428,6 +451,39 @@ async function renderApp() {
         });
 
         localStorage.setItem('appData_cache', JSON.stringify(state.data.appData));
+
+        try {
+            const configRes = await apiFetch(CONFIG.CONFIG_URL, {});
+            if (configRes.ok) {
+                const configFresh = await configRes.json();
+                const migracionInicial = {};
+
+                if (Array.isArray(configFresh.recurrentes)) {
+                    guardarRecurrentes(configFresh.recurrentes, false);
+                } else {
+                    const localesRecs = obtenerRecurrentes();
+                    if (localesRecs.length > 0) {
+                        migracionInicial.recurrentes = localesRecs;
+                    }
+                }
+
+                if (configFresh.card_limits && typeof configFresh.card_limits === 'object') {
+                    guardarLimitesTarjetas(configFresh.card_limits, false);
+                } else {
+                    const localesLimites = obtenerLimitesTarjetas();
+                    if (Object.keys(localesLimites).length > 0) {
+                        migracionInicial.card_limits = localesLimites;
+                    }
+                }
+
+                if (Object.keys(migracionInicial).length > 0) {
+                    await sincronizarConfigServidor(migracionInicial);
+                }
+            }
+        } catch (errConfig) {
+            console.error("Error sincronizando configuración:", errConfig);
+        }
+
         actualizarInterfaz();
         await procesarPagosAutomaticos();
     } catch(e) {
