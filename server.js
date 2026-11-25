@@ -85,11 +85,36 @@ const gastoSchema = new mongoose.Schema({
 const Gasto = mongoose.model('Gasto', gastoSchema);
 
 // =========================
-// SESIONES
+// MODELO CONFIGURACIÓN (FIJOS Y LÍMITES)
+// =========================
+
+const configSchema = new mongoose.Schema({
+    clave: {
+        type: String,
+        required: true,
+        unique: true,
+        trim: true
+    },
+    valor: {
+        type: mongoose.Schema.Types.Mixed,
+        required: true
+    }
+}, {
+    timestamps: true
+});
+
+const Config = mongoose.model('Config', configSchema);
+
+// =========================
+// SESIONES Y PROTECCIÓN PIN
 // =========================
 
 const COOKIE_NAME = 'bbva_session';
 const SESSION_DURATION = 7 * 24 * 60 * 60 * 1000;
+
+const MAX_INTENTOS_PIN = 5;
+const BLOQUEO_PIN_MS = 5 * 60 * 1000;
+const intentosLogin = new Map();
 
 function obtenerCookie(req, nombre) {
     const header = req.headers.cookie;
@@ -214,6 +239,17 @@ app.post('/api/login', (req, res) => {
 
     try {
 
+        const ip = req.ip || 'global';
+        const ahora = Date.now();
+        const registro = intentosLogin.get(ip);
+
+        if (registro && registro.bloqueadoHasta > ahora) {
+            const minRestantes = Math.max(1, Math.ceil((registro.bloqueadoHasta - ahora) / 60000));
+            return res.status(429).json({
+                error: `Demasiados intentos. Espera ${minRestantes} min.`
+            });
+        }
+
         const pinRecibido = String(
             req.body?.pin ?? ''
         );
@@ -228,13 +264,36 @@ app.post('/api/login', (req, res) => {
 
         if (pinRecibido !== String(APP_PIN)) {
 
-            console.log('❌ Intento de login incorrecto');
+            const fallosPrevios = (registro && registro.bloqueadoHasta <= ahora)
+                ? 0
+                : (registro?.fallos || 0);
+            const fallos = fallosPrevios + 1;
+
+            if (fallos >= MAX_INTENTOS_PIN) {
+                intentosLogin.set(ip, {
+                    fallos,
+                    bloqueadoHasta: ahora + BLOQUEO_PIN_MS
+                });
+                console.warn(`🚫 Acceso bloqueado 5 min por exceso de intentos (${ip})`);
+                return res.status(429).json({
+                    error: 'Demasiados intentos. Espera 5 min.'
+                });
+            }
+
+            intentosLogin.set(ip, {
+                fallos,
+                bloqueadoHasta: 0
+            });
+
+            console.log(`❌ Intento de login incorrecto (${fallos}/${MAX_INTENTOS_PIN})`);
 
             return res.status(401).json({
                 error: 'PIN incorrecto'
             });
 
         }
+
+        intentosLogin.delete(ip);
 
         const token = crearTokenSesion();
 
@@ -572,6 +631,98 @@ app.delete('/api/gastos/:id', async (req, res) => {
 
         res.status(500).json({
             error: 'Error al eliminar el gasto'
+        });
+    }
+});
+
+// =========================
+// CONFIGURACIÓN (FIJOS Y LÍMITES TARJETAS)
+// =========================
+
+app.get('/api/config', async (req, res) => {
+
+    try {
+
+        const docs = await Config.find({
+            clave: { $in: ['recurrentes', 'card_limits'] }
+        });
+
+        const resultado = {
+            recurrentes: null,
+            card_limits: null
+        };
+
+        docs.forEach(doc => {
+            if (doc.clave === 'recurrentes' && Array.isArray(doc.valor)) {
+                resultado.recurrentes = doc.valor;
+            }
+            if (doc.clave === 'card_limits' && doc.valor && typeof doc.valor === 'object' && !Array.isArray(doc.valor)) {
+                resultado.card_limits = doc.valor;
+            }
+        });
+
+        res.json(resultado);
+
+    } catch (error) {
+
+        console.error(
+            '❌ Error GET /api/config:',
+            error
+        );
+
+        res.status(500).json({
+            error: 'Error al obtener la configuración'
+        });
+    }
+});
+
+app.put('/api/config', async (req, res) => {
+
+    try {
+
+        const { recurrentes, card_limits } = req.body || {};
+
+        if (recurrentes !== undefined) {
+            if (!Array.isArray(recurrentes)) {
+                return res.status(400).json({
+                    error: 'Formato de fijos no válido'
+                });
+            }
+
+            await Config.findOneAndUpdate(
+                { clave: 'recurrentes' },
+                { clave: 'recurrentes', valor: recurrentes },
+                { upsert: true, new: true }
+            );
+        }
+
+        if (card_limits !== undefined) {
+            if (!card_limits || typeof card_limits !== 'object' || Array.isArray(card_limits)) {
+                return res.status(400).json({
+                    error: 'Formato de límites no válido'
+                });
+            }
+
+            await Config.findOneAndUpdate(
+                { clave: 'card_limits' },
+                { clave: 'card_limits', valor: card_limits },
+                { upsert: true, new: true }
+            );
+        }
+
+        res.json({
+            ok: true
+        });
+
+    } catch (error) {
+
+        console.error(
+            '❌ Error PUT /api/config:',
+            error
+        );
+
+        res.status(500).json({
+            error: 'Error al guardar la configuración'
         });
     }
 });
